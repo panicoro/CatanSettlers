@@ -1,4 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
+
+class Game(models.Model):
+    auto_increment_id = models.AutoField(primary_key = True)
+    name = models.CharField(max_length=50)
+
+
 
 class Resource (models.Model):
 
@@ -10,5 +17,5 @@ class Resource (models.Model):
         ('ORE','ore')
     ]
     name = models.CharField(max_length= 6, choices=RESOURCE_TYPE)
-    quantity = models.IntegerField(default=0)
+
     

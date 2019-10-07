@@ -1,3 +1,5 @@
 from django.contrib import admin
+from catan.models import Game,Resource
 
-# Register your models here.
+admin.site.register(Game)
+admin.site.register(Resource)
