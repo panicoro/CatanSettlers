@@ -1,20 +1,11 @@
 from rest_framework import serializers
 from catan.models import Tablero, Hexagono, Vertice
 
-class TableroSerializer(serializers.ModelSerializer):
-    hexagonos = serializers.StringRelatedField(many=True)
-    vertices = serializers.StringRelatedField(many=True)
-    class Meta:
-        model = Tablero
-        fields = ['id', 'nombre', 'vertices', 'hexagonos']
-
-    def create(selef, validated_data):
-        return Tablero.objects.create(**validated_data)
-
 class HexagonoSerializer(serializers.ModelSerializer):
+    position = serializers.CharField(source='get_position_display')
     class Meta:
         model = Hexagono
-        fields = ['id', 'resource', 'token']
+        fields = ['position', 'resource', 'token']  #si saco un campo , entonces no se mostrara en la pagina
     def create(selef, validated_data):
         return Hexagono.objects.create(**validated_data)
 
@@ -25,3 +16,15 @@ class VerticeSerializer(serializers.ModelSerializer):
 
     def create(selef, validated_data):
         return Vertice.objects.create(**validated_data)
+
+class TableroSerializer(serializers.ModelSerializer):
+    hexagonos = serializers.StringRelatedField(many=True)
+    vertices = serializers.StringRelatedField(many=True)
+    class Meta:
+        model = Tablero
+        fields = ['id', 'nombre', 'vertices', 'hexagonos']
+
+    def create(selef, validated_data):
+        return Tablero.objects.create(**validated_data)
+
+
