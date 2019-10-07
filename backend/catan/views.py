@@ -10,7 +10,6 @@ class RoomList(APIView):
     def get(self, request, format=None):
         rooms = Room.objects.all()
         serializer = RoomSerializer(rooms, many=True)
-        print(request.data)
         return Response(serializer.data)
 
 
