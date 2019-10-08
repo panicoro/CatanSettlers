@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from catan.models import Tablero, Hexagono, Vertice
+from catan.models import Tablero, Hexagono, Vertice, VertexPosition
 
 class HexagonoSerializer(serializers.ModelSerializer):
     position = serializers.CharField(source='get_position_display')
@@ -26,5 +26,11 @@ class TableroSerializer(serializers.ModelSerializer):
 
     def create(selef, validated_data):
         return Tablero.objects.create(**validated_data)
+
+
+class VertexPositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VertexPosition
+        fields = ['level', 'index']
 
 

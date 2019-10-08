@@ -20,7 +20,7 @@ class Hexagono(models.Model):
             ('9','(2, 1)'),
             ('10','(2, 2)'),
             ('11','(2, 3)'),
-            ('12','(2, 4)'), 
+            ('12','(2, 4)'),
             ('13','(2, 5)'),
             ('14','(2, 6)'),
             ('15','(2, 7)'),
@@ -52,3 +52,14 @@ class Vertice(models.Model):
 
     def __str__(self):
         return '{nivel: %d , indice: %d}' % (self.nivel, self.indice)
+
+class VertexPosition(models.Model):
+    level = models.IntegerField(default= 0)
+    index = models.IntegerField(default= 0)
+    
+    class Meta:
+        unique_together = ['level', 'index']
+        ordering = ['level']
+
+    def __str__(self):
+        return '{level: %d , index: %d}' % (self.level, self.index)
