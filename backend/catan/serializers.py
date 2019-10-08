@@ -29,4 +29,4 @@ class GameSerializer(serializers.ModelSerializer):
 class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
-        fields = ('id','name')
+        fields = ['id','name']
