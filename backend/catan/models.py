@@ -3,12 +3,17 @@ from django.contrib.auth.models import User
 
 
 class Game(models.Model):
-    auto_id = models.AutoField(primary_key = True)
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return '%s' % (self.order, self.name)
 
 class Player(models.Model):
     username = models.ForeignKey(User, on_delete=models.CASCADE)
-    game = models.ForeignKey(Game, on_delete = models.CASCADE)
+    game = models.ForeignKey(Game,related_name='players',on_delete = models.CASCADE)
+
+    def __str__(self):
+        return '%s' % (self.username)
 
 class Resource(models.Model):
 
@@ -20,3 +25,4 @@ class Resource(models.Model):
         ('ORE','ore')
     ]
     name = models.CharField(max_length= 6, choices=RESOURCE_TYPE)
+    owner = models.ForeignKey(Player, on_delete=models.CASCADE)

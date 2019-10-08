@@ -5,6 +5,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth import get_user_model
 
 class UserSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = ['username']
@@ -21,12 +22,13 @@ class PlayerSerializer(serializers.ModelSerializer):
         fields = ['username','game']
 
 class GameSerializer(serializers.ModelSerializer):
-    players = serializers.StringRelatedField(many=True)
+    pleyers = serializers.StringRelatedField(many=True)
     class Meta:
         model = Game
-        fields = ('auto_id','name', 'players')
+        fields = ['name', 'players']
 
 class ResourceSerializer(serializers.ModelSerializer):
+    #username = UserSerializer
     class Meta:
         model = Resource
         fields = ['id','name']
