@@ -5,15 +5,9 @@ from django.contrib.auth.models import User
 class Game(models.Model):
     name = models.CharField(max_length=50)
 
-    def __str__(self):
-        return '%s' % (self.order, self.name)
-
 class Player(models.Model):
     username = models.ForeignKey(User, on_delete=models.CASCADE)
     game = models.ForeignKey(Game,related_name='players',on_delete = models.CASCADE)
-
-    def __str__(self):
-        return '%s' % (self.username)
 
 class Resource(models.Model):
 

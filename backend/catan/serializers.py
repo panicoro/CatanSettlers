@@ -28,7 +28,6 @@ class GameSerializer(serializers.ModelSerializer):
         fields = ['name', 'players']
 
 class ResourceSerializer(serializers.ModelSerializer):
-    #username = UserSerializer
     class Meta:
         model = Resource
-        fields = ['id','name']
+        fields = ['id','name','owner']
