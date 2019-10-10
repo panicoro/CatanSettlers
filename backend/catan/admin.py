@@ -1,19 +1,23 @@
 from django.contrib import admin
 from .models import *
 
-class TableroAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nombre')
+class BoardAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
 
-class HexagonoAdmin(admin.ModelAdmin):
-    list_display = ('position', 'resource', 'token', 'tablero')
+class HexesAdmin(admin.ModelAdmin):
+    list_display = ('position', 'resource', 'token', 'board')
 
-class VerticeAdmin(admin.ModelAdmin):
-    list_display = ('nivel', 'indice', 'tablero')
+class VertexAdmin(admin.ModelAdmin):
+    list_display = ('level', 'index', 'board')
 
 class VertexPositionAdmin(admin.ModelAdmin):
     list_display = ('level', 'index')
 
-admin.site.register(Tablero, TableroAdmin)
-admin.site.register(Hexagono, HexagonoAdmin)
-admin.site.register(Vertice, VerticeAdmin)
+class GameAdmin(admin.ModelAdmin):
+    list_display = ('id','name','in_turn', 'board')
+
+admin.site.register(Board, BoardAdmin)
+admin.site.register(Hexes, HexesAdmin)
+admin.site.register(Vertex, VertexAdmin)
 admin.site.register(VertexPosition, VertexPositionAdmin)
+admin.site.register(Game, GameAdmin)

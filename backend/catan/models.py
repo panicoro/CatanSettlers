@@ -1,14 +1,27 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
-class Tablero(models.Model):
-    nombre = models.CharField(max_length=25, blank=True, default='')
+class Board(models.Model):
+    name = models.CharField(max_length=25, blank=True, default='')
 
     class Meta:
-        unique_together = ['id', 'nombre']
+        unique_together = ['id', 'name']
         ordering = ['id']
 
-class Hexagono(models.Model):
-    COORDENADAS_AVAILABLES = [
+class Game(models.Model):
+    name = models.CharField(max_length=25)
+    in_turn = models.CharField(max_length=25)
+    board = models.ForeignKey(Board, related_name='games', on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ['id', 'name']
+        ordering = ['id']
+
+    def __str__(self):
+        return '{name: %s , in_turn: %s}' % (self.name, self.in_turn)
+
+class Hexes(models.Model):
+
+    POSITION_AVAILABLES = [
             ('1','(0, 0)'),    
             ('2','(1, 0)'),
             ('3','(1, 1)'),
@@ -29,29 +42,30 @@ class Hexagono(models.Model):
             ('18','(2, 10'),
             ('19','(2, 11'),
     ]
-    position = models.CharField(max_length=2, choices=COORDENADAS_AVAILABLES)
+
+    position = models.CharField(max_length=2, choices=POSITION_AVAILABLES)
     resource  = models.CharField(max_length=25)
     token = models.IntegerField(default= 0)
-    tablero = models.ForeignKey(Tablero, related_name='hexagonos', on_delete=models.CASCADE)
+    board = models.ForeignKey(Board, related_name='hexes', on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ['tablero', 'position']
+        unique_together = ['board', 'position']
         ordering = ['token']
 
     def __str__(self):
-        return '{position: %s, resource: %s , token: %d}' % (self.position, self.resource, self.token)
+        return '{position:{%s} ,resource: %s , token: %d}' % (self.position, self.resource, self.token)
 
-class Vertice(models.Model):
-    nivel = models.IntegerField(default= 0)
-    indice = models.IntegerField(default= 0)
-    tablero = models.ForeignKey(Tablero, related_name='vertices', on_delete=models.CASCADE)
+class Vertex(models.Model):
+    level = models.IntegerField(default= 0)
+    index = models.IntegerField(default= 0)
+    board = models.ForeignKey(Board, related_name='vertex', on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ['nivel', 'indice']
-        ordering = ['nivel']
+        unique_together = ['level', 'index']
+        ordering = ['level']
 
     def __str__(self):
-        return '{nivel: %d , indice: %d}' % (self.nivel, self.indice)
+        return '{level: %d , index: %d}' % (self.level, self.index)
 
 class VertexPosition(models.Model):
     level = models.IntegerField(default= 0)
