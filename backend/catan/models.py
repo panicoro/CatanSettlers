@@ -11,3 +11,6 @@ class Room(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     players = models.ManyToManyField(User, related_name='room_players',
                                      blank=True)
+
+    def __str__(self):
+        return '{}'.format(self.name)
