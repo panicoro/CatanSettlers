@@ -1,6 +1,6 @@
 from django.contrib import admin
 from catan.models import Card, Player, Vertex_position_settlements
-from catan.models import Vertex_position_cities, Road_position, Last_gained, Resource
+from catan.models import *
 
 admin.site.register(Card)
 admin.site.register(Player)
