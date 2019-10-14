@@ -10,23 +10,25 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt import authentication
 
+
 class AuthAPIView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         data = request.data
-        response={"detail":"Invalid credentials"}
+        response = {"detail": "Invalid credentials"}
 
         try:
             data['username'] = data['user']
             data['password'] = data['pass']
-        except:
+        except Exception:
             return Response(response, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            user = authenticate(username=data['username'], password=data['password'])
-        except:
+            user = authenticate(username=data['username'],
+                                password=data['password'])
+        except Exception:
             user = None
 
-        if (user != None):
+        if (user is not None):
             serializer = self.get_serializer(data=request.data)
             response = serializer.validate(request.data)
         else:
