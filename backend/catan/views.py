@@ -22,11 +22,8 @@ class AuthAPIView(TokenObtainPairView):
         except Exception:
             return Response(response, status=status.HTTP_401_UNAUTHORIZED)
 
-        try:
-            user = authenticate(username=data['username'],
+        user = authenticate(username=data['username'],
                                 password=data['password'])
-        except Exception:
-            user = None
 
         if (user is not None):
             serializer = self.get_serializer(data=request.data)
