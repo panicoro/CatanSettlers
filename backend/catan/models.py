@@ -3,9 +3,22 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
+class Game(models.Model):
+    name = models.CharField(max_length=25)
+    in_turn = models.ForeignKey(User, related_name='in_turn',
+                                on_delete=models.CASCADE, null=True)
+    winner = models.ForeignKey(User, on_delete=models.CASCADE,
+                               blank=True, null=True)
+    roober = models.IntegerField()
+
+    class Meta:
+        unique_together = ['id', 'name']
+        ordering = ['id']
+
+
 class Player(models.Model):
     username = models.ForeignKey(User, on_delete=models.CASCADE)
-#   game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     colour = models.CharField(max_length=50)
     development_cards = models.IntegerField(default=0,
                                             validators=[MinValueValidator(0)])

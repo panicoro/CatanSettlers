@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from django.contrib.auth.models import User
 from mixer.backend.django import mixer
+from catan.models import Game
 
 
 @pytest.mark.django_db
@@ -14,6 +15,7 @@ class TestViews:
         request = RequestFactory().get(path)
         request.user = mixer.blend(User, username='Nico',
                                    password='minombrenico')
+        game = mixer.blend(Game, name='elwacho', robber=3)
         view = PlayerInfo.as_view()
         response = view(request, pk=1)
         assert response.status_code == 200
