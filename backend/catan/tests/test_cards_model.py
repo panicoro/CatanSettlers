@@ -26,15 +26,3 @@ class TestModels:
         assert str(card) == card.card_name
         resource = mixer.blend(Resource, resource_name='wool', owner=player1)
         assert str(resource) == resource.resource_name
-        vertex_settlements = mixer.blend(Vertex_position_settlements,
-                                         player=player1, level=1, index=2)
-        assert str(vertex_settlements) == str(vertex_settlements)
-        vertex_cities = mixer.blend(Vertex_position_cities,
-                                    player=player1, level=2, index=3)
-        assert str(vertex_cities) == str(vertex_cities)
-        road_pos = mixer.blend(Road_position, player=player1, level1=1,
-                               index1=2, level2=4, index2=6)
-        assert str(road_pos) == str(road_pos)
-        last_gained = mixer.blend(Last_gained, player=player1,
-                                  resources=resource)
-        assert str(last_gained) == last_gained.resources.resource_name
