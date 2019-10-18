@@ -3,11 +3,9 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from catan import views
 
 urlpatterns = [
-    path('boards/', views.list_board),
-    path('boards/<int:pk>/', views.board_detail),
-    path('games/', views.list_game),
-    path('games/<int:pk>/', views.game_detail),
-    path('hexes/', views.list_hexes),
+    path('games/', views.GameList.as_view()),
+    path('games/<int:pk>/board/', views.BoardInfo.as_view(),
+         name='BoardInfo'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
