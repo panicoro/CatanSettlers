@@ -1,4 +1,8 @@
 from django.contrib import admin
-from .models import Room
+from catan.models import *
 
 admin.site.register(Room)
+admin.site.register(Card)
+admin.site.register(Player)
+admin.site.register(Resource)
+admin.site.register(Game)

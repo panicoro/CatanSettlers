@@ -10,6 +10,8 @@ urlpatterns = [
          name='tokenObtainPair'),
     path('users/login/refresh/', TokenRefreshView.as_view(),
          name='refreshToken'),
+    path('games/<int:pk>/player', views.PlayerInfo.as_view(),
+         name='PlayerInfo'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

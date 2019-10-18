@@ -8,11 +8,12 @@ from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt import authentication
-from catan.serializers import RoomSerializer
+from catan.serializers import RoomSerializer, CardSerializer, ResourceSerializer
 from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import status
-from catan.models import Room
+from catan.models import Room, Card, Player, Resource, Game
+from django.shortcuts import get_object_or_404
 
 
 class RoomList(APIView):
@@ -62,3 +63,17 @@ class AuthAPIView(TokenObtainPairView):
             return Response(response, status=status.HTTP_401_UNAUTHORIZED)
 
         return Response(response, status=status.HTTP_201_CREATED)
+
+
+class PlayerInfo(APIView):
+    def get(self, request, pk):
+        game = get_object_or_404(Game, pk=pk)
+        user = self.request.user
+        player_id = Player.objects.filter(username=user, game=pk).get().id
+        queryset_cards = Card.objects.filter(owner=player_id)
+        queryset_resource = Resource.objects.filter(owner=player_id)
+        serializer_cards = CardSerializer(queryset_cards, many=True)
+        serializer_resource = ResourceSerializer(queryset_resource, many=True)
+        data = {'resources': serializer_resource.data,
+                'cards': serializer_cards.data}
+        return Response(data)
