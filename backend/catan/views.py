@@ -4,7 +4,7 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from catan.permissions import OwnRoomPermission
+from rest_framework.renderers import JSONRenderer
 
 
 class RoomList(APIView):
@@ -15,8 +15,6 @@ class RoomList(APIView):
 
 
 class RoomDetail(APIView):
-    permission_classes = [OwnRoomPermission]
-
     def get_object(self, pk):
         try:
             return Room.objects.get(pk=pk)
@@ -25,8 +23,11 @@ class RoomDetail(APIView):
 
     def put(self, request, pk, format=None):
         room = self.get_object(pk)
-        serializer = RoomSerializer(room, data=request.data)
+        room_serializer = RoomSerializer(room)
+        room_data = room_serializer.data
+        room_data['players'].append(self.request.user)
+        serializer = RoomSerializer(room, data=room_data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
