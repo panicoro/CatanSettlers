@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt import authentication
-from catan.serializers import RoomSerializer, CardSerializer, ResourceSerializer
+from catan.serializers import *
 from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import status
