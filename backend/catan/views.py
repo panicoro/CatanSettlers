@@ -1,53 +1,20 @@
+from django.http import Http404
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from catan.models import Board, Hexes, Game
-from catan.serializers import BoardSerializer, HexesSerializer, GameSerializer
+from django.shortcuts import get_object_or_404
+from catan.models import Board,Hexes,VertexPosition, Game
+from catan.serializers import GameListSerializer, BoardSerializer
 
-@api_view(['GET'])
-def list_board(request, format=None):
+class GameList(APIView):
+    def get(self, requests, format=None):
+        games = Game.objects.all()
+        gamesserializers = GameListSerializer(games, many=True)
+        return Response(gamesserializers.data)
 
-    if request.method == 'GET':
-        boards = Board.objects.all()
-        serializer = BoardSerializer(boards, many=True)
-        return Response(serializer.data)
-
-@api_view(['GET'])             
-def board_detail(request, pk, format=None):
-
-    try:
+class BoardInfo(APIView):
+    def get(self, request, pk):
+        board = get_object_or_404(Board, pk=pk)
         board = Board.objects.get(pk=pk)
-    except BoardSerializer.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = BoardSerializer(board)
-        return Response(serializer.data)
-
-@api_view(['GET'])
-def list_game(request, format=None):
-
-    if request.method == 'GET':
-        game = Game.objects.all()
-        serializer = GameSerializer(game, many=True)
-        return Response(serializer.data)
-
-@api_view(['GET'])             
-def game_detail(request, pk, format=None):
-    try:
-        game = Game.objects.get(pk=pk)
-    except Game.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = GameSerializer(game)
-        return Response(serializer.data)
-
-@api_view(['GET'])
-def list_hexes(request, format=None):
-
-    if request.method == 'GET':
-        hexes = Hexes.objects.all()
-        serializer = HexesSerializer(hexes, many=True)
-        return Response(serializer.data)
-
+        serializer_board = BoardSerializer(board)
+        return Response(serializer_board.data)
