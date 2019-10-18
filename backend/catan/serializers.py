@@ -63,3 +63,4 @@ class RoomSerializer(serializers.ModelSerializer):
         if data['owner'] in data['players']:
             raise serializers.ValidationError(
                 "Cannot add the owner to the players")
+        return data
