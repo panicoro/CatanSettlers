@@ -28,7 +28,7 @@ class RoomSerializer(serializers.ModelSerializer):
                 player = User.objects.filter(username=player_data)[0]
                 instance.players.add(player)
         return instance
-    
+
     def validate_players(self, players):
         # Check if number to put are allowed
         if len(players) > (self.instance.max_players - 1):
