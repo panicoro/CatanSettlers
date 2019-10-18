@@ -18,8 +18,9 @@ class TestModels:
         room.players.add(player2)
         assert room.max_players == 3
         assert room.name == "Test Room"
+        assert str(room) == "Test Room"
         assert room.owner == owner
         assert room.players.filter(username=player1.username
-                                   ).exists() == True
+                                   ).exists() is True
         assert room.players.filter(username=player2.username
-                                   ).exists() == True
+                                   ).exists() is True
