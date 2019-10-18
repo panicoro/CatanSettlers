@@ -6,7 +6,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.six import text_type
-from catan.models import Room
+from catan.models import Room, Card, Player, Resource
 
 
 class SignupSerializer(TokenObtainPairSerializer):
@@ -63,3 +63,15 @@ class RoomSerializer(serializers.ModelSerializer):
         if data['owner'] in data['players']:
             raise serializers.ValidationError(
                 "Cannot add the owner to the players")
+
+
+class CardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Card
+        fields = ['card_name']
+
+
+class ResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        fields = ['resource_name']
