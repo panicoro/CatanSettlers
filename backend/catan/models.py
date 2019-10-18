@@ -37,7 +37,8 @@ class VertexPosition(models.Model):
                                                         MaxValueValidator(2)])
     index = models.IntegerField(default= 0, validators=[MinValueValidator(0),
                                                         MaxValueValidator(11)])
-    position = models.OneToOneField(Hexes, related_name='position', on_delete=models.CASCADE, null=True)
+    position = models.OneToOneField(Hexes, related_name='position', 
+                                        on_delete=models.CASCADE,null=True)
     
     class Meta:
         unique_together = ['level', 'index']
@@ -50,7 +51,3 @@ class VertexPosition(models.Model):
             raise ValidationError('The index with level 1 must be between 0 and 5.')
         if (self.level == 2) and not (0 <= self.index <= 11):
             raise ValidationError('The index with level 2 must be between 0 and 11.')
-
-
-    def __str__(self):
-        return '{level: %d , index: %d}' % (self.level, self.index)

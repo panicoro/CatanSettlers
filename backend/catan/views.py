@@ -1,9 +1,7 @@
-from django.http import Http404
-from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from catan.models import Board,Hexes,VertexPosition, Game
+from catan.models import Board, Game
 from catan.serializers import GameListSerializer, BoardSerializer
 
 class GameList(APIView):
