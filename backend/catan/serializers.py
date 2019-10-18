@@ -1,6 +1,32 @@
-from rest_framework import serializers
+<<<<<<< backend/catan/serializers.py
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from rest_framework import fields
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+from rest_framework.reverse import reverse as api_reverse
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils.six import text_type
 from catan.models import Room
+
+
+class SignupSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super(SignupSerializer, cls).get_token(user)
+        return token
+
+    def validate(self, attrs):
+        user = authenticate(username=attrs['username'],
+                            password=attrs['password'])
+        data = {}
+        data['username'] = user.username
+        data['email'] = user.email
+        refresh = self.get_token(user)
+        data['token'] = text_type(refresh)
+        data['refresh'] = text_type(refresh)
+        data['access'] = text_type(refresh.access_token)
+        return data
 
 
 class RoomSerializer(serializers.ModelSerializer):
@@ -38,4 +64,3 @@ class RoomSerializer(serializers.ModelSerializer):
         if data['owner'] in data['players']:
             raise serializers.ValidationError(
                 "Cannot add the owner to the players")
-        return data
