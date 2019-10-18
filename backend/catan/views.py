@@ -23,7 +23,7 @@ class AuthAPIView(TokenObtainPairView):
             return Response(response, status=status.HTTP_401_UNAUTHORIZED)
 
         user = authenticate(username=data['username'],
-                                password=data['password'])
+                            password=data['password'])
 
         if (user is not None):
             serializer = self.get_serializer(data=request.data)
