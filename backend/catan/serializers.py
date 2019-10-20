@@ -1,25 +1,28 @@
 from rest_framework import serializers
-from catan.models import VertexPosition, Hexes, Board, Game
+from catan.models import HexePosition, Hexe, Board, Game
 
-class VertexPositionSerializer(serializers.ModelSerializer):
+
+class HexePositionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = VertexPosition
+        model = HexePosition
         fields = ['level', 'index']
 
-class HexesSerializer(serializers.ModelSerializer):
-    position = VertexPositionSerializer()
+
+class HexeSerializer(serializers.ModelSerializer):
+    position = HexePositionSerializer()
+
     class Meta:
-        model = Hexes
-        fields = ['position','terrain', 'token']
+        model = Hexe
+        fields = ['position', 'terrain', 'token']
+
 
 class BoardSerializer(serializers.ModelSerializer):
-    hexes = HexesSerializer(many=True)
     class Meta:
         model = Board
-        fields = ['name', 'hexes']
+        fields = ['id', 'name']
+
 
 class GameListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['id', 'name']
-
+        fields = ['id', 'name', 'board']
