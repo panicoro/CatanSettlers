@@ -44,3 +44,19 @@ class Resource(models.Model):
 
     def __str__(self):
         return self.resource_name
+
+
+class Card(models.Model):
+    CARD_TYPE = [
+        ('ROAD_BUILDING', 'road_building'),
+        ('YEAR_OF_PLENTY', 'year_of_plenty'),
+        ('MONOPOLY', 'monopoly'),
+        ('VICTORY_POINT', 'victory_point'),
+        ('KNIGHT', 'knight')
+    ]
+    owner = models.ForeignKey(Player, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    card_name = models.CharField(max_length=50, choices=CARD_TYPE)
+
+    def __str__(self):
+        return self.card_name

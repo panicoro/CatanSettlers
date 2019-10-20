@@ -1,7 +1,7 @@
 from django.urls import path
-from catan.views import *
+from catan import views
 
 urlpatterns = [
-    path('games/<int:pk>/player', ResourceList.as_view())
-    #path('game', GameList.as_view()),
+    path('games/<int:pk>/player', views.PlayerInfo.as_view(),
+        name='PlayerInfo'),
 ]

@@ -1,33 +1,14 @@
-from django.contrib.auth.models import User
-from .models import Game, Resource,Player
+from catan.models import *
 from rest_framework import serializers
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.contrib.auth import get_user_model
 
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['username']
-        extra_kwargs = {
-            'username': {
-                'validators': [UnicodeUsernameValidator()],
-            }
-        }
-
-class PlayerSerializer(serializers.ModelSerializer):
-    username = UserSerializer()
-    class Meta:
-        model = Player
-        fields = ['username','game']
-
-class GameSerializer(serializers.ModelSerializer):
-    pleyers = serializers.StringRelatedField(many=True)
-    class Meta:
-        model = Game
-        fields = ['name', 'players']
 
 class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
-        fields = ['id','name','owner']
+        fields = ['resource_name']
+
+
+class CardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Card
+        fields = ['card_name']

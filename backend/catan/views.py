@@ -10,18 +10,18 @@ from django.shortcuts import get_object_or_404
 class PlayerInfo(APIView):
     def get(self, request, pk):
         resource_list = []
+        card_list = []
         game = get_object_or_404(Game, pk=pk)
         user = self.request.user
         player_id = Player.objects.filter(username=user, game=pk).get().id
-        queryset_cards = Card.objects.filter(owner=player_id)
+        queryset_card = Card.objects.filter(owner=player_id)
         queryset_resource = Resource.objects.filter(owner=player_id)
-        serializer_cards = CardSerializer(queryset_cards, many=True)
+        serializer_card = CardSerializer(queryset_card, many=True)
         serializer_resource = ResourceSerializer(queryset_resource, many=True)
         for resource in serializer_resource.data:
-            print(resource.values())
-            resource_list.append(resource.values())
-            print(resource_list)
-
+            resource_list.append(resource['resource_name'])
+        for card in serializer_card.data:
+            card_list.append(card['card_name'])
         data = {'resources': resource_list,
-                'cards': serializer_cards.data}
+                'cards': card_list}
         return Response(data)
