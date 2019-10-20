@@ -21,11 +21,11 @@ class Game(models.Model):
 
 
 RESOURCE_TYPE = [
-    ('BRICK', 'brick'),
-    ('LUMBER', 'lumber'),
-    ('WOOL', 'wool'),
-    ('GRAIN', 'grain'),
-    ('ORE', 'ore'),
+    ('brick', 'BRICK'),
+    ('lumber', 'LUMBER'),
+    ('wool', 'WOOL'),
+    ('grain', 'GRAIN'),
+    ('ore', 'ORE'),
 ]
 
 
@@ -52,7 +52,7 @@ class HexePosition(models.Model):
 
 
 class Hexe(models.Model):
-    TERRAIN_TYPE = [('DESERT', 'desert')] + RESOURCE_TYPE
+    TERRAIN_TYPE = [('desert', 'DESERT')] + RESOURCE_TYPE
     terrain = models.CharField(max_length=6, choices=TERRAIN_TYPE)
     token = models.IntegerField(default=0, validators=[MinValueValidator(2),
                                                        MaxValueValidator(12)])
