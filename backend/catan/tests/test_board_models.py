@@ -1,5 +1,6 @@
 import pytest
-from catan.models import Board, Hexe, HexePosition, Game
+from django.contrib.auth.models import User
+from catan.models import Board, Hexe, HexePosition
 from django.core.exceptions import ValidationError
 
 
@@ -14,11 +15,6 @@ class TestModels:
     def test_board(self):
         board = Board.objects.create(name='Colonos')
         assert board.name == 'Colonos'
-
-    def test_game(self):
-        board = Board.objects.create(name='Colonos')
-        game = Game.objects.create(name='Juego 1', board=board)
-        assert game.name == 'Juego 1'
 
     def test_hexe(self):
         board = Board.objects.create(name='Colonos')
