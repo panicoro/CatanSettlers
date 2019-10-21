@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 
@@ -9,25 +10,6 @@ class Board(models.Model):
     class Meta:
         unique_together = ['id', 'name']
         ordering = ['id']
-
-
-class Game(models.Model):
-    name = models.CharField(max_length=25)
-    board = models.ForeignKey(Board, related_name='game_board',
-                              on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ['id', 'name']
-        ordering = ['id']
-
-
-RESOURCE_TYPE = [
-    ('brick', 'BRICK'),
-    ('lumber', 'LUMBER'),
-    ('wool', 'WOOL'),
-    ('grain', 'GRAIN'),
-    ('ore', 'ORE'),
-]
 
 
 class HexePosition(models.Model):
@@ -50,6 +32,30 @@ class HexePosition(models.Model):
         if (self.level == 2) and not (0 <= self.index <= 11):
             raise ValidationError(
                 'The index with level 2 must be between 0 and 11.')
+
+
+class Game(models.Model):
+    name = models.CharField(max_length=25)
+    board = models.ForeignKey(Board, related_name='game_board',
+                              on_delete=models.CASCADE)
+    roober = models.ForeignKey(HexePosition, related_name="robber",
+                               on_delete=models.CASCADE)
+    winner = models.ForeignKey(User, related_name="game_winner",
+                               on_delete=models.CASCADE,
+                               blank=True, null=True)
+
+    class Meta:
+        unique_together = ['id', 'name']
+        ordering = ['id']
+
+
+RESOURCE_TYPE = [
+    ('brick', 'BRICK'),
+    ('lumber', 'LUMBER'),
+    ('wool', 'WOOL'),
+    ('grain', 'GRAIN'),
+    ('ore', 'ORE'),
+]
 
 
 class Hexe(models.Model):
