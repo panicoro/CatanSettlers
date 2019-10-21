@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from catan.models import Room, Card, Player, Resource, Game
 from django.shortcuts import get_object_or_404
+from mixer.backend.django import mixer
 
 
 class RoomList(APIView):
@@ -21,6 +22,15 @@ class RoomList(APIView):
         rooms = Room.objects.all()
         serializer = RoomSerializer(rooms, many=True)
         return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        data1 = {'name': data['name'], 'owner': request.user, 'players': []}
+        serializer = RoomSerializer(data=data1)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RoomDetail(APIView):
@@ -40,6 +50,45 @@ class RoomDetail(APIView):
             serializer.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        room = get_object_or_404(Room, pk=pk)
+
+
+        data = {'level': 1, 'index': 2}
+        serializer = HexePositionSerializer(data=data)
+        print(serializer)
+        if serializer.is_valid():
+            serializer.save()
+
+
+ #       robber = HexePosition.objects.get(level=1)
+
+
+
+        data1 = {'name': room.name, 'robber': 1}
+        serializer1 = GameSerializer(data=data1)
+        print(serializer1)
+        if serializer1.is_valid():
+            serializer1.save()
+
+
+        room.game_has_started = True
+        room.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+"""
+#        data1 = {'level': 0, 'index': 1}
+#        serializer1 = HexePositionSerializer(data=data1)
+#        if serializer1.is_valid():
+#            serializer1.save()
+
+
+    def delete(self, request, pk):
+        room = get_object_or_404(Room, pk=pk)
+        room.delete()
+        return Response("Room deleted", status=status.HTTP_204_NO_CONTENT)
+"""
 
 
 class AuthAPIView(TokenObtainPairView):

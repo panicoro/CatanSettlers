@@ -6,7 +6,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.six import text_type
-from catan.models import Room, Card, Player, Resource
+from catan.models import *
 
 
 class SignupSerializer(TokenObtainPairSerializer):
@@ -28,6 +28,25 @@ class SignupSerializer(TokenObtainPairSerializer):
         return data
 
 
+class HexePositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HexePosition
+        fields = ['id', 'level', 'index']
+
+
+class BoardSerializer(serializers.ModelSerializer):
+    hexes = HexePositionSerializer(many=True)
+    class Meta:
+        model = Board
+        fields = ['hexes']
+
+
+class GameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        fields = ['id', 'name', 'winner', 'board', 'robber']
+
+
 class RoomSerializer(serializers.ModelSerializer):
     players = serializers.SlugRelatedField(
         many=True,
@@ -41,7 +60,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ['id', 'name', 'max_players', 'owner', 'players']
+        fields = ['id', 'name', 'max_players', 'owner', 'players', 'game_has_started']
 
     def update(self, instance, validated_data):
         # Only update the players list...
@@ -54,7 +73,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     def validate_players(self, players):
         # Check if number to put are allowed
-        if len(players) > (self.instance.max_players - 1):
+        if len(players) > 3:
             raise serializers.ValidationError("Cannot add more players")
         return players
 
