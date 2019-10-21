@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from catan.models import Room, Card, Player, Resource, Game
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import AllowAny
 
 
 class RoomList(APIView):
@@ -63,6 +64,28 @@ class AuthAPIView(TokenObtainPairView):
             return Response(response, status=status.HTTP_401_UNAUTHORIZED)
 
         return Response(response, status=status.HTTP_201_CREATED)
+
+
+class Register(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+
+        try:
+            data['username'] = data['user']
+            data['password'] = data['pass']
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(username=data['username'])
+
+        if (len(user) == 0):
+            User.objects.create_user(username=data['username'],
+                                     password=data['password'])
+            return Response(status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_409_CONFLICT)
 
 
 class PlayerInfo(APIView):
