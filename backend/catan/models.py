@@ -29,10 +29,10 @@ class HexePosition(models.Model):
 
 
 class VertexPosition(models.Model):
-    level = models.IntegerField(default= 0, validators=[MinValueValidator(0),
-                                                        MaxValueValidator(2)])
-    index = models.IntegerField(default= 0, validators=[MinValueValidator(0),
-                                                        MaxValueValidator(29)])
+    level = models.IntegerField(default=0, validators=[MinValueValidator(0),
+                                                       MaxValueValidator(2)])
+    index = models.IntegerField(default=0, validators=[MinValueValidator(0),
+                                                       MaxValueValidator(29)])
 
     class Meta:
         unique_together = ['level', 'index']
@@ -97,10 +97,10 @@ class Room(models.Model):
 
 class Game(models.Model):
     name = models.CharField(max_length=25)
+    board = models.ForeignKey(Board, related_name='game_board',
+                              on_delete=models.CASCADE)
     robber = models.ForeignKey(HexePosition, related_name="robber",
                                on_delete=models.CASCADE)
-    board = models.ForeignKey(Board, related_name="board_game",
-                              on_delete=models.CASCADE)
     winner = models.ForeignKey(User, related_name="game_winner",
                                on_delete=models.CASCADE,
                                blank=True, null=True)

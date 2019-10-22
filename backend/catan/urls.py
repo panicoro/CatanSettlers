@@ -14,6 +14,10 @@ urlpatterns = [
          name='PlayerInfo'),
     path('games/<int:pk>/', views.GameInfo.as_view(),
          name='GameInfo'),
+    path('games/', views.GameList.as_view(), name='Games'),
+    path('boards/', views.BoardList.as_view(), name='Boards'),
+    path('games/<int:pk>/board/', views.BoardInfo.as_view(),
+         name='BoardInfo'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

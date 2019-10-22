@@ -6,9 +6,8 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.six import text_type
-from catan.models import (Room, Card, Player,
-                          Resource, Current_Turn,
-                          HexePosition, Game, Road, Building, VertexPosition)
+from catan.models import *
+from django.core.exceptions import ValidationError
 
 
 class SignupSerializer(TokenObtainPairSerializer):
@@ -86,6 +85,14 @@ class HexePositionSerializer(serializers.ModelSerializer):
         fields = ['level', 'index']
 
 
+class HexeSerializer(serializers.ModelSerializer):
+    position = HexePositionSerializer()
+
+    class Meta:
+        model = Hexe
+        fields = ['position', 'terrain', 'token']
+
+
 class VertexPositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = VertexPosition
@@ -135,6 +142,18 @@ class Current_TurnSerializer(serializers.ModelSerializer):
         instance.dices2 = dices2
         instance.save()
         return instance
+
+
+class BoardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Board
+        fields = ['id', 'name']
+
+
+class GameListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        fields = ['id', 'name', 'board']
 
 
 class GameSerializer(serializers.ModelSerializer):
