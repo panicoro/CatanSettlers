@@ -6,10 +6,8 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.six import text_type
-from catan.models import (
-                            Room, Card, Player, Resource,
-                            HexePosition, Hexe, Board, Game
-                         )
+from catan.models import *
+from django.core.exceptions import ValidationError
 
 
 class SignupSerializer(TokenObtainPairSerializer):
@@ -105,4 +103,3 @@ class GameListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = ['id', 'name', 'board']
-

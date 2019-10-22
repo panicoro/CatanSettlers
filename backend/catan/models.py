@@ -39,14 +39,12 @@ class HexePosition(models.Model):
                 'The index with level 2 must be between 0 and 11.')
 
 
-
 class Board(models.Model):
     name = models.CharField(max_length=25)
 
     class Meta:
         unique_together = ['id', 'name']
         ordering = ['id']
-
 
 
 class Game(models.Model):
@@ -122,4 +120,3 @@ class Resource(models.Model):
 
     def __str__(self):
         return self.resource_name
-

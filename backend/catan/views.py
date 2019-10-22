@@ -13,11 +13,7 @@ from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from catan.models import Room, Card, Player, Resource, Game
-from catan.models import (
-                            Room, Card, Player, Resource,
-                            Hexe, Board, Game
-                         )
+from catan.models import *
 
 
 class RoomList(APIView):
