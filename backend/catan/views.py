@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt import authentication
 from catan.serializers import *
 from django.http import Http404
+from random import random
 from rest_framework.response import Response
 from rest_framework import status
 from catan.models import Room, Card, Player, Resource, Game
@@ -76,4 +77,127 @@ class PlayerInfo(APIView):
         serializer_resource = ResourceSerializer(queryset_resource, many=True)
         data = {'resources': serializer_resource.data,
                 'cards': serializer_cards.data}
+        return Response(data)
+
+
+class GameInfo(APIView):
+    def get_list_without_keys(self, serialized_list, key):
+        """
+        A method to quit the keys of the serialized objects
+        Args:
+        serialized_list: serialized list of objects.
+        key: a key to obtain the elements.
+        """
+        data = []
+        for serialized_data in serialized_list.data:
+            data.append(serialized_data[key])
+        return data
+
+    def get_list_serialized_objects(self, queryset, serializer, key):
+        """
+        A method to get serialized objects without keys from a queryset
+        Args:
+        queryset: a queryset of certain objects.
+        key: a key to obtain elements.
+        """
+        data = []
+        serialized_objects = serializer(queryset, many=True)
+        final_data = self.get_list_without_keys(serialized_objects, key)
+        return final_data
+
+    def get_roads(self, player):
+        """
+        A method to obtain a list of roads of a player
+        Args:
+        player: A player object.
+        """
+        roads = []
+        player_roads = Road.objects.filter(owner=player.id)
+        serialized_roads = RoadSerializer(player_roads, many=True)
+        for serialized_road in serialized_roads.data:
+            new_road = []
+            new_road.append(serialized_road['vertex_1'])
+            new_road.append(serialized_road['vertex_2'])
+            roads.append(new_road)
+        return roads
+
+    def get_settlements(self, player):
+        """
+        A method to obtain a list of settlements of a player
+        Args:
+        player: A player object.
+        """
+        settlements = self.get_list_serialized_objects(
+                            queryset=Building.objects.filter(name="SETTLEMENT",
+                                                             owner=player.id),
+                            serializer=BuildingSerializer, key='position')
+        return settlements
+
+    def get_cities(self, player):
+        """
+        A method to obtain a list of cities of a player
+        Args:
+        player: A player object.
+        """
+        cities = self.get_list_serialized_objects(
+                            queryset=Building.objects.filter(name="CITY",
+                                                             owner=player.id),
+                            serializer=BuildingSerializer, key='position')
+        return cities
+
+    def get_last_gained(self, player):        
+        """
+        A method to obtain a list of last_gained of a player
+        Args:
+        player: A player object.
+        """
+        last_gained = self.get_list_serialized_objects(
+                            queryset=Resource.objects.filter(last_gained=True,
+                                                             owner=player.id),
+                            serializer=ResourceSerializer, key='resource_name')
+        return last_gained
+
+    def get_players(self, pk):
+        """
+        A method to obtain the list of serialized players
+        """
+        players = Player.objects.filter(game=pk)
+        serialized_players = []
+        for player in players:
+            partial_serialized_player = PlayerSerializer(player)
+            data = partial_serialized_player.data
+            last_gained = self.get_last_gained(player)
+            settlements = self.get_settlements(player)
+            cities = self.get_cities(player)
+            roads = self.get_roads(player)
+            data['roads'] = roads
+            data['last_gained'] = last_gained
+            data['settlements'] = settlements
+            data['cities'] = cities
+            serialized_players.append(data)
+        return serialized_players
+
+    def throw_dice(self):
+        """
+        A method to generate a thow of dice
+        (uniform discrete distribution)
+        """
+        return 1 * int(6 * random()) + 1
+
+    def get(self, request, pk):
+        game = get_object_or_404(Game, pk=pk)
+        # Throw the dices...
+        game.current_turn.dices1 = self.throw_dice()
+        game.current_turn.dices2 = self.throw_dice()
+        game.save()
+        # Get the game serializer...
+        serialized_game = GameSerializer(game)
+        data = serialized_game.data
+        # Change data presentation of a dices
+        dices1 = data['current_turn'].pop('dices1')
+        dices2 = data['current_turn'].pop('dices2')
+        data['current_turn']['dices'] = [dices1, dices2]
+        # Add players...
+        serialized_players = self.get_players(pk=pk)
+        data['players'] = serialized_players
         return Response(data)
