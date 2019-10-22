@@ -6,7 +6,9 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.six import text_type
-from catan.models import Room, Card, Player, Resource
+from catan.models import (Room, Card, Player,
+                          Resource, Current_Turn,
+                          HexePosition, Game, Road, Building, VertexPosition)
 
 
 class SignupSerializer(TokenObtainPairSerializer):
@@ -76,3 +78,71 @@ class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
         fields = ['resource_name']
+
+
+class HexePositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HexePosition
+        fields = ['level', 'index']
+
+
+class VertexPositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VertexPosition
+        fields = ['level', 'index']
+
+
+class RoadSerializer(serializers.ModelSerializer):
+    vertex_1 = VertexPositionSerializer()
+    vertex_2 = VertexPositionSerializer()
+
+    class Meta:
+        model = Road
+        fields = ['vertex_1', 'vertex_2']
+
+
+class BuildingSerializer(serializers.ModelSerializer):
+    position = VertexPositionSerializer()
+
+    class Meta:
+        model = Building
+        fields = ['position']
+
+
+class PlayerSerializer(serializers.ModelSerializer):
+    username = serializers.SlugRelatedField(queryset=User.objects.all(),
+                                            slug_field='username')
+
+    class Meta:
+        model = Player
+        fields = ['username', 'colour', 'development_cards',
+                  'resources_cards', 'victory_points']
+
+
+class Current_TurnSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(queryset=User.objects.all(),
+                                        slug_field='username')
+
+    class Meta:
+        model = Current_Turn
+        fields = ['user', 'dices1', 'dices2']
+
+    def update(self, instance, validated_data):
+        # only update dices for now
+        dices1 = validated_data.pop('dices1')
+        dices2 = validated_data.pop('dices2')
+        instance.dices1 = dices1
+        instance.dices2 = dices2
+        instance.save()
+        return instance
+
+
+class GameSerializer(serializers.ModelSerializer):
+    current_turn = Current_TurnSerializer()
+    robber = HexePositionSerializer()
+    winner = serializers.SlugRelatedField(queryset=User.objects.all(),
+                                          slug_field='username')
+
+    class Meta:
+        model = Game
+        fields = ['robber', 'current_turn', 'winner']
