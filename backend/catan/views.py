@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from catan.models import Room, Card, Player, Resource, Game
 from django.shortcuts import get_object_or_404
-from mixer.backend.django import mixer
 
 
 class RoomList(APIView):
@@ -62,11 +61,11 @@ class RoomDetail(APIView):
             serializer.save()
 
 
- #       robber = HexePosition.objects.get(level=1)
+        robber = HexePosition.objects.get(level=1)
 
 
 
-        data1 = {'name': room.name, 'robber': 1}
+        data1 = {'name': room.name, 'robber': robber}
         serializer1 = GameSerializer(data=data1)
         print(serializer1)
         if serializer1.is_valid():
@@ -78,12 +77,6 @@ class RoomDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 """
-#        data1 = {'level': 0, 'index': 1}
-#        serializer1 = HexePositionSerializer(data=data1)
-#        if serializer1.is_valid():
-#            serializer1.save()
-
-
     def delete(self, request, pk):
         room = get_object_or_404(Room, pk=pk)
         room.delete()

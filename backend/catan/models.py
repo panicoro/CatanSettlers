@@ -58,7 +58,7 @@ class Game(models.Model):
                                   blank=True, null=True)
     board = models.ForeignKey(Board, related_name='games', on_delete=models.CASCADE, default=True, null=True)
 
-    robber = models.IntegerField()
+    robber = models.ForeignKey(HexePosition, related_name="robber", on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ['id', 'name']
