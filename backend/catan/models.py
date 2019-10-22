@@ -49,8 +49,6 @@ class Board(models.Model):
 
 class Game(models.Model):
     name = models.CharField(max_length=25)
-    in_turn = models.ForeignKey(User, related_name='in_turn',
-                                on_delete=models.CASCADE, null=True)
     board = models.ForeignKey(Board, related_name='game_board',
                               on_delete=models.CASCADE)
     roober = models.ForeignKey(HexePosition, related_name="robber",
