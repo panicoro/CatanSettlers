@@ -14,9 +14,32 @@ class Room(models.Model):
                                      blank=True)
     game_id = models.IntegerField(null=True, blank=True)
     board_id = models.IntegerField(null=True)
+    game_has_started = models.BooleanField(default=False)
 
     def __str__(self):
         return '{}'.format(self.name)
+
+
+class VertexPosition(models.Model):
+    level = models.IntegerField(default=0, validators=[MinValueValidator(0),
+                                                       MaxValueValidator(2)])
+    index = models.IntegerField(default=0, validators=[MinValueValidator(0),
+                                                       MaxValueValidator(29)])
+
+    class Meta:
+        unique_together = ['level', 'index']
+        ordering = ['level']
+
+    def clean(self):
+        if (self.level == 0) and not (0 <= self.index <= 5):
+            raise ValidationError(
+                'The index with level 0 must be between 0 and 5.')
+        if (self.level == 1) and not (0 <= self.index <= 17):
+            raise ValidationError(
+                'The index with level 1 must be between 0 and 17.')
+        if (self.level == 2) and not (0 <= self.index <= 29):
+            raise ValidationError(
+                'The index with level 2 must be between 0 and 29.')
 
 
 class HexePosition(models.Model):

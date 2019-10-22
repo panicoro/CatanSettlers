@@ -22,14 +22,19 @@ class RoomList(APIView):
         serializer = RoomSerializer(rooms, many=True)
         return Response(serializer.data)
 
-   def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         data = request.data
-        data1 = {'name': data['name'], 'owner': request.user, 'players': []}
-        serializer = RoomSerializer(data=data1)
+        data['owner'] = request.user
+        data['players'] = []
+        data['game_has_started'] = False
+        serializer = RoomSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            data = serializer.data
+            data.pop('board_id')
+            return Response(data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RoomDetail(APIView):
