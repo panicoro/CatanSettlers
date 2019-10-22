@@ -44,7 +44,7 @@ class BoardSerializer(serializers.ModelSerializer):
 class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['id', 'name', 'winner', 'board', 'robber']
+        fields = ['id', 'name', 'board']
 
 
 class RoomSerializer(serializers.ModelSerializer):

@@ -63,13 +63,11 @@ class RoomDetail(APIView):
 
         robber = HexePosition.objects.get(level=1)
 
+        board = Board.objects.create(name='Colonos')
 
+        game = Game.objects.create(name='Juego', board=board,
+                                   robber=robber)
 
-        data1 = {'name': room.name, 'robber': robber}
-        serializer1 = GameSerializer(data=data1)
-        print(serializer1)
-        if serializer1.is_valid():
-            serializer1.save()
 
 
         room.game_has_started = True
