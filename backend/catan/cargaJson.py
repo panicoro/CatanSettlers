@@ -69,3 +69,9 @@ def CheckBuild(list_build, list_vertex, level, index):
                     rta = False
                     return rta
     return rta
+
+def deleteResource(list_resource):
+    for resource in list_resource:
+            #Resource.delete(Resource,using=int(resource.id))
+            resource.delete()
+

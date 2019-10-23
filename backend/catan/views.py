@@ -249,6 +249,7 @@ class BuildSettlement(APIView):
         if not is_building or not is_road:
             response = {"detail": "invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
+        deleteResource(necessary_resources)
         new_build = Building(game=game,name='SETTLEMENT',owner=owner,position=position)
         new_build.save()
         return Response(status= status.HTTP_200_OK)
