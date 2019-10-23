@@ -44,7 +44,7 @@ class RoomSerializer(serializers.ModelSerializer):
         model = Room
         fields = ['id', 'name', 'max_players', 'owner', 'players',
                   'game_has_started', 'game_id', 'board_id']
-    
+
     def create(self, validaded_data):
         players = validaded_data.pop('players')
         new_room = Room.objects.create(**validaded_data)
@@ -78,6 +78,7 @@ class RoomSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Cannot add the owner to the players")
         return data
+
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:

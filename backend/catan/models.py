@@ -13,7 +13,7 @@ class Room(models.Model):
     players = models.ManyToManyField(User, related_name='room_players',
                                      blank=True)
     game_id = models.IntegerField(null=True, blank=True)
-    board_id = models.IntegerField(null=True)
+    board_id = models.IntegerField()
     game_has_started = models.BooleanField(default=False)
 
     def __str__(self):
@@ -140,11 +140,11 @@ class Player(models.Model):
 
 class Card(models.Model):
     CARD_TYPE = [
-        ('ROAD_BUILDING', 'road_building'),
-        ('YEAR_OF_PLENTY', 'year_of_plenty'),
-        ('MONOPOLY', 'monopoly'),
-        ('VICTORY_POINT', 'victory_point'),
-        ('KNIGHT', 'knight')
+        ('road_building', 'ROAD_BUILDING'),
+        ('year_of_plenty', 'YEAR_OF_PLENTY'),
+        ('monopoly', 'MONOPOLY'),
+        ('victory_point', 'VICTORY_POINT'),
+        ('knight', 'KNIGHT')
     ]
     owner = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
@@ -161,3 +161,38 @@ class Resource(models.Model):
 
     def __str__(self):
         return self.resource_name
+
+
+class Building(models.Model):
+    TYPE_BUILDING = [
+        ('settlement', 'SETTLEMENT'),
+        ('city', 'CITY')
+    ]
+    game = models.ForeignKey(Game, on_delete=models.CASCADE,
+                             related_name="building_game")
+    name = models.CharField(max_length=50, choices=TYPE_BUILDING)
+    owner = models.ForeignKey(Player, related_name='buildings',
+                              on_delete=models.CASCADE)
+    position = models.ForeignKey(VertexPosition, related_name='position',
+                                 on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['position', 'game'],
+                                    name='One building per position in game')
+        ]
+
+    def clean(self):
+        if self.owner.game.id != self.game.id:
+            raise ValidationError('Cannot be player of other game')
+
+
+class Current_Turn(models.Model):
+    game = models.OneToOneField(Game, related_name='current_turn',
+                                on_delete=models.CASCADE, null=True)
+    user_in_turn = models.ForeignKey(User, on_delete=models.CASCADE,
+                                     related_name="user_in_turn")
+    dices1 = models.IntegerField(validators=[MinValueValidator(1),
+                                             MaxValueValidator(6)])
+    dices2 = models.IntegerField(validators=[MinValueValidator(1),
+                                             MaxValueValidator(6)])
