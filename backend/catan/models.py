@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError
 
 class Room(models.Model):
     name = models.CharField(max_length=50)
-    max_players = models.IntegerField(default=3,
-                                      validators=[MinValueValidator(3),
+    max_players = models.IntegerField(default=4,
+                                      validators=[MinValueValidator(4),
                                                   MaxValueValidator(4)])
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     players = models.ManyToManyField(User, related_name='room_players',
@@ -76,7 +76,7 @@ class Game(models.Model):
     name = models.CharField(max_length=25)
     board = models.ForeignKey(Board, related_name='game_board',
                               on_delete=models.CASCADE)
-    roober = models.ForeignKey(HexePosition, related_name="robber",
+    robber = models.ForeignKey(HexePosition, related_name="robber",
                                on_delete=models.CASCADE)
     winner = models.ForeignKey(User, related_name="game_winner",
                                on_delete=models.CASCADE,
@@ -88,11 +88,11 @@ class Game(models.Model):
 
 
 RESOURCE_TYPE = [
-    ('BRICK', 'brick'),
-    ('LUMBER', 'lumber'),
-    ('WOOL', 'wool'),
-    ('GRAIN', 'grain'),
-    ('ORE', 'ore')
+    ('brick', 'BRICK'),
+    ('lumber', 'LUMBER'),
+    ('wool', 'WOOL'),
+    ('grain', 'GRAIN'),
+    ('ore', 'ORE')
 ]
 
 
@@ -108,16 +108,34 @@ class Hexe(models.Model):
 
 
 class Player(models.Model):
+    COLOUR = [
+        ('yellow', 'YELLOW'),
+        ('blue', 'BLUE'),
+        ('green', 'GREEN'),
+        ('red', 'RED'),
+    ]
+    turn = models.IntegerField(validators=[MinValueValidator(1),
+                                           MaxValueValidator(4)])
     username = models.ForeignKey(User, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    colour = models.CharField(max_length=50)
+    colour = models.CharField(max_length=50, choices=COLOUR)
+
     development_cards = models.IntegerField(default=0,
                                             validators=[MinValueValidator(0)])
     resources_cards = models.IntegerField(default=0,
                                           validators=[MinValueValidator(0)])
+    victory_points = models.IntegerField(default=0,
+                                         validators=[MinValueValidator(0)])
 
-    def __str__(self):
-        return '%s' % (self.username)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['username', 'game'],
+                                    name='User in one game at time'),
+            models.UniqueConstraint(fields=['turn', 'game'],
+                                    name='User with unique turn per game'),
+            models.UniqueConstraint(fields=['colour', 'game'],
+                                    name='User with unique colour per game'),
+        ]
 
 
 class Card(models.Model):

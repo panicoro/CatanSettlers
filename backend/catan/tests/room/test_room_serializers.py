@@ -32,12 +32,12 @@ class TestSerializer:
                               password="hola1234")
         player2 = mixer.blend(User, username="player_test2",
                               password="hola1234")
-        room = mixer.blend('catan.Room', name="Test Room", max_players=3,
+        room = mixer.blend('catan.Room', name="Test Room", max_players=4,
                            owner=owner)
         room.players.add(player1)
         room_data = {
             "name": "Test Room",
-            "max_players": 3,
+            "max_players": 4,
             "owner": "owner_test",
             "players": ["player_test1", "player_test2"]
         }
@@ -58,15 +58,18 @@ class TestSerializer:
                               password="hola1234")
         player3 = mixer.blend(User, username="player_test3",
                               password="hola1234")
-        room = mixer.blend('catan.Room', name="Test Room", max_players=3,
+        player4 = mixer.blend(User, username="player_test4",
+                              password="hola1234")
+        room = mixer.blend('catan.Room', name="Test Room", max_players=4,
                            owner=owner)
         room.players.add(player1)
         room.players.add(player2)
         room_data = {
             "name": "Test Room",
-            "max_players": 3,
+            "max_players": 4,
             "owner": "owner_test",
-            "players": ["player_test1", "player_test2", "player_test3"]
+            "players": ["player_test1", "player_test2",
+                        "player_test3", "player_test4"]
         }
         serializer = RoomSerializer(room, data=room_data)
         assert serializer.is_valid() is False

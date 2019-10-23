@@ -12,7 +12,7 @@ class TestModels:
         board = Board.objects.create(name='Colonos')
 
         game = Game.objects.create(name='Juego', board=board,
-                                   roober=hexe_position)
+                                   robber=hexe_position)
         user1 = mixer.blend(User, username='Nico', password='minombrenico')
         player1 = mixer.blend(Player, username=user1, colour='Rojo',
                               development_cards=1, resources_cards=2)
@@ -31,12 +31,11 @@ class TestModels:
         board = Board.objects.create(name='Colonos')
 
         game = Game.objects.create(name='Juego', board=board,
-                                   roober=hexe_position)
+                                   robber=hexe_position)
         user1 = mixer.blend(User, username='Nico', password='minombrenico')
         player1 = mixer.blend(Player, username=user1,
                               game=game, colour='Rojo',
                               development_cards=1, resources_cards=2)
-        assert str(player1) == str(player1.username)
         card = mixer.blend(Card, owner=player1,
                            game=game, card_name='monopoly')
         assert str(card) == card.card_name

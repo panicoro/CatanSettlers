@@ -57,43 +57,29 @@ class RoomDetail(APIView):
 
     def patch(self, request, pk):
         room = get_object_or_404(Room, pk=pk)
-
-
-        data = {'level': 1, 'index': 2}
-        serializer = HexePositionSerializer(data=data)
-        print(serializer)
-        if serializer.is_valid():
-            serializer.save()
-
-
-        robber = HexePosition.objects.get(level=1)
-
-
-
-        data1 = {'name': room.name, 'robber': 1}
-        serializer1 = GameSerializer(data=data1)
-        print(serializer1)
-        if serializer1.is_valid():
-            serializer1.save()
-
-
-        room.game_has_started = True
-        room.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-"""
-#        data1 = {'level': 0, 'index': 1}
-#        serializer1 = HexePositionSerializer(data=data1)
-#        if serializer1.is_valid():
-#            serializer1.save()
-
-
-    def delete(self, request, pk):
-        room = get_object_or_404(Room, pk=pk)
-        room.delete()
-        return Response("Room deleted", status=status.HTTP_204_NO_CONTENT)
-"""
-
+        board = get_object_or_404(Board, id=room.board_id)
+        hexes = Hexe.objects.all()
+        desert_terrain = hexes.filter(terrain="desert")[0]
+        desert_pos = desert_terrain.position
+        players = room.players.all()
+        if (len(players) == 3):
+            game = Game.objects.create(name=room.name, board=board,
+                                       robber=desert_pos)
+            player1 = Player.objects.create(turn=1, username=room.owner,
+                                            game=game, colour= "blue")
+            player2 = Player.objects.create(turn=2, username=players[0],
+                                            game=game, colour="red")
+            player3 = Player.objects.create(turn=3, username=players[1],
+                                            game=game, colour="yellow")
+            player4 = Player.objects.create(turn=4, username=players[2],
+                                            game=game, colour="green")
+            room.game_has_started = True
+            room.game_id = game.id
+            room.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            ValidationError("can't start the game without all players"),
+            status=status.HTTP_400_BAD_REQUEST)
 
 
 class AuthAPIView(TokenObtainPairView):

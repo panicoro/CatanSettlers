@@ -29,26 +29,6 @@ class SignupSerializer(TokenObtainPairSerializer):
         return data
 
 
-class HexePositionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HexePosition
-        fields = ['id', 'level', 'index']
-
-
-class BoardSerializer(serializers.ModelSerializer):
-    hexes = HexePositionSerializer(many=True)
-    
-    class Meta:
-        model = Board
-        fields = ['hexes']
-
-
-class GameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Game
-        fields = ['id', 'name', 'winner', 'board', 'robber']
-
-
 class RoomSerializer(serializers.ModelSerializer):
     players = serializers.SlugRelatedField(
         many=True,
@@ -99,7 +79,6 @@ class RoomSerializer(serializers.ModelSerializer):
                 "Cannot add the owner to the players")
         return data
 
-
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
@@ -111,3 +90,28 @@ class ResourceSerializer(serializers.ModelSerializer):
         model = Resource
         fields = ['resource_name']
 
+
+class HexePositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HexePosition
+        fields = ['level', 'index']
+
+
+class HexeSerializer(serializers.ModelSerializer):
+    position = HexePositionSerializer()
+
+    class Meta:
+        model = Hexe
+        fields = ['position', 'terrain', 'token']
+
+
+class BoardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Board
+        fields = ['id', 'name']
+
+
+class GameListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        fields = ['id', 'name', 'board']
