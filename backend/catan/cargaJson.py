@@ -56,34 +56,7 @@ def ResourcesRoad(list_resource):
             lumber = False
 
     return rta
-"""
-def CheckRoads(list_road, level1, index1, level2, index2):
-    rta = False
-    for road in list_road:
-        if road.vertex_1.level == level1 or road.vertex_1.level==level2:
-            if road.vertex_1.index == index1 or road.vertex_1.index==index2:
-                rta = True
-                return rta
-        if road.vertex_2.level == level1 or road.vertex_2.level==level2:
-            if road.vertex_2.index == index:
-                rta = True
-                return rta
-    return rta
 
-def CheckBuild(list_build, list_vertex, level1, index1, level2, index2):
-    rta = True
-    for build in list_build:
-        for vertex in list_vertex:
-            if build.position.level == vertex[0]:
-                if build.position.index == vertex[1]:
-                    rta = False
-                    return rta
-            if  build.position.level == level1 or build.position.level == level2:
-                if build.position.index == index1 or build.position.index == index2:
-                    rta = False
-                    return rta
-    return rta
-"""
 def CheckRoads(list_road, level, index):
     rta = False
     for road in list_road:
