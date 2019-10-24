@@ -10,7 +10,7 @@ def HexagonInfo(level, index):
             if level == hexagon[0] and index == hexagon[1]:
                 return aux['vecinos']
 
-
+"""
 def VertexInfo(level, index):
     with open('catan/VertexVecinos.json') as file:
         data = json.load(file)
@@ -76,3 +76,4 @@ def CheckBuild(list_build, list_vertex, level, index):
 def deleteResource(list_resource):
     for resource in list_resource:
         resource.delete()
+"""
