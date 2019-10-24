@@ -220,7 +220,14 @@ class GameList(APIView):
     def get(self, request, format=None):
         games = Game.objects.all()
         games_serializers = GameListSerializer(games, many=True)
-        return Response(games_serializers.data)
+        data = []
+        for serialized_game in games_serializers.data:
+            game_data = serialized_game
+            game_id = game_data['id']
+            current_turn = Current_Turn.objects.filter(game=game_id)[0]
+            game_data['in_turn'] = current_turn.user.username
+            data.append(game_data)
+        return Response(data)
 
 
 class BoardList(APIView):

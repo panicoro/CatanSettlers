@@ -142,9 +142,10 @@ class BoardSerializer(serializers.ModelSerializer):
 
 
 class GameListSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Game
-        fields = ['id', 'name', 'board']
+        fields = ['id', 'name']
 
 
 class GameSerializer(serializers.ModelSerializer):
