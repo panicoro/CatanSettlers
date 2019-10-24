@@ -12,11 +12,11 @@ class TestModels:
                               password="hola1234")
         player2 = mixer.blend(User, username="player_test2",
                               password="hola1234")
-        room = mixer.blend('catan.Room', name="Test Room", max_players=3,
+        room = mixer.blend('catan.Room', name="Test Room", max_players=4,
                            owner=owner)
         room.players.add(player1)
         room.players.add(player2)
-        assert room.max_players == 3
+        assert room.max_players == 4
         assert room.name == "Test Room"
         assert str(room) == "Test Room"
         assert room.owner == owner

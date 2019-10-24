@@ -12,16 +12,12 @@ from rest_framework_simplejwt.tokens import AccessToken
 @pytest.mark.django_db
 class TestViews:
 
-    def test_GameList(self):
-        path = reverse('Games')
-        request = RequestFactory().get(path)
-        view = GameList.as_view()
-        response = view(request)
-        assert response.status_code == 200
-
     def test_BoardList(self):
+        self.token = AccessToken()
         path = reverse('Boards')
         request = RequestFactory().get(path)
+        request.user = User.objects.create(username='Vero', password='roock')
+        force_authenticate(request, user=request.user, token=self.token)
         request.board = Board.objects.create(name='Colonos')
         view = BoardList.as_view()
         response = view(request)
@@ -36,7 +32,7 @@ class TestViews:
         request.user = User.objects.create(username='Vero', password='roock')
         force_authenticate(request, user=request.user, token=self.token)
         game = Game.objects.create(id=1, name='Juego 1', board=request.board,
-                                   roober=hexe_position, winner=request.user)
+                                   robber=hexe_position, winner=request.user)
         view = BoardInfo.as_view()
         response = view(request, pk=1)
         assert response.status_code == 200

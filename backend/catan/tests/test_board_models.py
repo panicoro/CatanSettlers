@@ -1,6 +1,6 @@
 import pytest
 from django.contrib.auth.models import User
-from catan.models import Board, Hexe, HexePosition
+from catan.models import Board, Hexe, HexePosition, VertexPosition
 from django.core.exceptions import ValidationError
 
 
@@ -57,4 +57,25 @@ class TestModels:
             hexe_position.full_clean()
         except ValidationError as e:
             error = 'The index with level 2 must be between 0 and 11.'
+            assert error in e.message_dict['__all__']
+
+    def test_VertexPositionNoValid(self):
+        vertex_position = VertexPosition.objects.create(level=0, index=6)
+        try:
+            vertex_position.full_clean()
+        except ValidationError as e:
+            error = 'The index with level 0 must be between 0 and 5.'
+            assert error in e.message_dict['__all__']
+        vertex_position = VertexPosition.objects.create(level=1, index=20)
+        try:
+            vertex_position.full_clean()
+        except ValidationError as e:
+            error = 'The index with level 1 must be between 0 and 17.'
+            assert error in e.message_dict['__all__']
+
+        vertex_position = VertexPosition.objects.create(level=2, index=30)
+        try:
+            vertex_position.full_clean()
+        except ValidationError as e:
+            error = 'The index with level 2 must be between 0 and 29.'
             assert error in e.message_dict['__all__']
