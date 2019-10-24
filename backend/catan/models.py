@@ -52,6 +52,13 @@ class VertexPosition(models.Model):
 
 class Board(models.Model):
     name = models.CharField(max_length=25)
+    board = models.ForeignKey(Board, related_name='game_board',
+                              on_delete=models.CASCADE)
+    robber = models.ForeignKey(HexePosition, related_name="robber",
+                               on_delete=models.CASCADE)
+    winner = models.ForeignKey(User, related_name="game_winner",
+                               on_delete=models.CASCADE,
+                               blank=True, null=True)
 
     class Meta:
         unique_together = ['id', 'name']
@@ -59,11 +66,11 @@ class Board(models.Model):
 
 
 RESOURCE_TYPE = [
-        ('brick', 'BRICK'),
-        ('lumber', 'LUMBER'),
-        ('wool', 'WOOL'),
-        ('grain', 'GRAIN'),
-        ('ore', 'ORE')
+    ('brick', 'BRICK'),
+    ('lumber', 'LUMBER'),
+    ('wool', 'WOOL'),
+    ('grain', 'GRAIN'),
+    ('ore', 'ORE')
 ]
 
 
