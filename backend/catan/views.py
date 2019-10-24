@@ -15,6 +15,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.models import *
 from rest_framework.permissions import AllowAny
+from random import shuffle
 
 
 class RoomList(APIView):
@@ -23,6 +24,20 @@ class RoomList(APIView):
         serializer = RoomSerializer(rooms, many=True)
         return Response(serializer.data)
 
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        data['owner'] = request.user
+        data['players'] = []
+        data['game_has_started'] = False
+        serializer = RoomSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            data = serializer.data
+            data.pop('board_id')
+            return Response(data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class RoomDetail(APIView):
     def get_object(self, pk):
@@ -30,6 +45,13 @@ class RoomDetail(APIView):
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             raise Http404
+
+    def get(self, request, pk, format=None):
+        room = get_object_or_404(Room, pk=pk)
+        room_serializer = RoomSerializer(room)
+        data = room_serializer.data
+        data.pop('board_id')
+        return Response(data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, format=None):
         room = self.get_object(pk)
@@ -41,6 +63,52 @@ class RoomDetail(APIView):
             serializer.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        room = get_object_or_404(Room, pk=pk)
+        board = get_object_or_404(Board, id=room.board_id)
+        vertex_positions = VertexPosition.objects.all()
+        hexes = Hexe.objects.filter(board=board)
+        desert_terrain = hexes.filter(terrain="desert")[0]
+        desert_pos = desert_terrain.position
+        players = room.players.all()
+        if (len(players) == 3):
+            game = Game.objects.create(name=room.name, board=board,
+                                       robber=desert_pos)
+            turns = [1, 2, 3, 4]
+            shuffle(turns)
+            player1 = Player.objects.create(turn=turns[0], username=room.owner,
+                                            game=game, colour="blue")
+            player2 = Player.objects.create(turn=turns[1], username=players[0],
+                                            game=game, colour="red")
+            player3 = Player.objects.create(turn=turns[2], username=players[1],
+                                            game=game, colour="yellow")
+            player4 = Player.objects.create(turn=turns[3], username=players[2],
+                                            game=game, colour="green")
+            first_player = Player.objects.filter(game=game, turn=1)[0]
+            current_turn = Current_Turn.objects.create(
+                game=game,
+                user_in_turn=first_player.username,
+                dices1=1, dices2=2)
+            room.game_has_started = True
+            room.game_id = game.id
+            room.save()
+            building1 = Building.objects.create(
+                name="settlement", game=game,
+                owner=player1, position=vertex_positions[0])
+            building2 = Building.objects.create(
+                name="settlement", game=game,
+                owner=player2, position=vertex_positions[1])
+            building3 = Building.objects.create(
+                name="settlement", game=game,
+                owner=player3, position=vertex_positions[2])
+            building4 = Building.objects.create(
+                name="settlement", game=game,
+                owner=player4, position=vertex_positions[3])
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            ValidationError("Can't start the game without all players"),
+            status=status.HTTP_400_BAD_REQUEST)
 
 
 class AuthAPIView(TokenObtainPairView):
