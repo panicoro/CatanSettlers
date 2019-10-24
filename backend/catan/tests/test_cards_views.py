@@ -28,7 +28,7 @@ class TestViews:
         request.board = Board.objects.create(name='Colonos')
 
         game = Game.objects.create(name='Juego', board=request.board,
-                                   roober=hexe_position, winner=request.user)
+                                   robber=hexe_position, winner=request.user)
 
         view = PlayerInfo.as_view()
         response = view(request, pk=1)

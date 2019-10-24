@@ -42,7 +42,7 @@ class TestViews:
         request.user = User.objects.create(username='Vero', password='roock')
         force_authenticate(request, user=request.user, token=self.token)
         game = Game.objects.create(id=1, name='Juego 1', board=request.board,
-                                   roober=hexe_position, winner=request.user)
+                                   robber=hexe_position, winner=request.user)
         view = BoardInfo.as_view()
         response = view(request, pk=1)
         assert response.status_code == 200

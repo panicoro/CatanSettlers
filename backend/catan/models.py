@@ -51,7 +51,7 @@ class Game(models.Model):
     name = models.CharField(max_length=25)
     board = models.ForeignKey(Board, related_name='game_board',
                               on_delete=models.CASCADE)
-    roober = models.ForeignKey(HexePosition, related_name="robber",
+    robber = models.ForeignKey(HexePosition, related_name="robber",
                                on_delete=models.CASCADE)
     winner = models.ForeignKey(User, related_name="game_winner",
                                on_delete=models.CASCADE,
@@ -63,11 +63,11 @@ class Game(models.Model):
 
 
 RESOURCE_TYPE = [
-    ('BRICK', 'brick'),
-    ('LUMBER', 'lumber'),
-    ('WOOL', 'wool'),
-    ('GRAIN', 'grain'),
-    ('ORE', 'ore')
+    ('brick', 'BRICK'),
+    ('lumber', 'LUMBER'),
+    ('wool', 'WOOL'),
+    ('grain', 'GRAIN'),
+    ('ore', 'ORE')
 ]
 
 
@@ -97,11 +97,11 @@ class Player(models.Model):
 
 class Card(models.Model):
     CARD_TYPE = [
-        ('ROAD_BUILDING', 'road_building'),
-        ('YEAR_OF_PLENTY', 'year_of_plenty'),
-        ('MONOPOLY', 'monopoly'),
-        ('VICTORY_POINT', 'victory_point'),
-        ('KNIGHT', 'knight')
+        ('road_building', 'ROAD_BUILDING'),
+        ('year_of_plenty', 'YEAR_OF_PLENTY'),
+        ('monopoly', 'MONOPOLY'),
+        ('victory_point', 'VICTORY_POINT'),
+        ('knight', 'KNIGHT')
     ]
     owner = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
