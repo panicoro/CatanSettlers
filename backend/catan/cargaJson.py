@@ -10,6 +10,7 @@ def HexagonInfo(level, index):
             if level == hexagon[0] and index == hexagon[1]:
                 return aux['vecinos']
 
+
 """
 def VertexInfo(level, index):
     with open('catan/VertexVecinos.json') as file:

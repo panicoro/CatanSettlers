@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from django.contrib.auth.models import User
 from mixer.backend.django import mixer
-from catan.models import Game, Player, HexePosition, Board
+from catan.models import *
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -29,6 +29,19 @@ class TestViews:
 
         game = Game.objects.create(name='Juego', board=request.board,
                                    robber=hexe_position, winner=request.user)
+
+        resource_list = []
+        card_list = []
+
+        resource = mixer.blend(Resource, owner=player,
+                               game=game, resource_name="ore")
+
+        card = mixer.blend(Card, owner=player,
+                           game=game, card_name="monopoly")
+
+        resource_list.append(resource.resource_name)
+
+        card_list.append(card.card_name)
 
         view = PlayerInfo.as_view()
         response = view(request, pk=1)
