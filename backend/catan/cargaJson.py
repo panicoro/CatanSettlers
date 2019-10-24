@@ -70,6 +70,26 @@ def CheckRoads(list_road, level, index):
                 return rta
     return rta
 
+def CheckRoads_Road(list_road, level1, index1, level2, index2):
+    rta = False
+    for road in list_road:
+        if road.vertex_1.level == level1:
+            if road.vertex_1.index == index1:
+                rta = True
+                return rta
+        if road.vertex_2.level == level1:
+            if road.vertex_2.index == index1:
+                rta = True
+                return rta
+        if road.vertex_1.level == level2:
+            if road.vertex_1.index == index2:
+                rta = True
+                return rta
+        if road.vertex_2.level == level2:
+            if road.vertex_2.index == index2:
+                rta = True
+                return rta
+    return rta
 
 def CheckBuild(list_build, list_vertex, level, index):
     rta = True
@@ -83,6 +103,36 @@ def CheckBuild(list_build, list_vertex, level, index):
                 if build.position.index == index:
                     rta = False
                     return rta
+    return rta
+
+def CheckBuild_Road(list_build, level1, index1, level2, index2):
+    rta = False
+    for build in list_build:
+        if build.position.level == level1:
+            if build.position.index == index1:
+                rta = True
+                return rta
+        if build.position.level == level2:
+            if build.position.index == index2:
+                rta = True
+                return rta
+    return rta
+
+def CheckPositionRoad(list_all_road,level1,index1,level2,index2):
+    rta = False
+    for road in list_all_road:
+        if road.vertex_1.level == level1:
+            if road.vertex_1.index == index1:
+                if road.vertex_2.level == level2:
+                    if road.vertex_2.index == index2:
+                        rta = True
+                        return rta
+        if road.vertex_1.level == level2:
+            if road.vertex_1.index == index2:
+                if road.vertex_2.level == level1:
+                    if road.vertex_2.index == index1:
+                        rta = True
+                        return rta
     return rta
 
 def deleteResource(list_resource):
