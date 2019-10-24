@@ -66,8 +66,7 @@ class TestModels:
         except ValidationError as e:
             error = 'The index with level 0 must be between 0 and 5.'
             assert error in e.message_dict['__all__']
-
-        vertex_position = VertexPosition.objects.create(level=1, index=18)
+        vertex_position = VertexPosition.objects.create(level=1, index=20)
         try:
             vertex_position.full_clean()
         except ValidationError as e:

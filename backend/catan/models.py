@@ -4,28 +4,20 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 
 
-class HexePosition(models.Model):
-    level = models.IntegerField(default=0,
-                                validators=[MinValueValidator(0),
-                                            MaxValueValidator(2)])
-    index = models.IntegerField(default=0,
-                                validators=[MinValueValidator(0),
-                                            MaxValueValidator(11)])
+class Room(models.Model):
+    name = models.CharField(max_length=50)
+    max_players = models.IntegerField(default=4,
+                                      validators=[MinValueValidator(4),
+                                                  MaxValueValidator(4)])
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    players = models.ManyToManyField(User, related_name='room_players',
+                                     blank=True)
+    game_id = models.IntegerField(null=True, blank=True)
+    board_id = models.IntegerField()
+    game_has_started = models.BooleanField(default=False)
 
-    class Meta:
-        unique_together = ['level', 'index']
-        ordering = ['level']
-
-    def clean(self):
-        if (self.level == 0) and not (0 <= self.index <= 0):
-            raise ValidationError(
-                'The index with level 0 must be between 0 and 0.')
-        if (self.level == 1) and not (0 <= self.index <= 5):
-            raise ValidationError(
-                'The index with level 1 must be between 0 and 5.')
-        if (self.level == 2) and not (0 <= self.index <= 11):
-            raise ValidationError(
-                'The index with level 2 must be between 0 and 11.')
+    def __str__(self):
+        return '{}'.format(self.name)
 
 
 class VertexPosition(models.Model):
@@ -48,6 +40,30 @@ class VertexPosition(models.Model):
         if (self.level == 2) and not (0 <= self.index <= 29):
             raise ValidationError(
                 'The index with level 2 must be between 0 and 29.')
+
+
+class HexePosition(models.Model):
+    level = models.IntegerField(default=0,
+                                validators=[MinValueValidator(0),
+                                            MaxValueValidator(2)])
+    index = models.IntegerField(default=0,
+                                validators=[MinValueValidator(0),
+                                            MaxValueValidator(11)])
+
+    class Meta:
+        unique_together = ['level', 'index']
+        ordering = ['level']
+
+    def clean(self):
+        if (self.level == 0) and not (0 <= self.index <= 0):
+            raise ValidationError(
+                'The index with level 0 must be between 0 and 0.')
+        if (self.level == 1) and not (0 <= self.index <= 5):
+            raise ValidationError(
+                'The index with level 1 must be between 0 and 5.')
+        if (self.level == 2) and not (0 <= self.index <= 11):
+            raise ValidationError(
+                'The index with level 2 must be between 0 and 11.')
 
 
 class Board(models.Model):
@@ -80,19 +96,6 @@ class Hexe(models.Model):
     class Meta:
         unique_together = ['board', 'position']
         ordering = ['id']
-
-
-class Room(models.Model):
-    name = models.CharField(max_length=50)
-    max_players = models.IntegerField(default=3,
-                                      validators=[MinValueValidator(3),
-                                                  MaxValueValidator(4)])
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    players = models.ManyToManyField(User, related_name='room_players',
-                                     blank=True)
-
-    def __str__(self):
-        return '{}'.format(self.name)
 
 
 class Game(models.Model):
@@ -140,9 +143,6 @@ class Player(models.Model):
                                     name='User with unique colour per game'),
         ]
 
-    def __str__(self):
-        return '%s' % (self.username)
-
 
 class Card(models.Model):
     CARD_TYPE = [
@@ -180,8 +180,8 @@ class Resource(models.Model):
 
 class Building(models.Model):
     TYPE_BUILDING = [
-        ('SETTLEMENT', 'settlement'),
-        ('CITY', 'city')
+        ('settlement', 'SETTLEMENT'),
+        ('city', 'CITY')
     ]
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name="building_game")
@@ -228,9 +228,9 @@ class Current_Turn(models.Model):
                                 on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="user")
-    dices1 = models.IntegerField(blank=True,
+    dices1 = models.IntegerField(null=True,
                                  validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])
-    dices2 = models.IntegerField(blank=True,
+    dices2 = models.IntegerField(null=True,
                                  validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])

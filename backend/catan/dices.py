@@ -80,7 +80,7 @@ def throw_dices(game, current_turn, board):
                         building_vertex = [building.position.level,
                                            building.position.index]
                         if building_vertex in hexe_neighbors:
-                            if building.name == 'SETTLEMENT ':
+                            if building.name == 'settlement':
                                 gain_resources(owner=player, game=game,
                                                resource_name=hexe.terrain,
                                                amount=1)
