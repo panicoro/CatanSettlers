@@ -146,7 +146,7 @@ class GameInfo(APIView):
                             serializer=BuildingSerializer, key='position')
         return cities
 
-    def get_last_gained(self, player):        
+    def get_last_gained(self, player):
         """
         A method to obtain a list of last_gained of a player
         Args:
@@ -231,25 +231,26 @@ class BuildSettlement(APIView):
         data = request.data
         level = int(data['payload']['level'])
         index = int(data['payload']['index'])
-        position = VertexPosition.objects.filter(level=level,index=index).get()
-        print(position.index)
+        position = VertexPosition.objects.filter(level=level,
+                                                 index=index).get()
         game = get_object_or_404(Game, pk=pk)
         user = self.request.user
         owner = Player.objects.filter(username=user, game=pk).get()
-        my_all_resource = Resource.objects.filter(owner=owner.id,game=pk)
+        my_all_resource = Resource.objects.filter(owner=owner.id, game=pk)
         necessary_resources = ResourceBuild(my_all_resource)
         if len(necessary_resources) != 4:
             response = {"detail": "It does not have the necessary resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-        my_road = Road.objects.filter(owner=owner.id,game=pk)
+        my_road = Road.objects.filter(owner=owner.id, game=pk)
         is_road = CheckRoad(my_road, level, index)
         all_building = Building.objects.filter(game=pk)
         vecinos = VertexInfo(level, index)
-        is_building = CheckBuild(all_building,vecinos,level,index)
+        is_building = CheckBuild(all_building, vecinos, level, index)
         if not is_building or not is_road:
             response = {"detail": "invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         deleteResource(necessary_resources)
-        new_build = Building(game=game,name='SETTLEMENT',owner=owner,position=position)
+        new_build = Building(game=game, name='SETTLEMENT', owner=owner,
+                             position=position)
         new_build.save()
-        return Response(status= status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
