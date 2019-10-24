@@ -10,6 +10,8 @@ urlpatterns = [
          name='tokenObtainPair'),
     path('users/login/refresh/', TokenRefreshView.as_view(),
          name='refreshToken'),
+    path('users/', views.Register.as_view(),
+         name='register'),
     path('games/<int:pk>/player', views.PlayerInfo.as_view(),
          name='PlayerInfo'),
     path('games/<int:pk>/', views.GameInfo.as_view(),
