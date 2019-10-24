@@ -244,7 +244,7 @@ class BuildSettlement(APIView):
         my_road = Road.objects.filter(owner=owner.id,game=pk)
         is_road = CheckRoad(my_road, level, index)
         all_building = Building.objects.filter(game=pk)
-        vecinos = Vertice(level, index)
+        vecinos = VertexInfo(level, index)
         is_building = CheckBuild(all_building,vecinos,level,index)
         if not is_building or not is_road:
             response = {"detail": "invalid position"}

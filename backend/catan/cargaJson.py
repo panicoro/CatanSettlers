@@ -1,43 +1,43 @@
 import json
 
 
-def Hexagono(level,index):
+def HexagonInfo(level,index):
     with open('catan/HexaVerVecinos.json') as file:
         data = json.load(file)
 
         for aux in data['data']:
-            hexagono=aux['hexagono']
-            if level== hexagono[0] and index== hexagono[1]:
+            hexagon=aux['hexagono']
+            if level== hexagon[0] and index== hexagon[1]:
                 return aux['vecinos']
 
 
-def Vertice(level, index):
+def VertexInfo(level, index):
     with open('catan/VertexVecinos.json') as file:
         data = json.load(file)
 
         for aux in data["data"]:
-            vertice = aux['vertice']
-            if level== vertice[0] and index== vertice[1]:
+            vertex = aux['vertice']
+            if level== vertex[0] and index== vertex[1]:
                 return aux['vecinos']
 
 def ResourceBuild(list_resource):
-    ladrillo = True
-    madera = True
-    lana = True 
-    cereal = True
+    birck = True
+    lumber = True
+    wool = True 
+    grain = True
     rta = []
     for resource in list_resource:
-        if resource.resource_name =="brick" and ladrillo:
-            ladrillo = False
+        if resource.resource_name =="brick" and birck:
+            birck = False
             rta.append(resource)
-        if resource.resource_name == "lumber" and madera:
-            madera = False
+        if resource.resource_name == "lumber" and lumber:
+            lumber = False
             rta.append(resource)
-        if resource.resource_name == "wool" and lana:
-            lana = False
+        if resource.resource_name == "wool" and wool:
+            wool = False
             rta.append(resource)
-        if resource.resource_name == "grain" and cereal:
-            cereal = False
+        if resource.resource_name == "grain" and grain:
+            grain = False
             rta.append(resource)
 
     return rta
@@ -72,6 +72,5 @@ def CheckBuild(list_build, list_vertex, level, index):
 
 def deleteResource(list_resource):
     for resource in list_resource:
-            #Resource.delete(Resource,using=int(resource.id))
             resource.delete()
 
