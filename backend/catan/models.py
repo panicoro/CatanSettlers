@@ -223,11 +223,11 @@ class Road(models.Model):
 class Current_Turn(models.Model):
     game = models.OneToOneField(Game, related_name='current_turn',
                                 on_delete=models.CASCADE, null=True)
-    number_turn = models.IntegerField(validators=[MinValueValidator(1),
-                                                  MaxValueValidator(4)])
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="user")
-    dices1 = models.IntegerField(validators=[MinValueValidator(1),
+    dices1 = models.IntegerField(blank=True,
+                                 validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])
-    dices2 = models.IntegerField(validators=[MinValueValidator(1),
+    dices2 = models.IntegerField(blank=True,
+                                 validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])
