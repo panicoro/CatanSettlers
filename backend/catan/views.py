@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt import authentication
 from catan.serializers import *
+from catan.dices import throw_dices
 from django.http import Http404
 from random import random
 from rest_framework.response import Response
@@ -177,19 +178,8 @@ class GameInfo(APIView):
             serialized_players.append(data)
         return serialized_players
 
-    def throw_dice(self):
-        """
-        A method to generate a thow of dice
-        (uniform discrete distribution)
-        """
-        return 1 * int(6 * random()) + 1
-
     def get(self, request, pk):
         game = get_object_or_404(Game, pk=pk)
-        # Throw the dices...
-        game.current_turn.dices1 = self.throw_dice()
-        game.current_turn.dices2 = self.throw_dice()
-        game.save()
         # Get the game serializer...
         serialized_game = GameSerializer(game)
         data = serialized_game.data
