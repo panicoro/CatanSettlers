@@ -341,7 +341,7 @@ class BuildSettlement(APIView):
         all_building = Building.objects.filter(game=pk)
         vecinos = VertexInfo(level, index)
         is_building = CheckBuild(all_building, vecinos, level, index)
-        if not is_building or not is_road:
+        if not is_building:# or not is_road:
             response = {"detail": "invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         deleteResource(necessary_resources)

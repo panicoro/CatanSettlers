@@ -1,8 +1,11 @@
 import json
+import os
 
+
+MYDIR = os.path.dirname(__file__)
 
 def HexagonInfo(level, index):
-    with open('catan/HexaVerVecinos.json') as file:
+    with open(os.path.join(MYDIR, 'HexaVerVecinos.json')) as file:
         data = json.load(file)
 
         for aux in data['data']:
@@ -12,7 +15,7 @@ def HexagonInfo(level, index):
 
 
 def VertexInfo(level, index):
-    with open('catan/VertexVecinos.json') as file:
+    with open(os.path.join(MYDIR, 'VertexVecinos.json')) as file:
         data = json.load(file)
 
         for aux in data["data"]:
@@ -22,13 +25,13 @@ def VertexInfo(level, index):
 
 
 def ResourceBuild(list_resource):
-    birck = True
+    brick = True
     lumber = True
     wool = True
     grain = True
     rta = []
     for resource in list_resource:
-        if resource.resource_name == "brick" and birck:
+        if resource.resource_name == "brick" and brick:
             birck = False
             rta.append(resource)
         if resource.resource_name == "lumber" and lumber:
@@ -40,7 +43,6 @@ def ResourceBuild(list_resource):
         if resource.resource_name == "grain" and grain:
             grain = False
             rta.append(resource)
-
     return rta
 
 
