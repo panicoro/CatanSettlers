@@ -169,7 +169,7 @@ class GameInfo(APIView):
                             serializer=BuildingSerializer, key='position')
         return cities
 
-    def get_last_gained(self, player):        
+    def get_last_gained(self, player):
         """
         A method to obtain a list of last_gained of a player
         Args:

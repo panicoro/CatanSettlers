@@ -134,15 +134,6 @@ class Current_TurnSerializer(serializers.ModelSerializer):
         model = Current_Turn
         fields = ['user', 'dices1', 'dices2']
 
-    def update(self, instance, validated_data):
-        # only update dices for now
-        dices1 = validated_data.pop('dices1')
-        dices2 = validated_data.pop('dices2')
-        instance.dices1 = dices1
-        instance.dices2 = dices2
-        instance.save()
-        return instance
-
 
 class BoardSerializer(serializers.ModelSerializer):
     class Meta:
