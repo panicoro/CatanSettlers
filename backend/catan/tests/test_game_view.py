@@ -20,6 +20,19 @@ class TestView(TestCase):
         self.token = AccessToken()
 
     def test_GameList(self):
+        hexe_position = HexePosition.objects.create(level=1, index=2)
+        board = Board.objects.create(name='Colonos')
+        game1 = Game.objects.create(name='Juego', board=board,
+                                    robber=hexe_position)
+        user1 = mixer.blend(User, username='Nico', password='minombrenico')
+        user2 = mixer.blend(User, username='Pablo', password='minombrepablo')
+        player1 = mixer.blend(Player, username=user1,
+                              game=game1, colour='yellow',
+                              development_cards=1, resources_cards=2)
+        player2 = mixer.blend(Player, username=user2,
+                              game=game1, colour='green',
+                              development_cards=1, resources_cards=2)
+        current_turn = mixer.blend(Current_Turn, game=game1, user=user1)
         path = reverse('Games')
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
