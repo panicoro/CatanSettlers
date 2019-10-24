@@ -19,7 +19,7 @@ urlpatterns = [
     path('games/<int:pk>/board/', views.BoardInfo.as_view(),
          name='BoardInfo'),
     path('games/<int:pk>/player/actions/', views.BuiltRoad.as_view(),
-        name='BuiltRoad'),
+         name='BuiltRoad'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

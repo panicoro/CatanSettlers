@@ -1,13 +1,13 @@
 import json
 
 
-def Hexagono(level,index):
+def Hexagono(level, index):
     with open('catan/HexaVerVecinos.json') as file:
         data = json.load(file)
 
         for aux in data['data']:
-            hexagono=aux['hexagono']
-            if level== hexagono[0] & index== hexagono[1]:
+            hexagono = aux['hexagono']
+            if level == hexagono[0] & index == hexagono[1]:
                 return aux['vecinos']
 
 
@@ -17,17 +17,18 @@ def Vertice(level, index):
 
         for aux in data["data"]:
             vertice = aux['vertice']
-            if level== vertice[0] and index== vertice[1]:
+            if level == vertice[0] and index == vertice[1]:
                 return aux['vecinos']
+
 
 def ResourceBuild(list_resource):
     ladrillo = True
     madera = True
-    lana = True 
+    lana = True
     cereal = True
     rta = []
     for resource in list_resource:
-        if resource.resource_name =="brick" and ladrillo:
+        if resource.resource_name == "brick" and ladrillo:
             ladrillo = False
             rta.append(resource)
         if resource.resource_name == "lumber" and madera:
@@ -41,6 +42,7 @@ def ResourceBuild(list_resource):
             rta.append(resource)
 
     return rta
+
 
 def ResourcesRoad(list_resource):
     brick = True
@@ -57,6 +59,7 @@ def ResourcesRoad(list_resource):
 
     return rta
 
+
 def CheckRoads(list_road, level, index):
     rta = False
     for road in list_road:
@@ -69,6 +72,7 @@ def CheckRoads(list_road, level, index):
                 rta = True
                 return rta
     return rta
+
 
 def CheckRoads_Road(list_road, level1, index1, level2, index2):
     rta = False
@@ -91,6 +95,7 @@ def CheckRoads_Road(list_road, level1, index1, level2, index2):
                 return rta
     return rta
 
+
 def CheckBuild(list_build, list_vertex, level, index):
     rta = True
     for build in list_build:
@@ -105,6 +110,7 @@ def CheckBuild(list_build, list_vertex, level, index):
                     return rta
     return rta
 
+
 def CheckBuild_Road(list_build, level1, index1, level2, index2):
     rta = False
     for build in list_build:
@@ -118,7 +124,8 @@ def CheckBuild_Road(list_build, level1, index1, level2, index2):
                 return rta
     return rta
 
-def CheckPositionRoad(list_all_road,level1,index1,level2,index2):
+
+def CheckPositionRoad(list_all_road, level1, index1, level2, index2):
     rta = False
     for road in list_all_road:
         if road.vertex_1.level == level1:
@@ -135,8 +142,7 @@ def CheckPositionRoad(list_all_road,level1,index1,level2,index2):
                         return rta
     return rta
 
+
 def deleteResource(list_resource):
     for resource in list_resource:
-            #Resource.delete(Resource,using=int(resource.id))
-            resource.delete()
-
+        resource.delete()

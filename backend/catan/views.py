@@ -18,7 +18,6 @@ from catan.models import *
 from catan.cargaJson import *
 
 
-
 class RoomList(APIView):
     def get(self, request, format=None):
         rooms = Room.objects.all()
@@ -147,7 +146,7 @@ class GameInfo(APIView):
                             serializer=BuildingSerializer, key='position')
         return cities
 
-    def get_last_gained(self, player):        
+    def get_last_gained(self, player):
         """
         A method to obtain a list of last_gained of a player
         Args:
@@ -237,11 +236,14 @@ class BuiltRoad(APIView):
         index1 = int(data['payload']['index1'])
         level2 = int(data['payload']['level2'])
         index2 = int(data['payload']['index2'])
-        position_1 = VertexPosition.objects.filter(level=level1, index=index1).get()
-        position_2 = VertexPosition.objects.filter(level=level2, index=index2).get()
+        position_1 = VertexPosition.objects.filter(level=level1,
+                                                   index=index1).get()
+        position_2 = VertexPosition.objects.filter(level=level2,
+                                                   index=index2).get()
         list_all_road = Road.objects.filter(game=pk)
-        position_road = CheckPositionRoad(list_all_road,level1,index1,level2,index2)
-        #verifico si la posicion esta libre
+        position_road = CheckPositionRoad(list_all_road, level1, index1,
+                                          level2, index2)
+        # verifico si la posicion esta libre
         if position_road:
             response = {"detail": "invalid position, reserved"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
@@ -252,14 +254,16 @@ class BuiltRoad(APIView):
             response = {"detail": "Doesn't have enough resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         roads = Road.objects.filter(owner=owner.id, game=pk)
-        is_roads= CheckRoads_Road(roads, level1, index1, level2, index2)
+        is_roads = CheckRoads_Road(roads, level1, index1, level2, index2)
         buildings = Building.objects.filter(owner=owner.id, game=pk)
-        is_building = CheckBuild_Road(buildings,level1,index1,level2,index2)
-        #verifico que tenga camino o edificio propio
+        is_building = CheckBuild_Road(buildings, level1, index1, level2,
+                                      index2)
+        # verifico que tenga camino o edificio propio
         if not is_roads and not is_building:
             response = {"detail": "invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         deleteResource(resources)
-        new_road = Road(game=game, vertex_1=position_1, vertex_2=position_2, owner=owner)
+        new_road = Road(game=game, vertex_1=position_1, vertex_2=position_2,
+                        owner=owner)
         new_road.save()
         return Response(status=status.HTTP_200_OK)
