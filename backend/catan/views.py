@@ -227,7 +227,7 @@ class GameInfo(APIView):
         player: A player object.
         """
         settlements = self.get_list_serialized_objects(
-                            queryset=Building.objects.filter(name="SETTLEMENT",
+                            queryset=Building.objects.filter(name="settlement",
                                                              owner=player.id),
                             serializer=BuildingSerializer, key='position')
         return settlements
@@ -239,7 +239,7 @@ class GameInfo(APIView):
         player: A player object.
         """
         cities = self.get_list_serialized_objects(
-                            queryset=Building.objects.filter(name="CITY",
+                            queryset=Building.objects.filter(name="city",
                                                              owner=player.id),
                             serializer=BuildingSerializer, key='position')
         return cities
