@@ -49,6 +49,9 @@ class VertexPosition(models.Model):
             raise ValidationError(
                 'The index with level 2 must be between 0 and 29.')
 
+    def __str__(self):
+        return '[level: %d , index: %d]' % (self.level, self.index)
+
 
 class Board(models.Model):
     name = models.CharField(max_length=25)
@@ -223,11 +226,11 @@ class Road(models.Model):
 class Current_Turn(models.Model):
     game = models.OneToOneField(Game, related_name='current_turn',
                                 on_delete=models.CASCADE, null=True)
-    number_turn = models.IntegerField(validators=[MinValueValidator(1),
-                                                  MaxValueValidator(4)])
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="user")
-    dices1 = models.IntegerField(validators=[MinValueValidator(1),
+    dices1 = models.IntegerField(blank=True,
+                                 validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])
-    dices2 = models.IntegerField(validators=[MinValueValidator(1),
+    dices2 = models.IntegerField(blank=True,
+                                 validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])

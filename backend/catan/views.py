@@ -15,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.models import *
+from catan.cargaJson import *
+
 
 
 class RoomList(APIView):
@@ -223,3 +225,66 @@ class BoardInfo(APIView):
         board_hexes = Hexe.objects.filter(board=game.board.id)
         hexes_serializer = HexeSerializer(board_hexes, many=True)
         return Response({"hexes": hexes_serializer.data})
+
+
+class BuiltRoad(APIView):
+    def post(self, request, pk):
+        data = request.data
+        game = get_object_or_404(Game, pk=pk)
+        user = self.request.user
+        owner = Player.objects.filter(username=user, game=pk).get().id
+        level1 = data['payload']['level1']
+        index1 = data['payload']['index1']
+        level2 = data['payload']['level2']
+        index2 = data['payload']['index2']
+        position_1 = VertexPosition.objects.filter(level=level1, index=index1).get()
+        print(position_1.index)
+        position_2 = VertexPosition.objects.filter(level=level2, index=index2).get()
+        print(position_2.index)
+        resources = Resource.objects.filter(owner=owner, game=pk)
+        print(resources)
+        #listo los recursos del player
+        list_resources = ResourcesRoad(resources)
+        if len(list_resources) != 2:
+            response = {"detail": "Doesn't have enough resources"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+        #listo los caminos del player
+        roads = Road.objects.filter(owner=owner, game=pk)
+        print(roads)
+        #chequeo si hay un camino construido con el (level1, index1) o (level1, index2)
+        is_roads1 = CheckRoads(roads, level1, index1)
+
+        is_roads2 = CheckRoads(roads, level2, index2)
+
+        #listo los edificios del player
+        buildings = Building.objects.filter(owner=owner, game=pk)
+        print(buildings)
+        #obtengo la lista de vecinos del primer vertice
+        vecinos1 = Vertice(int(level1), int(index1))
+        print (vecinos1)
+        #chequeo si hay un edificio construido, con el primer vertice
+        is_building1 = CheckBuild(buildings,vecinos1,level1,index1)
+
+        if not is_building1 or not is_roads1:
+            response = {"detail": "invalid position"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        deleteResource(resources)
+        new_road = Road(game=game, vertex_1=position_1, vertex_2=position_2, owner=owner)
+        new_road.save()
+        return Response(status=status.HTTP_200_OK)
+
+
+        #obtengo la lista de vecinos del segundo vertice
+        vecinos2 = Vertice(int(level2), int(index2))
+        print (vecinos2)
+
+        #chequeo si hay un edificio construido, con el segundo vertice
+        is_building2 = CheckBuild(buildings,vecinos2,level2, index2)
+        if not is_building2 or not is_roads2:
+            response = {"detail": "invalid position"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        deleteResource(resources)
+        new_road = Road(game=game, vertex_1=position_1, vertex_2=position_2, owner=owner)
+        new_road.save()
+        return Response(status=status.HTTP_200_OK)
