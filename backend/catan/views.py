@@ -18,7 +18,7 @@ from django.shortcuts import get_object_or_404
 from catan.models import *
 from rest_framework.permissions import AllowAny
 from random import shuffle
-#from catan.cargaJson import *
+from catan.cargaJson import *
 
 
 class RoomList(APIView):
@@ -276,7 +276,6 @@ class GameInfo(APIView):
             serialized_players.append(data)
         return serialized_players
 
-
     def get(self, request, pk):
         game = get_object_or_404(Game, pk=pk)
         # Get the game serializer...
@@ -321,7 +320,7 @@ class BoardInfo(APIView):
         return Response({"hexes": hexes_serializer.data})
 
 
-class BuiltRoad(APIView):
+class BuildRoad(APIView):
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
@@ -335,6 +334,7 @@ class BuiltRoad(APIView):
                                                    index=index1).get()
         position_2 = VertexPosition.objects.filter(level=level2,
                                                    index=index2).get()
+
         list_all_road = Road.objects.filter(game=pk)
         position_road = CheckPositionRoad(list_all_road, level1, index1,
                                           level2, index2)
@@ -353,6 +353,7 @@ class BuiltRoad(APIView):
         buildings = Building.objects.filter(owner=owner.id, game=pk)
         is_building = CheckBuild_Road(buildings, level1, index1, level2,
                                       index2)
+
         # verifico que tenga camino o edificio propio
         if not is_roads and not is_building:
             response = {"detail": "invalid position"}
