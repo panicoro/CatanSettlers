@@ -338,16 +338,19 @@ class BuildRoad(APIView):
         list_all_road = Road.objects.filter(game=pk)
         position_road = CheckPositionRoad(list_all_road, level1, index1,
                                           level2, index2)
+
         # verifico si la posicion esta libre
         if position_road:
             response = {"detail": "invalid position, reserved"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
+
         resources = Resource.objects.filter(owner=owner.id, game=pk)
         list_resources = ResourcesRoad(resources)
         # verifico recursos necesarios
         if len(list_resources) != 2:
             response = {"detail": "Doesn't have enough resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
+
         roads = Road.objects.filter(owner=owner.id, game=pk)
         is_roads = CheckRoads_Road(roads, level1, index1, level2, index2)
         buildings = Building.objects.filter(owner=owner.id, game=pk)
@@ -356,7 +359,7 @@ class BuildRoad(APIView):
 
         # verifico que tenga camino o edificio propio
         if not is_roads and not is_building:
-            response = {"detail": "invalid position"}
+            response = {"detail": "must have something built"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         deleteResource(resources)
         new_road = Road(game=game, vertex_1=position_1, vertex_2=position_2,
