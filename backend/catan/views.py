@@ -20,6 +20,7 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
+import sys
 
 
 class RoomList(APIView):
@@ -228,7 +229,7 @@ class GameInfo(APIView):
         player: A player object.
         """
         settlements = self.get_list_serialized_objects(
-                            queryset=Building.objects.filter(name="SETTLEMENT",
+                            queryset=Building.objects.filter(name="settlement",
                                                              owner=player.id),
                             serializer=BuildingSerializer, key='position')
         return settlements
@@ -240,7 +241,7 @@ class GameInfo(APIView):
         player: A player object.
         """
         cities = self.get_list_serialized_objects(
-                            queryset=Building.objects.filter(name="CITY",
+                            queryset=Building.objects.filter(name="city",
                                                              owner=player.id),
                             serializer=BuildingSerializer, key='position')
         return cities
@@ -322,29 +323,101 @@ class BoardInfo(APIView):
 
 
 class BuildSettlement(APIView):
+    def ResourceBuild(self, list_resource):
+        """
+        Devueleve una lista de tamaño variable dependiendo
+        si encuentralos elementos.
+        """
+        brick = True
+        lumber = True
+        wool = True
+        grain = True
+        rta = []
+        for resource in list_resource:
+            if resource.resource_name == "brick" and brick:
+                birck = False
+                rta.append(resource)
+            if resource.resource_name == "lumber" and lumber:
+                lumber = False
+                rta.append(resource)
+            if resource.resource_name == "wool" and wool:
+                wool = False
+                rta.append(resource)
+            if resource.resource_name == "grain" and grain:
+                grain = False
+                rta.append(resource)
+        return rta
+
+    def CheckRoad(self, list_road, level, index):
+        """
+        Devuelve True si hay uno de los vertices de las rutas del player
+        coincide con el VertexPosition ingresado por el mismo.
+        """
+        rta = False
+        for road in list_road:
+            if road.vertex_1.level == level:
+                if road.vertex_1.index == index:
+                    rta = True
+                    return rta
+            if road.vertex_2.level == level:
+                if road.vertex_2.index == index:
+                    rta = True
+                    return rta
+        return rta
+
+    def CheckBuild(self, list_build, list_vertex):
+        """
+        Devuelve True si no hay una costrucción en los vecinos del
+        VertexPosition ingresado por el player.
+        """
+        rta = True
+        for build in list_build:
+            for vertex in list_vertex:
+                if build.position.level == vertex[0]:
+                    if build.position.index == vertex[1]:
+                        rta = False
+                        return rta
+        return rta
+
+    def deleteResource(self, list_resource):
+        """
+        Elimina los recursos de la lista.
+        """
+        for resource in list_resource:
+            resource.delete()
+
     def post(self, request, pk):
         data = request.data
         level = int(data['payload']['level'])
         index = int(data['payload']['index'])
         position = VertexPosition.objects.filter(level=level,
                                                  index=index).get()
+        building = Building.objects.filter(position=position)
+        # Verificando que la posición esté disponible
+        if building.exists():
+            print("caca")
+            response = {"detail": "Busy position"}
+            print(response)
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        # Obteniendo los recursos delplayer
         game = get_object_or_404(Game, pk=pk)
         user = self.request.user
         owner = Player.objects.filter(username=user, game=pk).get()
         my_all_resource = Resource.objects.filter(owner=owner.id, game=pk)
-        necessary_resources = ResourceBuild(my_all_resource)
+        necessary_resources = self.ResourceBuild(my_all_resource)
+        # Verificando que posee los recursos necesarios
         if len(necessary_resources) != 4:
             response = {"detail": "It does not have the necessary resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         my_road = Road.objects.filter(owner=owner.id, game=pk)
-        is_road = CheckRoad(my_road, level, index)
+        is_road = self.CheckRoad(my_road, level, index)
         all_building = Building.objects.filter(game=pk)
         vecinos = VertexInfo(level, index)
-        is_building = CheckBuild(all_building, vecinos, level, index)
-        if not is_building:# or not is_road:
+        is_building = self.CheckBuild(all_building, vecinos)
+        if not is_building or not is_road:
             response = {"detail": "invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-        deleteResource(necessary_resources)
+        self.deleteResource(necessary_resources)
         new_build = Building(game=game, name='SETTLEMENT', owner=owner,
                              position=position)
         new_build.save()
