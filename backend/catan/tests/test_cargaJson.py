@@ -70,8 +70,7 @@ class TestView(TestCase):
                                 position=self.vert_pos2)
         list_build = Building.objects.filter(owner=self.player, game=self.game)
         self.assertEqual(CheckBuild_Road(list_build, self.vert_pos1.level,
-                                         self.vert_pos1.index,
-                                         1, 1), True)
+                                         self.vert_pos1.index, 1, 1), True)
         self.assertEqual(CheckBuild_Road(list_build, 1, 1,
                                          self.vert_pos2.level,
                                          self.vert_pos2.index), True)
@@ -88,8 +87,7 @@ class TestView(TestCase):
                         self.vert_pos2.index, self.vert_pos1.level,
                         self.vert_pos1.index))
         self.assertEqual(CheckPositionRoad(list_road, self.vert_pos1.level,
-                                           self.vert_pos1.index,
-                                           1, 1), False)
+                                           self.vert_pos1.index, 1, 1), False)
 
     def test_deleteResource(self):
         Resource.objects.create(owner=self.player, game=self.game,
