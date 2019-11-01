@@ -332,6 +332,14 @@ class PlayerActions(APIView):
         """
         return game.current_turn.user == player.username
 
+    def checkVertex(self, level, index):
+        rta = False
+        vertex = VertexPosition.objects.filter(level=level, index=index)
+        if vertex.exists():
+            rta = True
+            return rta
+        return rta
+
     def ResourceBuild(self, player_id, game_id):
         """
         Return a variable variable size list
@@ -358,8 +366,10 @@ class PlayerActions(APIView):
                 rta.append(resource)
         return rta
 
-    def CheckPosition(self, game_id, position):
+    def CheckPosition(self, game_id, level, index):
         rta = True
+        position = VertexPosition.objects.filter(level=level,
+                                                 index=index).get()
         building = Building.objects.filter(game=game_id, position=position)
         if building.exists():
             rta = False
@@ -404,6 +414,17 @@ class PlayerActions(APIView):
         for resource in list_resource:
             resource.delete()
 
+    def Building(self, game, player, level, index):
+        position = VertexPosition.objects.filter(level=level,
+                                                 index=index).get()
+        new_build = Building(game=game, name='settlement', owner=player,
+                             position=position)
+        new_build.save()
+        point = player.victory_points + 1
+        player.victory_points = point
+        player.save()
+        pass
+
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
@@ -415,11 +436,12 @@ class PlayerActions(APIView):
         if data['type'] == 'build_settlement':
             level = data['payload']['level']
             index = data['payload']['index']
-            position = VertexPosition.objects.filter(level=level,
-                                                     index=index).get()
+            # Check that the position exists
+            if not self.checkVertex(level, index):
+                response = {"detail": "Non-existent position"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
             # Check that the position is available
-            is_position = self.CheckPosition(game.id, position)
-            if not is_position:
+            if not self.CheckPosition(game.id, level, index):
                 response = {"detail": "Busy position"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
             necessary_resources = self.ResourceBuild(player.id, game.id)
@@ -435,11 +457,6 @@ class PlayerActions(APIView):
             if not is_building or not is_road:
                 response = {"detail": "Invalid position"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            new_build = Building(game=game, name='settlement', owner=player,
-                                 position=position)
-            new_build.save()
-            point = player.victory_points + 1
-            player.victory_points = point
-            player.save()
+            self.Building(game, player, level, index)
             self.deleteResource(necessary_resources)
             return Response(status=status.HTTP_200_OK)
