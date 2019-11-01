@@ -334,8 +334,8 @@ class PlayerActions(APIView):
 
     def ResourceBuild(self, player_id, game_id):
         """
-        Devueleve una lista de tamaño variable dependiendo
-        si encuentra los elementos.
+        Return a variable variable size list
+        if you find the items.
         """
         list_resource = Resource.objects.filter(owner=player_id, game=game_id)
         brick = True
@@ -368,13 +368,13 @@ class PlayerActions(APIView):
 
     def CheckRoad(self, player_id, game_id, level, index):
         """
-        Devuelve True si hay uno de los vertices de las rutas del player
-        coincide con el VertexPosition ingresado por el mismo.
+        Returns True if there is one of the vertices of the player's paths
+        matches the VertexPosition entered by it.
         """
         vertex = VertexPosition.objects.filter(level=level, index=index).get()
         rta = False
         road_player = Road.objects.filter(Q(owner=player_id, game=game_id,
-                                          vertex_1=vertex) | 
+                                          vertex_1=vertex) |
                                           Q(owner=player_id, game=game_id,
                                           vertex_2=vertex))
         if road_player.exists():
@@ -383,9 +383,9 @@ class PlayerActions(APIView):
 
     def CheckBuild(self, game_id, level, index):
         """
-        Devuelve True si no hay una costrucción en los vecinos del
-        VertexPosition ingresado por el player.
-        """ 
+        Returns True if there is no construction in the neighbors of the
+        VertexPosition entered by the player.
+        """
         list_build = Building.objects.filter(game=game_id)
         list_vertex = VertexInfo(level, index)
         rta = True
@@ -397,10 +397,9 @@ class PlayerActions(APIView):
                         return rta
         return rta
 
-
     def deleteResource(self, list_resource):
         """
-        Elimina los recursos de la lista.
+        Remove resources from the list.
         """
         for resource in list_resource:
             resource.delete()
@@ -411,31 +410,33 @@ class PlayerActions(APIView):
         player = get_object_or_404(Player, username=request.user, game=game)
         # Check if the player is on his turn
         if not self.check_player_in_turn(game, player):
-            response = {"detail": "not in turn"}
+            response = {"detail": "Not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'build_settlement':
             level = data['payload']['level']
             index = data['payload']['index']
             position = VertexPosition.objects.filter(level=level,
-                                                    index=index).get()
-            # Verificando que la posición esté disponible
+                                                     index=index).get()
+            # Check that the position is available
             is_position = self.CheckPosition(game.id, position)
             if not is_position:
                 response = {"detail": "Busy position"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            # Obteniendo los recursos del player
-            necessary_resources = self.ResourceBuild(player.id,game.id)
-            # Verificando que posee los recursos necesarios
+            necessary_resources = self.ResourceBuild(player.id, game.id)
+            # Check that the pleyer has the necessary resources
             if len(necessary_resources) != 4:
-                response = {"detail": "It does not have the necessary resources"}
+                response = {"detail": "It does not have" +
+                            "the necessary resources"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
             is_road = self.CheckRoad(player.id, game.id, level, index)
             is_building = self.CheckBuild(game.id, level, index)
+            # Check that there are no building in the neighboring vertex
+            # Checking that the player has a road in the vertex
             if not is_building or not is_road:
-                response = {"detail": "invalid position"}
+                response = {"detail": "Invalid position"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            new_build = Building(game=game, name='SETTLEMENT', owner=player,
-                                position=position)
+            new_build = Building(game=game, name='settlement', owner=player,
+                                 position=position)
             new_build.save()
             point = player.victory_points + 1
             player.victory_points = point
