@@ -15,6 +15,7 @@ def HexagonInfo(level, index):
                 return aux['vecinos']
 
 
+# get the neighbors of a given vertex
 def VertexInfo(level, index):
     with open(os.path.join(MYDIR, 'VertexVecinos.json')) as file:
         data = json.load(file)
@@ -25,6 +26,7 @@ def VertexInfo(level, index):
                 return aux['vecinos']
 
 
+# get the necessary resources
 def ResourcesRoad(list_resource):
     brick = True
     lumber = True
@@ -41,6 +43,7 @@ def ResourcesRoad(list_resource):
     return rta
 
 
+# check the existence of a built road
 def CheckRoads_Road(list_road, level1, index1, level2, index2):
     rta = False
     for road in list_road:
@@ -63,6 +66,7 @@ def CheckRoads_Road(list_road, level1, index1, level2, index2):
     return rta
 
 
+# check the existence of a built building
 def CheckBuild_Road(list_build, level1, index1, level2, index2):
     rta = False
     for build in list_build:
@@ -77,6 +81,7 @@ def CheckBuild_Road(list_build, level1, index1, level2, index2):
     return rta
 
 
+# check if the position given for the new road is repeated
 def CheckPositionRoad(list_all_road, level1, index1, level2, index2):
     rta = False
     for road in list_all_road:
@@ -95,6 +100,17 @@ def CheckPositionRoad(list_all_road, level1, index1, level2, index2):
     return rta
 
 
+# delete resource
 def deleteResource(list_resource):
     for resource in list_resource:
         resource.delete()
+
+
+# check if it's neighbor
+def is_neighbor(list_neighbor, level, index):
+    vec = False
+    for v in list_neighbor:
+        if v[0] == level and v[1] == index:
+            vec = True
+            return vec
+    return vec
