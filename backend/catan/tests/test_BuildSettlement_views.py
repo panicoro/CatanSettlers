@@ -36,20 +36,26 @@ class TestViews(TestCase):
                                                 user=self.user,
                                                 dices1=3,
                                                 dices2=3)
-        self.road = Road.objects.create(owner=self.player, vertex_1=self.vertex_1,
-                                   vertex_2=self.vertex_2, game=self.game)
-        self.brick = Resource.objects.create(owner=self.player, game=self.game,
-                                        resource_name="brick")
-        self.lumber = Resource.objects.create(owner=self.player, game=self.game,
-                                         resource_name="lumber")
-        self.wool = Resource.objects.create(owner=self.player, game=self.game,
-                                       resource_name="wool")
-        self.grain = Resource.objects.create(owner=self.player, game=self.game,
-                                        resource_name="grain")
+        self.road = Road.objects.create(owner=self.player,
+                                        vertex_1=self.vertex_1,
+                                        vertex_2=self.vertex_2,
+                                        game=self.game)
+        self.brick = Resource.objects.create(owner=self.player,
+                                             game=self.game,
+                                             resource_name="brick")
+        self.lumber = Resource.objects.create(owner=self.player,
+                                              game=self.game,
+                                              resource_name="lumber")
+        self.wool = Resource.objects.create(owner=self.player,
+                                            game=self.game,
+                                            resource_name="wool")
+        self.grain = Resource.objects.create(owner=self.player,
+                                             game=self.game,
+                                             resource_name="grain")
 
     def test_noTurn(self):
         user = User.objects.create_user(username='catan', email='matilde13')
-        self.turn.user= user
+        self.turn.user = user
         self.turn.save()
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_settlement",
@@ -60,6 +66,20 @@ class TestViews(TestCase):
         view = PlayerActions.as_view()
         response = view(request, pk=1)
         response.render()
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "Not in turn"}
         assert response.status_code == 403
 
     def test_build_vertex1(self):
@@ -72,6 +92,22 @@ class TestViews(TestCase):
         view = PlayerActions.as_view()
         response = view(request, pk=1)
         response.render()
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path_game)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert response_player.data['resources'] == []
+        assert response_game.data['players'][
+               0]['settlements'][0]['level'] == 1
+        assert response_game.data['players'][
+               0]['settlements'][0]['index'] == 16
+        assert response_game.data['players'][0]['victory_points'] == 1
         assert response.status_code == 200
 
     def test_build_vertex2(self):
@@ -83,6 +119,22 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path_game)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert response_player.data['resources'] == []
+        assert response_game.data['players'][
+               0]['settlements'][0]['level'] == 2
+        assert response_game.data['players'][
+               0]['settlements'][0]['index'] == 26
+        assert response_game.data['players'][0]['victory_points'] == 1
         assert response.status_code == 200
 
     def test_invalidPosition_road(self):
@@ -95,6 +147,20 @@ class TestViews(TestCase):
         self.road.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "Invalid position"}
         assert response.status_code == 403
 
     def test_invalidPosition_build(self):
@@ -109,6 +175,20 @@ class TestViews(TestCase):
                                         position=self.vertex_1)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "Invalid position"}
         assert response.status_code == 403
 
     def test_busyPosition(self):
@@ -123,6 +203,20 @@ class TestViews(TestCase):
                                         position=self.vertex_2)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "Busy position"}
         assert response.status_code == 403
 
     def test_noResource(self):
@@ -135,4 +229,19 @@ class TestViews(TestCase):
         self.grain.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert len(response_player.data['resources']) < 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "It does not have" +
+                                 "the necessary resources"}
         assert response.status_code == 403
