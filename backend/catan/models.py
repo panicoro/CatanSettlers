@@ -41,6 +41,9 @@ class VertexPosition(models.Model):
             raise ValidationError(
                 'The index with level 2 must be between 0 and 29.')
 
+    def __str__(self):
+        return '%d,%d' % (self.level, self.index)
+
 
 class HexePosition(models.Model):
     level = models.IntegerField(default=0,

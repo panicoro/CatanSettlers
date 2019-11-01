@@ -20,7 +20,7 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
-import sys
+from django.db.models import Q
 
 
 class RoomList(APIView):
@@ -322,12 +322,22 @@ class BoardInfo(APIView):
         return Response({"hexes": hexes_serializer.data})
 
 
-class BuildSettlement(APIView):
-    def ResourceBuild(self, list_resource):
+class PlayerActions(APIView):
+    def check_player_in_turn(self, game, player):
+        """
+        A method to check if the player is in turn in the given game.
+        Args:
+        @game: a started game.
+        @player: a player in the game.
+        """
+        return game.current_turn.user == player.username
+
+    def ResourceBuild(self, player_id, game_id):
         """
         Devueleve una lista de tamaño variable dependiendo
-        si encuentralos elementos.
+        si encuentra los elementos.
         """
+        list_resource = Resource.objects.filter(owner=player_id, game=game_id)
         brick = True
         lumber = True
         wool = True
@@ -348,28 +358,36 @@ class BuildSettlement(APIView):
                 rta.append(resource)
         return rta
 
-    def CheckRoad(self, list_road, level, index):
+    def CheckPosition(self, game_id, position):
+        rta = True
+        building = Building.objects.filter(game=game_id, position=position)
+        if building.exists():
+            rta = False
+            return rta
+        return rta
+
+    def CheckRoad(self, player_id, game_id, level, index):
         """
         Devuelve True si hay uno de los vertices de las rutas del player
         coincide con el VertexPosition ingresado por el mismo.
         """
+        vertex = VertexPosition.objects.filter(level=level, index=index).get()
         rta = False
-        for road in list_road:
-            if road.vertex_1.level == level:
-                if road.vertex_1.index == index:
-                    rta = True
-                    return rta
-            if road.vertex_2.level == level:
-                if road.vertex_2.index == index:
-                    rta = True
-                    return rta
+        road_player = Road.objects.filter(Q(owner=player_id, game=game_id,
+                                          vertex_1=vertex) | 
+                                          Q(owner=player_id, game=game_id,
+                                          vertex_2=vertex))
+        if road_player.exists():
+            rta = True
         return rta
 
-    def CheckBuild(self, list_build, list_vertex):
+    def CheckBuild(self, game_id, level, index):
         """
         Devuelve True si no hay una costrucción en los vecinos del
         VertexPosition ingresado por el player.
-        """
+        """ 
+        list_build = Building.objects.filter(game=game_id)
+        list_vertex = VertexInfo(level, index)
         rta = True
         for build in list_build:
             for vertex in list_vertex:
@@ -378,6 +396,7 @@ class BuildSettlement(APIView):
                         rta = False
                         return rta
         return rta
+
 
     def deleteResource(self, list_resource):
         """
@@ -388,37 +407,38 @@ class BuildSettlement(APIView):
 
     def post(self, request, pk):
         data = request.data
-        level = int(data['payload']['level'])
-        index = int(data['payload']['index'])
-        position = VertexPosition.objects.filter(level=level,
-                                                 index=index).get()
-        building = Building.objects.filter(position=position)
-        # Verificando que la posición esté disponible
-        if building.exists():
-            print("caca")
-            response = {"detail": "Busy position"}
-            print(response)
-            return Response(response, status=status.HTTP_403_FORBIDDEN)
-        # Obteniendo los recursos delplayer
         game = get_object_or_404(Game, pk=pk)
-        user = self.request.user
-        owner = Player.objects.filter(username=user, game=pk).get()
-        my_all_resource = Resource.objects.filter(owner=owner.id, game=pk)
-        necessary_resources = self.ResourceBuild(my_all_resource)
-        # Verificando que posee los recursos necesarios
-        if len(necessary_resources) != 4:
-            response = {"detail": "It does not have the necessary resources"}
+        player = get_object_or_404(Player, username=request.user, game=game)
+        # Check if the player is on his turn
+        if not self.check_player_in_turn(game, player):
+            response = {"detail": "not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-        my_road = Road.objects.filter(owner=owner.id, game=pk)
-        is_road = self.CheckRoad(my_road, level, index)
-        all_building = Building.objects.filter(game=pk)
-        vecinos = VertexInfo(level, index)
-        is_building = self.CheckBuild(all_building, vecinos)
-        if not is_building or not is_road:
-            response = {"detail": "invalid position"}
-            return Response(response, status=status.HTTP_403_FORBIDDEN)
-        self.deleteResource(necessary_resources)
-        new_build = Building(game=game, name='SETTLEMENT', owner=owner,
-                             position=position)
-        new_build.save()
-        return Response(status=status.HTTP_200_OK)
+        if data['type'] == 'build_settlement':
+            level = data['payload']['level']
+            index = data['payload']['index']
+            position = VertexPosition.objects.filter(level=level,
+                                                    index=index).get()
+            # Verificando que la posición esté disponible
+            is_position = self.CheckPosition(game.id, position)
+            if not is_position:
+                response = {"detail": "Busy position"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            # Obteniendo los recursos del player
+            necessary_resources = self.ResourceBuild(player.id,game.id)
+            # Verificando que posee los recursos necesarios
+            if len(necessary_resources) != 4:
+                response = {"detail": "It does not have the necessary resources"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            is_road = self.CheckRoad(player.id, game.id, level, index)
+            is_building = self.CheckBuild(game.id, level, index)
+            if not is_building or not is_road:
+                response = {"detail": "invalid position"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            new_build = Building(game=game, name='SETTLEMENT', owner=player,
+                                position=position)
+            new_build.save()
+            point = player.victory_points + 1
+            player.victory_points = point
+            player.save()
+            self.deleteResource(necessary_resources)
+            return Response(status=status.HTTP_200_OK)

@@ -10,14 +10,18 @@ urlpatterns = [
          name='tokenObtainPair'),
     path('users/login/refresh/', TokenRefreshView.as_view(),
          name='refreshToken'),
+    path('users/', views.Register.as_view(),
+         name='register'),
     path('games/<int:pk>/player', views.PlayerInfo.as_view(),
          name='PlayerInfo'),
+    path('games/<int:pk>/', views.GameInfo.as_view(),
+         name='GameInfo'),
     path('games/', views.GameList.as_view(), name='Games'),
     path('boards/', views.BoardList.as_view(), name='Boards'),
     path('games/<int:pk>/board/', views.BoardInfo.as_view(),
          name='BoardInfo'),
-    path('games/<int:pk>/player/actions', views.BuildSettlement.as_view(),
-         name='BuildSettlement'),
+    path('games/<int:pk>/player/actions', views.PlayerActions.as_view(),
+         name='PlayerActions'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
