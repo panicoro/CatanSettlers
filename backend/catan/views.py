@@ -326,27 +326,32 @@ class BuildRoad(APIView):
         game = get_object_or_404(Game, pk=pk)
         user = self.request.user
         owner = Player.objects.filter(username=user, game=pk).get()
-        level1 = int(data['payload']['level1'])
-        index1 = int(data['payload']['index1'])
-        level2 = int(data['payload']['level2'])
-        index2 = int(data['payload']['index2'])
+        level1 = data['payload'][0]['level']
+        index1 = data['payload'][0]['index']
+        level2 = data['payload'][1]['level']
+        index2 = data['payload'][1]['index']
+
         position_1 = VertexPosition.objects.filter(level=level1,
                                                    index=index1).get()
         position_2 = VertexPosition.objects.filter(level=level2,
                                                    index=index2).get()
+        list_neighbor = VertexInfo(level1, index1)
+        # check that the neighbor exists
+        if not is_neighbor(list_neighbor, position_2.level, position_2.index):
+            response = {"detail": "not neighbor"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
 
         list_all_road = Road.objects.filter(game=pk)
         position_road = CheckPositionRoad(list_all_road, level1, index1,
                                           level2, index2)
-
-        # verifico si la posicion esta libre
+        # I check if the position is free
         if position_road:
             response = {"detail": "invalid position, reserved"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
 
         resources = Resource.objects.filter(owner=owner.id, game=pk)
         list_resources = ResourcesRoad(resources)
-        # verifico recursos necesarios
+        # I verify necessary resources
         if len(list_resources) != 2:
             response = {"detail": "Doesn't have enough resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
@@ -356,8 +361,7 @@ class BuildRoad(APIView):
         buildings = Building.objects.filter(owner=owner.id, game=pk)
         is_building = CheckBuild_Road(buildings, level1, index1, level2,
                                       index2)
-
-        # verifico que tenga camino o edificio propio
+        # I verify that I have my own road or building
         if not is_roads and not is_building:
             response = {"detail": "must have something built"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
