@@ -79,6 +79,7 @@ class TestView(TestCase):
         response = view_actions(request, pk=1)
         response.render()
         assert response.status_code == 403
+        assert response.data['detail'] == 'not in turn'
         url = reverse('GameInfo', kwargs={'pk': 1})
         request = RequestFactory().get(url)
         force_authenticate(request, user=self.user2, token=self.token)
