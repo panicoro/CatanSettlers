@@ -43,7 +43,6 @@ def set_players_resources_not_last_gained(players):
 
 
 def random_discard(players):
-    """
     for player in players:
         if player.resources_cards > 7:
             resources = Resource.objects.filter(owner=player)
@@ -54,8 +53,6 @@ def random_discard(players):
             resource_position = resource_position[0:math.floor(len(resource_position)/2)]
             for elem in resource_position:
                 resources[elem].delete()
-    """
-
 
 
 def gain_resources(game, owner, resource_name, amount):
