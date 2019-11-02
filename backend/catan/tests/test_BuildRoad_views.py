@@ -50,14 +50,14 @@ class TestViews(TestCase):
         user = User.objects.create_user(username='nvero', email='bariloche')
         self.turn.user = user
         self.turn.save()
-        path = reverse('BuildRoad', kwargs={'pk': 1})
+        path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 1},
                             {"level": 2, "index": 2}]}
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
-        view = BuildRoad.as_view()
+        view = PlayerActions.as_view()
         response = view(request, pk=1)
         response.render()
         path_game = reverse('GameInfo', kwargs={'pk': 1})
@@ -76,7 +76,7 @@ class TestViews(TestCase):
         assert response.status_code == 403
 
     def test_not_neighbor(self):
-        path = reverse('BuildRoad', kwargs={'pk': 1})
+        path = reverse('PlayerActions', kwargs={'pk': 1})
         vert_position1 = VertexPosition.objects.create(level=2, index=18)
         vert_position2 = VertexPosition.objects.create(level=2, index=20)
         data = {"type": "build_road",
@@ -85,13 +85,13 @@ class TestViews(TestCase):
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
-        view = BuildRoad.as_view()
+        view = PlayerActions.as_view()
         response = view(request, pk=1)
         assert response.data == {'detail': 'not neighbor'}
         assert response.status_code == 403
 
     def test_invalid_position(self):
-        path = reverse('BuildRoad', kwargs={'pk': 1})
+        path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 0},
                             {"level": 2, "index": 1}]}
@@ -99,7 +99,7 @@ class TestViews(TestCase):
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
 
-        view = BuildRoad.as_view()
+        view = PlayerActions.as_view()
         response = view(request, pk=1)
 
         path_game = reverse('GameInfo', kwargs={'pk': 1})
@@ -119,7 +119,7 @@ class TestViews(TestCase):
 
     def test_build_road(self):
         self.token = AccessToken()
-        path = reverse('BuildRoad', kwargs={'pk': 1})
+        path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 1},
                             {"level": 2, "index": 2}]}
@@ -129,7 +129,7 @@ class TestViews(TestCase):
                                            password='bariloche')
         force_authenticate(request, user=self.user, token=self.token)
 
-        view = BuildRoad.as_view()
+        view = PlayerActions.as_view()
         response = view(request, pk=1)
         response.render()
         path_game = reverse('GameInfo', kwargs={'pk': 1})
@@ -155,7 +155,7 @@ class TestViews(TestCase):
         assert response.status_code == 200
 
     def test_nothing_built(self):
-        path = reverse('BuildRoad', kwargs={'pk': 1})
+        path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 1},
                             {"level": 2, "index": 2}]}
@@ -163,7 +163,7 @@ class TestViews(TestCase):
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
         self.road.delete()
-        view = BuildRoad.as_view()
+        view = PlayerActions.as_view()
         response = view(request, pk=1)
 
         path_game = reverse('GameInfo', kwargs={'pk': 1})
@@ -182,7 +182,7 @@ class TestViews(TestCase):
         assert response.status_code == 403
 
     def test_not_resource(self):
-        path = reverse('BuildRoad', kwargs={'pk': 1})
+        path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 1},
                             {"level": 2, "index": 2}]}
@@ -191,7 +191,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         self.brick.delete()
         self.lumber.delete()
-        view = BuildRoad.as_view()
+        view = PlayerActions.as_view()
         response = view(request, pk=1)
         path_game = reverse('GameInfo', kwargs={'pk': 1})
         request_game = RequestFactory().get(path_game)
@@ -209,14 +209,14 @@ class TestViews(TestCase):
         assert response.status_code == 403
 
     def test_not_vertex_position(self):
-        path = reverse('BuildRoad', kwargs={'pk': 1})
+        path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 200, "index": 10000},
                             {"level": 2, "index": 2}]}
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
-        view = BuildRoad.as_view()
+        view = PlayerActions.as_view()
         response = view(request, pk=1)
         path_game = reverse('GameInfo', kwargs={'pk': 1})
         request_game = RequestFactory().get(path_game)
