@@ -336,7 +336,7 @@ class BuildRoad(APIView):
             level2 = data['payload'][1]['level']
             index2 = data['payload'][1]['index']
             # Check that the position exists
-            if not checkVertexsPositions(level1, index2, level2, index2):
+            if not checkVertexsPositions(level1, index1, level2, index2):
                 response = {"detail": "Non-existent vetertexs positions"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
             position_1 = VertexPosition.objects.filter(level=level1,
