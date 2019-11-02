@@ -209,7 +209,7 @@ class TestViews(TestCase):
         assert response.data == {'detail': "Doesn't have enough resources"}
         assert response.status_code == 403
 
-    def test_not_exist_vertex(self):
+    def test_not_vertex_position(self):
         path = reverse('BuildRoad', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 200, "index": 10000},
