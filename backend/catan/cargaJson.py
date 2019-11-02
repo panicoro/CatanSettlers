@@ -1,3 +1,4 @@
+from catan.models import *
 import json
 import os
 
@@ -27,7 +28,8 @@ def VertexInfo(level, index):
 
 
 # get the necessary resources
-def ResourcesRoad(list_resource):
+def ResourcesRoad(owner_id, game_id):
+    list_resource = Resource.objects.filter(owner=owner_id, game=game_id)
     brick = True
     lumber = True
     rta = []
@@ -44,7 +46,8 @@ def ResourcesRoad(list_resource):
 
 
 # check the existence of a built road
-def CheckRoads_Road(list_road, level1, index1, level2, index2):
+def CheckRoads_Road(owner_id, game_id, level1, index1, level2, index2):
+    list_road = Road.objects.filter(owner=owner_id, game=game_id)
     rta = False
     for road in list_road:
         if road.vertex_1.level == level1:
@@ -67,7 +70,8 @@ def CheckRoads_Road(list_road, level1, index1, level2, index2):
 
 
 # check the existence of a built building
-def CheckBuild_Road(list_build, level1, index1, level2, index2):
+def CheckBuild_Road(owner_id, game_id, level1, index1, level2, index2):
+    list_build = Building.objects.filter(owner=owner_id, game=game_id)
     rta = False
     for build in list_build:
         if build.position.level == level1:
@@ -82,7 +86,8 @@ def CheckBuild_Road(list_build, level1, index1, level2, index2):
 
 
 # check if the position given for the new road is repeated
-def CheckPositionRoad(list_all_road, level1, index1, level2, index2):
+def CheckPositionRoad(game_id, level1, index1, level2, index2):
+    list_all_road = Road.objects.filter(game=game_id)
     rta = False
     for road in list_all_road:
         if road.vertex_1.level == level1:
@@ -101,7 +106,8 @@ def CheckPositionRoad(list_all_road, level1, index1, level2, index2):
 
 
 # delete resource
-def deleteResource(list_resource):
+def deleteResource(owner_id, game_id):
+    list_resource = Resource.objects.filter(owner=owner_id, game=game_id)
     for resource in list_resource:
         resource.delete()
 
@@ -114,3 +120,26 @@ def is_neighbor(list_neighbor, level, index):
             vec = True
             return vec
     return vec
+
+
+def check_player_in_turn(game, player):
+    """
+    A method to check if the player is in turn in the given game.
+    Args:
+    @game: a started game.
+    @player: a player in the game.
+    """
+    return game.current_turn.user == player.username
+
+
+# check that the vertices exist within the allowed range
+def checkVertexsPositions(level1, index1, level2, index2):
+    exist_v = False
+    position_1 = VertexPosition.objects.filter(level=level1,
+                                               index=index1)
+    position_2 = VertexPosition.objects.filter(level=level2,
+                                               index=index2)
+    if position_1.exists() and position_2.exists():
+        exist_v = True
+        return exist_v
+    return exist_v
