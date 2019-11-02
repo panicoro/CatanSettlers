@@ -53,6 +53,8 @@ def random_discard(players):
             resource_position = resource_position[0:math.floor(len(resource_position)/2)]
             for elem in resource_position:
                 resources[elem].delete()
+            player.resources_cards =  len(resources) - len(resource_position)
+            player.save()
 
 
 def gain_resources(game, owner, resource_name, amount):
