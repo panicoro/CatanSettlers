@@ -320,7 +320,17 @@ class BoardInfo(APIView):
         return Response({"hexes": hexes_serializer.data})
 
 
-class BuildRoad(APIView):
+class PlayerActions(APIView):
+    def Road(self, game, player, level1, index1, level2, index2):
+        position_1 = VertexPosition.objects.filter(level=level1,
+                                                   index=index1).get()
+        position_2 = VertexPosition.objects.filter(level=level2,
+                                                   index=index2).get()
+        new_road = Road(game=game, vertex_1=position_1,
+                        vertex_2=position_2, owner=player)
+        new_road.save()
+        pass
+
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
@@ -339,10 +349,6 @@ class BuildRoad(APIView):
             if not checkVertexsPositions(level1, index1, level2, index2):
                 response = {"detail": "Non-existent vetertexs positions"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            position_1 = VertexPosition.objects.filter(level=level1,
-                                                       index=index1).get()
-            position_2 = VertexPosition.objects.filter(level=level2,
-                                                       index=index2).get()
             list_neighbor = VertexInfo(level1, index1)
             # check that the neighbor exists
             if not is_neighbor(list_neighbor, level2, index2):
@@ -367,8 +373,6 @@ class BuildRoad(APIView):
             if not is_roads and not is_building:
                 response = {"detail": "must have something built"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            new_road = Road(game=game, vertex_1=position_1,
-                            vertex_2=position_2, owner=owner)
-            new_road.save()
+            new_road = self.Road(game, owner, level1, index1, level2, index2)
             deleteResource(owner.id, game.id)
             return Response(status=status.HTTP_200_OK)
