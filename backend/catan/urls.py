@@ -20,8 +20,8 @@ urlpatterns = [
     path('boards/', views.BoardList.as_view(), name='Boards'),
     path('games/<int:pk>/board/', views.BoardInfo.as_view(),
          name='BoardInfo'),
-    path('games/<int:pk>/player/actions', views.BuildRoad.as_view(),
-         name='BuildRoad'),
+    path('games/<int:pk>/player/actions', views.PlayerActions.as_view(),
+         name='PlayerActions'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
