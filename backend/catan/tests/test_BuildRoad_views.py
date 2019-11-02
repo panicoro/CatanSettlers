@@ -151,7 +151,6 @@ class TestViews(TestCase):
         assert response_game.data['players'][0]['roads'][1][0]['index'] == 1
         assert response_game.data['players'][0]['roads'][1][1]['level'] == 2
         assert response_game.data['players'][0]['roads'][1][1]['index'] == 2
-        print(response_game.data['players'][0]['roads'])
         assert len(response_game.data['players'][0]['roads']) == 2
         assert response.status_code == 200
 
