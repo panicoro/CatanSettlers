@@ -60,7 +60,6 @@ class TestView(TestCase):
     def test_VertexInfo(self):
         vert_pos = VertexPosition.objects.create(level=1, index=16)
         aux_vec = [[2, 26], [1, 17], [1, 15]]
-
         self.assertEqual(VertexInfo(vert_pos.level, vert_pos.index), aux_vec)
 
     def test_CheckRoads_Road(self):
