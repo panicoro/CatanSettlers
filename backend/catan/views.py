@@ -107,7 +107,7 @@ class RoomDetail(APIView):
             building4 = Building.objects.create(
                 name="settlement", game=game,
                 owner=player4, position=vertex_positions[3])
-            throw_dices(game, current_turn, board)
+            throw_dices(game)
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
             ValidationError("Can't start the game without all players"),

@@ -56,14 +56,14 @@ def gain_resources(game, owner, resource_name, amount):
                                 last_gained=True)
 
 
-def throw_dices(game, current_turn, board):
+def throw_dices(game):
     # Throw the dices
     dice1 = throw_dice()
     dice2 = throw_dice()
     # Get the sum of dices
     sum_dices = dice1 + dice2
     # Get the hexes with this token from the board
-    hexes = Hexe.objects.filter(board=board, token=sum_dices)
+    hexes = Hexe.objects.filter(board=game.board, token=sum_dices)
     # Get the players of the games
     players = Player.objects.filter(game=game)
     set_players_resources_not_last_gained(players)
@@ -88,6 +88,6 @@ def throw_dices(game, current_turn, board):
                                 gain_resources(owner=player, game=game,
                                                resource_name=hexe.terrain,
                                                amount=2)
-    current_turn.dices1 = dice1
-    current_turn.dices2 = dice2
-    current_turn.save()
+    game.current_turn.dices1 = dice1
+    game.current_turn.dices2 = dice2
+    game.current_turn.save()

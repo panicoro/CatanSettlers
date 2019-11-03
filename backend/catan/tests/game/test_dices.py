@@ -56,7 +56,7 @@ class TestView(TestCase):
                                     owner=player1,
                                     name='settlement',
                                     position=vertex_positions[i])
-        throw_dices(game1, current_turn, board)
+        throw_dices(game1)
         assert len(Resource.objects.filter(owner=player1)) != 0
 
     def test_throw_dicesCities(self):
@@ -76,5 +76,5 @@ class TestView(TestCase):
                                     owner=player1,
                                     name='city',
                                     position=vertex_positions[i])
-        throw_dices(game1, current_turn, board)
+        throw_dices(game1)
         assert len(Resource.objects.filter(owner=player1)) != 0
