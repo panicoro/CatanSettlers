@@ -1,8 +1,10 @@
 import json
+import os
 
 
+MYDIR = os.path.dirname(__file__)
 def HexagonInfo(level, index):
-    with open('catan/HexaVerVecinos.json') as file:
+    with open(os.path.join(MYDIR, 'HexaVerVecinos.json')) as file:
         data = json.load(file)
 
         for aux in data['data']:
@@ -13,7 +15,7 @@ def HexagonInfo(level, index):
 
 """
 def VertexInfo(level, index):
-    with open('catan/VertexVecinos.json') as file:
+    with open(os.path.join(MYDIR, 'VertexVecinos.json')) as file:
         data = json.load(file)
 
         for aux in data["data"]:
