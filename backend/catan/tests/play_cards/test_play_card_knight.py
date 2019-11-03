@@ -97,7 +97,8 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.status_code == 204
         assert response.data == {"there are no buildings in the hexagon"}
-#        assert self.game.robber == HexePosition.objects.all()[18]
+        assert Game.objects.filter(
+            robber=HexePosition.objects.all()[17]).exists() is True
 
     def test_move_robberOneBuilding(self):
         self.createGame()
@@ -139,8 +140,10 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.status_code == 204
         assert response.data == {"you stole the resource ore"}
-#        assert self.player1.resources_cards == 1
-#        assert self.player2.resources_cards == 0
+        assert Player.objects.filter(
+            game=self.game, username=self.user1)[0].resources_cards == 1
+        assert Player.objects.filter(
+            game=self.game, username=self.user2)[0].resources_cards == 0
 
     def test_move_robberMyOneBuilding(self):
         self.createGame()
@@ -215,6 +218,10 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.status_code == 204
         assert response.data == {"you stole the resource ore"}
+        assert Player.objects.filter(
+            game=self.game, username=self.user1)[0].resources_cards == 1
+        assert Player.objects.filter(
+            game=self.game, username=self.user2)[0].resources_cards == 0
 
         data = {'type': 'move_robber',
                 'payload': {
@@ -285,7 +292,8 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.status_code == 204
         assert response.data == {"the player has no resources"}
-#        assert self.player1.development_cards == 0
+        assert Player.objects.filter(
+            game=self.game, username=self.user1)[0].development_cards == 0
 
     def test_noHaveKnightCards(self):
         self.createGame()
