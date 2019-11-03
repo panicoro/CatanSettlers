@@ -125,11 +125,15 @@ def throw_dices(game, dice1=0, dice2=0):
     # Get the players of the games
     players = Player.objects.filter(game=game)
     # if sum_dices == 7:
-    #   random_dicart(players)
+    #   random_discart(players)
     # else (poner lo que sigue en else hasta inclusive distribute_resources):
     set_players_resources_not_last_gained(players)
     # Get the hexes with this token from the board
     hexes = Hexe.objects.filter(board=game.board, token=sum_dices)
+    # If the robber is in one hexes with the token of the sum
+    # then we must exclude it...
+    if game.robber in hexes:
+        hexes = hexes.exclude(id=game.robber.id)
     # Then distribute_resources...
     distribute_resources(hexes, players, game)
     game.current_turn.dices1 = two_dices[0]
