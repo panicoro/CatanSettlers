@@ -15,6 +15,7 @@ def HexagonInfo(level, index):
             if level == hexagon[0] and index == hexagon[1]:
                 return aux['vecinos']
 
+
 def check_player_in_turn(game, player):
     """
     A method to check if the player is in turn in the given game.

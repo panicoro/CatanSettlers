@@ -50,7 +50,8 @@ class TestViews(TestCase):
 
     def test_ActionsNotInTurn(self):
         self.createGame()
-        self.current_turn = mixer.blend(Current_Turn, user=self.user2, game=self.game)
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user2, game=self.game)
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
@@ -74,7 +75,8 @@ class TestViews(TestCase):
 
     def test_move_robberWithOutBuildings(self):
         self.createGame()
-        self.current_turn = mixer.blend(Current_Turn, user=self.user1, game=self.game)
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user1, game=self.game)
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
@@ -99,7 +101,8 @@ class TestViews(TestCase):
 
     def test_move_robberOneBuilding(self):
         self.createGame()
-        self.current_turn = mixer.blend(Current_Turn, user=self.user1, game=self.game)
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user1, game=self.game)
 
         vertex_positions = VertexPosition.objects.all()
         building1 = Building.objects.create(
@@ -141,7 +144,8 @@ class TestViews(TestCase):
 
     def test_move_robberMyOneBuilding(self):
         self.createGame()
-        self.current_turn = mixer.blend(Current_Turn, user=self.user1, game=self.game)
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user1, game=self.game)
 
         vertex_positions = VertexPosition.objects.all()
         building1 = Building.objects.create(
@@ -170,7 +174,8 @@ class TestViews(TestCase):
 
     def test_move_robberMoreBuildings(self):
         self.createGame()
-        self.current_turn = mixer.blend(Current_Turn, user=self.user1, game=self.game)
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user1, game=self.game)
 
         vertex_positions = VertexPosition.objects.all()
         building1 = Building.objects.create(
@@ -250,13 +255,16 @@ class TestViews(TestCase):
 
     def test_playCardKnight(self):
         self.createGame()
-        self.current_turn = mixer.blend(Current_Turn, user=self.user1, game=self.game)
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user1, game=self.game)
 
         vertex_positions = VertexPosition.objects.all()
         building1 = Building.objects.create(
             name="settlement", game=self.game,
             owner=self.player2, position=vertex_positions[21])
-        card = Card.objects.create(owner=self.player1, game=self.game, card_name='knight')
+        card = Card.objects.create(owner=self.player1,
+                                   game=self.game,
+                                   card_name='knight')
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
@@ -281,7 +289,8 @@ class TestViews(TestCase):
 
     def test_noHaveKnightCards(self):
         self.createGame()
-        self.current_turn = mixer.blend(Current_Turn, user=self.user1, game=self.game)
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user1, game=self.game)
 
         vertex_positions = VertexPosition.objects.all()
         building1 = Building.objects.create(
