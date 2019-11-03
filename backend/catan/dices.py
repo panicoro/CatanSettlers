@@ -46,14 +46,14 @@ def random_discard(players):
     for player in players:
         if player.resources_cards > 7:
             resources = Resource.objects.filter(owner=player)
-            resource_position = []
+            res_pos = []
             for i in range(0, len(resources)):
-                resource_position.append(i)
-            shuffle(resource_position)
-            resource_position = resource_position[0:math.floor(len(resource_position)/2)]
-            for elem in resource_position:
+                res_pos.append(i)
+            shuffle(res_pos)
+            res_pos = res_pos[0:math.floor(len(res_pos)/2)]
+            for elem in res_pos:
                 resources[elem].delete()
-            player.resources_cards =  len(resources) - len(resource_position)
+            player.resources_cards = len(resources) - len(res_pos)
             player.save()
 
 
@@ -97,16 +97,16 @@ def throw_dices(game, current_turn, board):
                     if len(buildings) != 0:
                         for building in buildings:
                             building_vertex = [building.position.level,
-                                            building.position.index]
+                                               building.position.index]
                             if building_vertex in hexe_neighbors:
                                 if building.name == 'settlement':
                                     gain_resources(owner=player, game=game,
-                                                resource_name=hexe.terrain,
-                                                amount=1)
+                                                   resource_name=hexe.terrain,
+                                                   amount=1)
                                 else:
                                     gain_resources(owner=player, game=game,
-                                                resource_name=hexe.terrain,
-                                                amount=2)
+                                                   resource_name=hexe.terrain,
+                                                   amount=2)
     current_turn.dices1 = dice1
     current_turn.dices2 = dice2
     current_turn.save()
