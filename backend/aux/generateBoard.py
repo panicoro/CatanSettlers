@@ -2,7 +2,7 @@
 Random Board Generator
 """
 from catan.models import Hexe, HexePosition, Board, VertexPosition
-from random import randint
+from random import randint, choice
 
 TYPE_RESOURCE = ['brick', 'wool', 'grain', 'ore', 'lumber']
 
@@ -44,13 +44,12 @@ def generateBoard(name):
     position_for_desert = randint(0, 18)
     hexe_position_desert = hexes_positions[position_for_desert]
     hexes_positions = hexes_positions.exclude(id=(position_for_desert + 1))
-    new_token = randint(2, 12)
-    hexe_desert = Hexe(board=new_board, token=new_token,
-                       terrain='desert', position=hexe_position_desert)
+    hexe_desert = Hexe(board=new_board, terrain='desert',
+                       position=hexe_position_desert)
     hexe_desert.save()
     for i in range(0, len(hexes_positions)-1):
         new_terrain = TYPE_RESOURCE[randint(0, 4)]
-        new_token = randint(2, 12)
+        new_token = choice([i for i in range(2,12) if i not in [7]])
         new_hexe = Hexe(board=new_board, token=new_token,
                         terrain=new_terrain, position=hexes_positions[i])
         new_hexe.save()
