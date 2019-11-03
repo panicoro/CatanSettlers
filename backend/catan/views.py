@@ -11,7 +11,7 @@ from rest_framework_simplejwt import authentication
 from catan.serializers import *
 from catan.dices import throw_dices
 from django.http import Http404
-from random import random
+from random import random, randint
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -19,6 +19,7 @@ from catan.models import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
+from catan.cargaJson import HexagonInfo, check_player_in_turn
 
 
 class RoomList(APIView):
@@ -318,3 +319,160 @@ class BoardInfo(APIView):
         board_hexes = Hexe.objects.filter(board=game.board.id)
         hexes_serializer = HexeSerializer(board_hexes, many=True)
         return Response({"hexes": hexes_serializer.data})
+
+
+class PlayerActions(APIView):
+    def move_robber(self, level, index):
+        position = HexePosition.objects.filter(level=level,
+                                               index=index).get()
+        self.game.robber = position
+        self.game.save()
+
+    def obtain_ownersBuildings(self, level, index):
+        buildings = Building.objects.filter(game=self.game)
+        vertex_in_hex = HexagonInfo(level, index)
+        buildings_in_hex = []
+
+        for pos in range(0, 6):
+            vertex = VertexPosition.objects.filter(
+                level=vertex_in_hex[pos][0],
+                index=vertex_in_hex[pos][1])[0]
+            if Building.objects.filter(position=vertex).exists():
+                building = Building.objects.filter(position=vertex)
+                buildings_in_hex.append(building)
+
+        self.owners = []
+
+        for pos in range(len(buildings_in_hex)):
+            self.owners.append(buildings_in_hex[pos][0].owner)
+
+    def steal_resource(self, player_robber):
+        # Si no hay ninguna construccion en el hexagono del ladron #
+
+        if len(self.owners) == 0:
+            self.data_text = {"there are no buildings in the hexagon"}
+            self.status = status.HTTP_204_NO_CONTENT
+            return Response(self.data_text, self.status)
+
+        # Si hay una sola construccion en el hexagono del ladron #
+
+        elif len(self.owners) == 1:
+            if str(self.owners[0].username) in str(self.my_user):
+                self.data_text = {
+                    "there are no enemy buildings in the hexagon"}
+                self.status = status.HTTP_204_NO_CONTENT
+                return Response(self.data_text, self.status)
+
+            resources_list = Resource.objects.filter(owner=self.owners[0])
+
+            if resources_list.exists():
+                resource_robber = Resource.objects.filter(
+                    owner=self.owners[0])[randint(0, len(resources_list)-1)]
+
+                resource_robber.owner = self.my_player
+                resource_robber.last_gained = True
+                resource_robber.save()
+                self.owners[0].resources_cards -= 1
+                self.owners[0].save()
+                self.my_player.resources_cards += 1
+                self.my_player.save()
+                self.data_text = {"you stole the resource " +
+                                  str(resource_robber)}
+                self.status = status.HTTP_204_NO_CONTENT
+                return Response(self.data_text, self.status)
+            self.data_text = {"the player has no resources"}
+            self.status = status.HTTP_204_NO_CONTENT
+            return Response(self.data_text, self.status)
+
+        # Si hay mas de una construccion en el hexagono del ladron #
+
+        else:
+            if player_robber is not None:
+                if player_robber in str(self.my_user):
+                    self.data_text = {"you can't choose yourself"}
+                    self.status = status.HTTP_409_CONFLICT
+                    return Response(self.data_text, self.status)
+                for j in range(0, len(self.owners)):
+                    if player_robber in str(self.owners[j].username):
+                        resources_list = Resource.objects.filter(
+                            owner=self.owners[j])
+                        if resources_list.exists():
+                            resource_robber = Resource.objects.filter(
+                                owner=self.owners[j])[randint(
+                                    0, len(resources_list)-1)]
+                            resource_robber.owner = self.my_player
+                            resource_robber.last_gained = True
+                            resource_robber.save()
+                            self.owners[j].resources_cards -= 1
+                            self.owners[j].save()
+                            self.my_player.resources_cards += 1
+                            self.my_player.save()
+                            self.data_text = {"you stole the resource " +
+                                              str(resource_robber)}
+                            self.status = status.HTTP_204_NO_CONTENT
+                            return Response(self.data_text, self.status)
+                        self.data_text = {"the player has no resources"}
+                        self.status = status.HTTP_204_NO_CONTENT
+                        return Response(self.data_text, self.status)
+            self.data_text = {"you have to choose a player that has buildings"}
+            self.status = status.HTTP_409_CONFLICT
+            return Response(self.data_text, self.status)
+
+    def post(self, request, pk):
+        self.game = get_object_or_404(Game, pk=pk)
+        self.my_user = request.user
+        self.my_player = Player.objects.get(username=self.my_user)
+
+        if not check_player_in_turn(self.game, self.my_player):
+            response = {"detail": "Not in turn"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data
+        if data['type'] == 'move_robber':
+
+            # Obtener y cambiar la nueva posicion del ladron
+
+            level = data['payload']['position']['level']
+            index = data['payload']['position']['index']
+
+            self.move_robber(level, index)
+
+            # Jugadores que tienen pueblos o ciudades
+            # en el hexagono del ladron
+
+            self.obtain_ownersBuildings(level, index)
+
+            # Elegir jugador a quien robar y robar
+
+            player_robber = data['payload']['player']
+
+            self.steal_resource(player_robber)
+
+            return Response(self.data_text, self.status)
+
+        if data['type'] == 'play_knight_card':
+
+            # Verificar si el jugador tiene carta KNIGHT
+
+            if Card.objects.filter(owner=self.my_player,
+                                   card_name='knight').exists():
+                level = data['payload']['position']['level']
+                index = data['payload']['position']['index']
+                self.move_robber(level, index)
+
+                self.obtain_ownersBuildings(level, index)
+
+                player_robber = data['payload']['player']
+
+                self.steal_resource(player_robber)
+
+                if self.status != status.HTTP_409_CONFLICT:
+                    self.my_player.development_cards -= 1
+                    knight_card = Card.objects.filter(
+                        owner=self.my_player, card_name='knight')[0]
+                    knight_card.delete()
+                    self.my_player.save()
+
+                return Response(self.data_text, self.status)
+            data_text = {'You have no knight cards'}
+            return Response(data_text, status=status.HTTP_409_CONFLICT)
