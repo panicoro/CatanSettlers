@@ -132,8 +132,8 @@ def throw_dices(game, dice1=0, dice2=0):
     hexes = Hexe.objects.filter(board=game.board, token=sum_dices)
     # If the robber is in one hexes with the token of the sum
     # then we must exclude it...
-    if game.robber in hexes:
-        hexes = hexes.exclude(id=game.robber.id)
+    if hexes.filter(position=game.robber).exists():
+        hexes = hexes.exclude(position=game.robber)
     # Then distribute_resources...
     distribute_resources(hexes, players, game)
     game.current_turn.dices1 = two_dices[0]
