@@ -2,7 +2,8 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import RequestFactory
 from catan.models import Board, Game, HexePosition
-from catan.views import BoardInfo, BoardList, GameList
+from catan.views.board_views import BoardInfo, BoardList
+from catan.views.game_views import GameList
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import force_authenticate

@@ -2,7 +2,8 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import TestCase, RequestFactory
 from catan.models import *
-from catan.views import *
+from catan.views.players_views import PlayerActions, PlayerInfo
+from catan.views.game_views import GameInfo
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import force_authenticate
