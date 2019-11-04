@@ -52,6 +52,7 @@ class TestViews(TestCase):
         self.grain = Resource.objects.create(owner=self.player,
                                              game=self.game,
                                              resource_name="grain")
+
     def test_noVertex(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_settlement",

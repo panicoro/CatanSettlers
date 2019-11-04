@@ -371,7 +371,7 @@ class PlayerActions(APIView):
         rta = []
         for resource in list_resource:
             if resource.resource_name == "brick" and brick:
-                birck = False
+                brick = False
                 rta.append(resource)
             if resource.resource_name == "lumber" and lumber:
                 lumber = False
@@ -441,7 +441,6 @@ class PlayerActions(APIView):
         point = player.victory_points + 1
         player.victory_points = point
         player.save()
-        pass
 
     def post(self, request, pk):
         data = request.data
