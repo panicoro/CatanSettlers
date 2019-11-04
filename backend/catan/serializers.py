@@ -135,8 +135,7 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ['username', 'colour', 'development_cards',
-                  'resources_cards', 'victory_points']
+        fields = ['username', 'colour', 'victory_points']
 
 
 class Current_TurnSerializer(serializers.ModelSerializer):
