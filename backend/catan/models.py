@@ -41,9 +41,6 @@ class VertexPosition(models.Model):
             raise ValidationError(
                 'The index with level 2 must be between 0 and 29.')
 
-    def __str__(self):
-        return '[level: %d , index: %d]' % (self.level, self.index)
-
 
 class HexePosition(models.Model):
     level = models.IntegerField(default=0,
@@ -129,10 +126,10 @@ class Player(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     colour = models.CharField(max_length=50, choices=COLOUR)
 
-    #development_cards = models.IntegerField(default=0,
-    #                                        validators=[MinValueValidator(0)])
-    #resources_cards = models.IntegerField(default=0,
-    #                                      validators=[MinValueValidator(0)])
+    development_cards = models.IntegerField(default=0,
+                                            validators=[MinValueValidator(0)])
+    resources_cards = models.IntegerField(default=0,
+                                          validators=[MinValueValidator(0)])
     victory_points = models.IntegerField(default=0,
                                          validators=[MinValueValidator(0)])
 
