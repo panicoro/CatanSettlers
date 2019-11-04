@@ -109,16 +109,6 @@ def is_neighbor(list_neighbor, level, index):
     return vec
 
 
-def check_player_in_turn(game, player):
-    """
-    A method to check if the player is in turn in the given game.
-    Args:
-    @game: a started game.
-    @player: a player in the game.
-    """
-    return game.current_turn.user == player.username
-
-
 # check that the vertices exist within the allowed range
 def checkVertexsPositions(level1, index1, level2, index2):
     exist_v = False
