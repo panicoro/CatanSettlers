@@ -21,6 +21,7 @@ from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from django.db.models import Q
+from catan.views.actions.road import build_road
 
 
 class PlayerInfo(APIView):
@@ -145,7 +146,7 @@ class PlayerActions(APIView):
         player.victory_points = point
         player.save()
 
-    def Road(self, game, player, level1, index1, level2, index2):
+    """def Road(self, game, player, level1, index1, level2, index2):
         position_1 = VertexPosition.objects.filter(level=level1,
                                                    index=index1).get()
         position_2 = VertexPosition.objects.filter(level=level2,
@@ -153,7 +154,7 @@ class PlayerActions(APIView):
         new_road = Road(game=game, vertex_1=position_1,
                         vertex_2=position_2, owner=player)
         new_road.save()
-
+    """
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
@@ -192,11 +193,10 @@ class PlayerActions(APIView):
 
         user = self.request.user
         owner = Player.objects.filter(username=user, game=pk).get()
-        # Check if the player is on his turn
-        if not check_player_in_turn(game, owner):
-            response = {"detail": "Not in turn"}
-            return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'build_road':
+            response = build_road(data['payload'], game, owner)
+            return response
+            """
             level1 = data['payload'][0]['level']
             index1 = data['payload'][0]['index']
             level2 = data['payload'][1]['level']
@@ -229,7 +229,7 @@ class PlayerActions(APIView):
             if not is_roads and not is_building:
                 response = {"detail": "must have something built"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            self.Road(game, owner, level1, index1, level2, index2)
+            Road(game, owner, level1, index1, level2, index2)
             deleteResource(owner.id, game.id)
             return Response(status=status.HTTP_200_OK)
-
+"""
