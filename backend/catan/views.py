@@ -528,3 +528,5 @@ class PlayerActions(APIView):
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
             self.Road(game, owner, level1, index1, level2, index2)
             deleteResource(owner.id, game.id)
+            return Response(status=status.HTTP_200_OK)
+
