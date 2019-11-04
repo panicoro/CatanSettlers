@@ -256,6 +256,20 @@ class GameInfo(APIView):
                             serializer=ResourceSerializer, key='resource_name')
         return last_gained
 
+    def get_resource_card(self, player, game):
+        """
+        """
+        resource_card = len(Resource.objects.filter(owner=player.id,
+                                                    game=game))
+        return resource_card
+
+    def get_development_card(self, player, game):
+        """
+        """
+        development_card = len(Card.objects.filter(owner=player.id,
+                                                   game=game))
+        return development_card
+
     def get_players(self, pk):
         """
         A method to obtain the list of serialized players
@@ -269,10 +283,14 @@ class GameInfo(APIView):
             settlements = self.get_settlements(player)
             cities = self.get_cities(player)
             roads = self.get_roads(player)
+            resource_card = self.get_resource_card(player, pk)
+            development_card = self.get_development_card(player, pk)
             data['roads'] = roads
             data['last_gained'] = last_gained
             data['settlements'] = settlements
             data['cities'] = cities
+            data['resources_cards'] = resource_card
+            data['development_cards'] = development_card
             serialized_players.append(data)
         return serialized_players
 
@@ -329,7 +347,6 @@ class PlayerActions(APIView):
         new_road = Road(game=game, vertex_1=position_1,
                         vertex_2=position_2, owner=player)
         new_road.save()
-        pass
 
     def post(self, request, pk):
         data = request.data
@@ -373,6 +390,6 @@ class PlayerActions(APIView):
             if not is_roads and not is_building:
                 response = {"detail": "must have something built"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            new_road = self.Road(game, owner, level1, index1, level2, index2)
+            self.Road(game, owner, level1, index1, level2, index2)
             deleteResource(owner.id, game.id)
             return Response(status=status.HTTP_200_OK)
