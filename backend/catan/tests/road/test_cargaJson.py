@@ -3,7 +3,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
-from catan.cargaJson import *
+# from catan.cargaJson import *
+from catan.views.actions.road import *
 from django.test import TestCase
 from catan.models import *
 from django.contrib.auth.models import User
