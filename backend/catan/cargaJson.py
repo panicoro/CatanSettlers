@@ -7,7 +7,7 @@ MYDIR = os.path.dirname(__file__)
 
 
 def HexagonInfo(level, index):
-    with open('catan/HexaVerVecinos.json') as file:
+    with open(os.path.join(MYDIR, 'HexaVerVecinos.json')) as file:
         data = json.load(file)
 
         for aux in data['data']:
