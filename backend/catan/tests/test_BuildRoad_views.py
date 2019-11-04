@@ -28,8 +28,6 @@ class TestViews(TestCase):
                                         winner=self.user)
         self.player = Player.objects.create(turn=1, username=self.user,
                                             colour='YELLOW', game=self.game,
-                                            development_cards=0,
-                                            resources_cards=0,
                                             victory_points=0)
         self.turn = Current_Turn.objects.create(game=self.game,
                                                 user=self.user,
@@ -128,7 +126,6 @@ class TestViews(TestCase):
         request.user = User.objects.create(username='nvero',
                                            password='bariloche')
         force_authenticate(request, user=self.user, token=self.token)
-
         view = PlayerActions.as_view()
         response = view(request, pk=1)
         response.render()
@@ -143,6 +140,7 @@ class TestViews(TestCase):
         view_player = PlayerInfo.as_view()
         response_player = view_player(request_player, pk=1)
         assert len(response_player.data['resources']) == 0
+        assert response_game.data['players'][0]['resources_cards'] == 0
         assert response_game.data['players'][0]['roads'][0][0]['level'] == 2
         assert response_game.data['players'][0]['roads'][0][0]['index'] == 0
         assert response_game.data['players'][0]['roads'][0][1]['level'] == 2
@@ -180,6 +178,7 @@ class TestViews(TestCase):
         assert response_game.data['players'][0]['roads'] == []
         assert response.data == {'detail': 'must have something built'}
         assert response.status_code == 403
+        assert response_game.data['players'][0]['resources_cards'] == 2
 
     def test_not_resource(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})

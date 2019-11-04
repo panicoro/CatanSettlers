@@ -27,8 +27,6 @@ class TestView(TestCase):
                                         winner=self.user)
         self.player = Player.objects.create(turn=1, username=self.user,
                                             colour='YELLOW', game=self.game,
-                                            development_cards=0,
-                                            resources_cards=2,
                                             victory_points=0)
         self.brick = Resource.objects.create(owner=self.player, game=self.game,
                                              resource_name='brick')
