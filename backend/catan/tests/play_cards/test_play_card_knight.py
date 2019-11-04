@@ -55,7 +55,7 @@ class TestViews(TestCase):
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
-        data = {'type': 'move_robber',
+        data = {'type': 'play_knight_card',
                 'payload': {
                     'position': {
                         'level': 2,
@@ -77,10 +77,13 @@ class TestViews(TestCase):
         self.createGame()
         self.current_turn = mixer.blend(
             Current_Turn, user=self.user1, game=self.game)
+        card = Card.objects.create(owner=self.player1,
+                                   game=self.game,
+                                   card_name='knight')
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
-        data = {'type': 'move_robber',
+        data = {'type': 'play_knight_card',
                 'payload': {
                     'position': {
                         'level': 2,
@@ -109,10 +112,16 @@ class TestViews(TestCase):
         building1 = Building.objects.create(
             name="settlement", game=self.game,
             owner=self.player2, position=vertex_positions[21])
+        Card.objects.create(owner=self.player1,
+                            game=self.game,
+                            card_name='knight')
+        Card.objects.create(owner=self.player1,
+                            game=self.game,
+                            card_name='knight')
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
-        data = {'type': 'move_robber',
+        data = {'type': 'play_knight_card',
                 'payload': {
                     'position': {
                         'level': 2,
@@ -154,10 +163,13 @@ class TestViews(TestCase):
         building1 = Building.objects.create(
             name="settlement", game=self.game,
             owner=self.player1, position=vertex_positions[21])
+        card = Card.objects.create(owner=self.player1,
+                                   game=self.game,
+                                   card_name='knight')
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
-        data = {'type': 'move_robber',
+        data = {'type': 'play_knight_card',
                 'payload': {
                     'position': {
                         'level': 2,
@@ -187,10 +199,19 @@ class TestViews(TestCase):
         building2 = Building.objects.create(
             name="settlement", game=self.game,
             owner=self.player3, position=vertex_positions[49])
+        Card.objects.create(owner=self.player1,
+                            game=self.game,
+                            card_name='knight')
+        Card.objects.create(owner=self.player1,
+                            game=self.game,
+                            card_name='knight')
+        Card.objects.create(owner=self.player1,
+                            game=self.game,
+                            card_name='knight')
 
         path = reverse('PlayerActions', kwargs={'pk': 1})
 
-        data = {'type': 'move_robber',
+        data = {'type': 'play_knight_card',
                 'payload': {
                     'position': {
                         'level': 2,
@@ -223,7 +244,7 @@ class TestViews(TestCase):
         assert Player.objects.filter(
             game=self.game, username=self.user2)[0].resources_cards == 0
 
-        data = {'type': 'move_robber',
+        data = {'type': 'play_knight_card',
                 'payload': {
                     'position': {
                         'level': 2,
@@ -238,11 +259,11 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.status_code == 409
+        assert response.status_code == 403
         assert response.data == {
             "you have to choose a player that has buildings"}
 
-        data = {'type': 'move_robber',
+        data = {'type': 'play_knight_card',
                 'payload': {
                     'position': {
                         'level': 2,
@@ -257,7 +278,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.status_code == 409
+        assert response.status_code == 403
         assert response.data == {"you can't choose yourself"}
 
     def test_playCardKnight(self):
@@ -322,5 +343,5 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.status_code == 409
+        assert response.status_code == 403
         assert response.data == {"You have no knight cards"}

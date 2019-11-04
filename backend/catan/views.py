@@ -390,21 +390,21 @@ class PlayerActions(APIView):
             if player_robber is not None:
                 if player_robber in str(self.my_user):
                     self.data_text = {"you can't choose yourself"}
-                    self.status = status.HTTP_409_CONFLICT
+                    self.status = status.HTTP_403_FORBIDDEN
                     return Response(self.data_text, self.status)
-                for j in range(0, len(self.owners)):
-                    if player_robber in str(self.owners[j].username):
+                for pos in range(0, len(self.owners)):
+                    if player_robber in str(self.owners[pos].username):
                         resources_list = Resource.objects.filter(
-                            owner=self.owners[j])
+                            owner=self.owners[pos])
                         if resources_list.exists():
                             resource_robber = Resource.objects.filter(
-                                owner=self.owners[j])[randint(
+                                owner=self.owners[pos])[randint(
                                     0, len(resources_list)-1)]
                             resource_robber.owner = self.my_player
                             resource_robber.last_gained = True
                             resource_robber.save()
-                            self.owners[j].resources_cards -= 1
-                            self.owners[j].save()
+                            self.owners[pos].resources_cards -= 1
+                            self.owners[pos].save()
                             self.my_player.resources_cards += 1
                             self.my_player.save()
                             self.data_text = {"you stole the resource " +
@@ -415,7 +415,7 @@ class PlayerActions(APIView):
                         self.status = status.HTTP_204_NO_CONTENT
                         return Response(self.data_text, self.status)
             self.data_text = {"you have to choose a player that has buildings"}
-            self.status = status.HTTP_409_CONFLICT
+            self.status = status.HTTP_403_FORBIDDEN
             return Response(self.data_text, self.status)
 
     def post(self, request, pk):
@@ -428,28 +428,6 @@ class PlayerActions(APIView):
             return Response(response, status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
-        if data['type'] == 'move_robber':
-
-            # Obtener y cambiar la nueva posicion del ladron
-
-            level = data['payload']['position']['level']
-            index = data['payload']['position']['index']
-
-            self.move_robber(level, index)
-
-            # Jugadores que tienen pueblos o ciudades
-            # en el hexagono del ladron
-
-            self.obtain_ownersBuildings(level, index)
-
-            # Elegir jugador a quien robar y robar
-
-            player_robber = data['payload']['player']
-
-            self.steal_resource(player_robber)
-
-            return Response(self.data_text, self.status)
-
         if data['type'] == 'play_knight_card':
 
             # Verificar si el jugador tiene carta KNIGHT
@@ -466,7 +444,7 @@ class PlayerActions(APIView):
 
                 self.steal_resource(player_robber)
 
-                if self.status != status.HTTP_409_CONFLICT:
+                if self.status != status.HTTP_403_FORBIDDEN:
                     self.my_player.development_cards -= 1
                     knight_card = Card.objects.filter(
                         owner=self.my_player, card_name='knight')[0]
@@ -475,4 +453,4 @@ class PlayerActions(APIView):
 
                 return Response(self.data_text, self.status)
             data_text = {'You have no knight cards'}
-            return Response(data_text, status=status.HTTP_409_CONFLICT)
+            return Response(data_text, status=status.HTTP_403_FORBIDDEN)
