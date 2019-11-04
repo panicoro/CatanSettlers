@@ -16,9 +16,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.models import *
-from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
+from catan.cargaJson import *
 
 
 class RoomList(APIView):
@@ -318,3 +318,60 @@ class BoardInfo(APIView):
         board_hexes = Hexe.objects.filter(board=game.board.id)
         hexes_serializer = HexeSerializer(board_hexes, many=True)
         return Response({"hexes": hexes_serializer.data})
+
+
+class PlayerActions(APIView):
+    def Road(self, game, player, level1, index1, level2, index2):
+        position_1 = VertexPosition.objects.filter(level=level1,
+                                                   index=index1).get()
+        position_2 = VertexPosition.objects.filter(level=level2,
+                                                   index=index2).get()
+        new_road = Road(game=game, vertex_1=position_1,
+                        vertex_2=position_2, owner=player)
+        new_road.save()
+
+    def post(self, request, pk):
+        data = request.data
+        game = get_object_or_404(Game, pk=pk)
+        user = self.request.user
+        owner = Player.objects.filter(username=user, game=pk).get()
+        # Check if the player is on his turn
+        if not check_player_in_turn(game, owner):
+            response = {"detail": "Not in turn"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        if data['type'] == 'build_road':
+            level1 = data['payload'][0]['level']
+            index1 = data['payload'][0]['index']
+            level2 = data['payload'][1]['level']
+            index2 = data['payload'][1]['index']
+            # Check that the position exists
+            if not checkVertexsPositions(level1, index1, level2, index2):
+                response = {"detail": "Non-existent vetertexs positions"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            list_neighbor = VertexInfo(level1, index1)
+            # check that the neighbor exists
+            if not is_neighbor(list_neighbor, level2, index2):
+                response = {"detail": "not neighbor"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            position_road = CheckPositionRoad(game.id, level1, index1,
+                                              level2, index2)
+            # I check if the position is free
+            if position_road:
+                response = {"detail": "invalid position, reserved"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            list_resources = ResourcesRoad(owner.id, game.id)
+            # I verify necessary resources
+            if len(list_resources) != 2:
+                response = {"detail": "Doesn't have enough resources"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            is_roads = CheckRoads_Road(owner.id, game.id, level1, index1,
+                                       level2, index2)
+            is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
+                                          level2, index2)
+            # I verify that I have my own road or building
+            if not is_roads and not is_building:
+                response = {"detail": "must have something built"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
+            self.Road(game, owner, level1, index1, level2, index2)
+            deleteResource(owner.id, game.id)
+            return Response(status=status.HTTP_200_OK)
