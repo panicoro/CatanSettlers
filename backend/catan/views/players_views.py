@@ -20,8 +20,8 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
-from django.db.models import Q
 from catan.views.actions.road import build_road
+from catan.views.actions.build import build_settlement
 
 
 class PlayerInfo(APIView):
@@ -54,98 +54,6 @@ class PlayerActions(APIView):
         """
         return game.current_turn.user == player.username
 
-    def checkVertex(self, level, index):
-        rta = False
-        vertex = VertexPosition.objects.filter(level=level, index=index)
-        if vertex.exists():
-            rta = True
-            return rta
-        return rta
-
-    def ResourceBuild(self, player_id, game_id):
-        """
-        Return a variable variable size list
-        if you find the items.
-        """
-        list_resource = Resource.objects.filter(owner=player_id, game=game_id)
-        brick = True
-        lumber = True
-        wool = True
-        grain = True
-        rta = []
-        for resource in list_resource:
-            if resource.resource_name == "brick" and brick:
-                brick = False
-                rta.append(resource)
-            if resource.resource_name == "lumber" and lumber:
-                lumber = False
-                rta.append(resource)
-            if resource.resource_name == "wool" and wool:
-                wool = False
-                rta.append(resource)
-            if resource.resource_name == "grain" and grain:
-                grain = False
-                rta.append(resource)
-        return rta
-
-    def CheckPosition(self, game_id, level, index):
-        rta = True
-        position = VertexPosition.objects.filter(level=level,
-                                                 index=index).get()
-        building = Building.objects.filter(game=game_id, position=position)
-        if building.exists():
-            rta = False
-            return rta
-        return rta
-
-    def CheckRoad(self, player_id, game_id, level, index):
-        """
-        Returns True if there is one of the vertices of the player's paths
-        matches the VertexPosition entered by it.
-        """
-        vertex = VertexPosition.objects.filter(level=level, index=index).get()
-        rta = False
-        road_player = Road.objects.filter(Q(owner=player_id, game=game_id,
-                                          vertex_1=vertex) |
-                                          Q(owner=player_id, game=game_id,
-                                          vertex_2=vertex))
-        if road_player.exists():
-            rta = True
-        return rta
-
-    def CheckBuild(self, game_id, level, index):
-        """
-        Returns True if there is no construction in the neighbors of the
-        VertexPosition entered by the player.
-        """
-        list_build = Building.objects.filter(game=game_id)
-        list_vertex = VertexInfo(level, index)
-        rta = True
-        for build in list_build:
-            for vertex in list_vertex:
-                if build.position.level == vertex[0]:
-                    if build.position.index == vertex[1]:
-                        rta = False
-                        return rta
-        return rta
-
-    def deleteResource(self, list_resource):
-        """
-        Remove resources from the list.
-        """
-        for resource in list_resource:
-            resource.delete()
-
-    def Building(self, game, player, level, index):
-        position = VertexPosition.objects.filter(level=level,
-                                                 index=index).get()
-        new_build = Building(game=game, name='settlement', owner=player,
-                             position=position)
-        new_build.save()
-        point = player.victory_points + 1
-        player.victory_points = point
-        player.save()
-
     """def Road(self, game, player, level1, index1, level2, index2):
         position_1 = VertexPosition.objects.filter(level=level1,
                                                    index=index1).get()
@@ -164,33 +72,8 @@ class PlayerActions(APIView):
             response = {"detail": "Not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'build_settlement':
-            level = data['payload']['level']
-            index = data['payload']['index']
-            # Check that the position exists
-            if not self.checkVertex(level, index):
-                response = {"detail": "Non-existent position"}
-                return Response(response, status=status.HTTP_403_FORBIDDEN)
-            # Check that the position is available
-            if not self.CheckPosition(game.id, level, index):
-                response = {"detail": "Busy position"}
-                return Response(response, status=status.HTTP_403_FORBIDDEN)
-            necessary_resources = self.ResourceBuild(player.id, game.id)
-            # Check that the pleyer has the necessary resources
-            if len(necessary_resources) != 4:
-                response = {"detail": "It does not have" +
-                            "the necessary resources"}
-                return Response(response, status=status.HTTP_403_FORBIDDEN)
-            is_road = self.CheckRoad(player.id, game.id, level, index)
-            is_building = self.CheckBuild(game.id, level, index)
-            # Check that there are no building in the neighboring vertex
-            # Checking that the player has a road in the vertex
-            if not is_building or not is_road:
-                response = {"detail": "Invalid position"}
-                return Response(response, status=status.HTTP_403_FORBIDDEN)
-            self.Building(game, player, level, index)
-            self.deleteResource(necessary_resources)
-            return Response(status=status.HTTP_200_OK)
-
+            response = build_settlement(data['payload'], game, player)
+            return response
         user = self.request.user
         owner = Player.objects.filter(username=user, game=pk).get()
         if data['type'] == 'build_road':
