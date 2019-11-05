@@ -11,7 +11,7 @@ from rest_framework_simplejwt import authentication
 from catan.serializers import *
 from catan.dices import throw_dices
 from django.http import Http404
-from random import random
+from random import random, randint
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -22,6 +22,8 @@ from rest_framework.permissions import AllowAny
 from random import shuffle
 from catan.views.actions.road import build_road
 from catan.views.actions.build import build_settlement
+from catan.views.actions.robber import move_robber
+from catan.views.actions.play_cards import move_robberCard
 
 
 class PlayerInfo(APIView):
@@ -63,10 +65,13 @@ class PlayerActions(APIView):
                         vertex_2=position_2, owner=player)
         new_road.save()
     """
+
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
         player = get_object_or_404(Player, username=request.user, game=game)
+        my_user = request.user
+        my_player = Player.objects.get(username=my_user, game=game)
         # Check if the player is on his turn
         if not self.check_player_in_turn(game, player):
             response = {"detail": "Not in turn"}
@@ -79,3 +84,14 @@ class PlayerActions(APIView):
         if data['type'] == 'build_road':
             response = build_road(data['payload'], game, owner)
             return response
+
+        if data['type'] == 'move_robber':
+            response = move_robber(data['payload'], game, my_user, my_player)
+            return response
+
+        if data['type'] == 'play_knight_card':
+            response = move_robberCard(data['payload'], game, my_user, my_player)
+            return response
+
+        response = {"detail": 'Please select a valid action'}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)

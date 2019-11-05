@@ -15,7 +15,8 @@ urlpatterns = [
     path('users/', login_views.Register.as_view(),
          name='register'),
     # Players views
-    path('games/<int:pk>/player/actions', players_views.PlayerActions.as_view(),
+    path('games/<int:pk>/player/actions/',
+         players_views.PlayerActions.as_view(),
          name='PlayerActions'),
     path('games/<int:pk>/player', players_views.PlayerInfo.as_view(),
          name='PlayerInfo'),
