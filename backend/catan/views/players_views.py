@@ -22,6 +22,7 @@ from rest_framework.permissions import AllowAny
 from random import shuffle
 from catan.views.actions.road import build_road
 from catan.views.actions.build import build_settlement
+from catan.views.actions.bank import bank_trade
 
 
 class PlayerInfo(APIView):
@@ -74,8 +75,11 @@ class PlayerActions(APIView):
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
             return response
-        user = self.request.user
-        owner = Player.objects.filter(username=user, game=pk).get()
+
         if data['type'] == 'build_road':
-            response = build_road(data['payload'], game, owner)
+            response = build_road(data['payload'], game, player)
+            return response
+
+        if data['type'] == 'bank_trade':
+            response = bank_trade(data['payload'], game, player)
             return response
