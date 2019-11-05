@@ -22,8 +22,8 @@ def resource_search(game, player, give):
 
 
 # delete the resource you want to give.
-def deleteResource(owner_id, game_id, give):
-    list_resource = Resource.objects.filter(owner=owner_id, game=game_id,
+def deleteResource(player, game, give):
+    list_resource = Resource.objects.filter(owner=player, game=game,
                                             resource_name=give)
     for resource in list_resource:
         resource.delete()
