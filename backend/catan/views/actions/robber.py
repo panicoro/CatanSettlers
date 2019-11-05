@@ -14,6 +14,15 @@ from random import shuffle
 from django.db.models import Q
 
 
+def checkPosition(level, index):
+    rta = False
+    hexe = HexePosition.objects.filter(level=level, index=index)
+    if hexe.exists():
+        rta = True
+        return rta
+    return rta
+
+
 def move_robber(payload, game, my_user, my_player):
     dice1 = Current_Turn.objects.filter(game=game)[0].dices1
     dice2 = Current_Turn.objects.filter(game=game)[0].dices2
@@ -25,6 +34,10 @@ def move_robber(payload, game, my_user, my_player):
         level = payload['position']['level']
         index = payload['position']['index']
         player_robber = payload['player']
+
+        if checkPosition(level, index) is False:
+            response = {"detail": "There is no hexagon in that position"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
 
         position = HexePosition.objects.filter(level=level,
                                                index=index).get()

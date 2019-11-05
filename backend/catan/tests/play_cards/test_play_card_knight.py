@@ -69,6 +69,36 @@ class TestViews(TestCase):
         assert response.status_code == 403
         assert response.data == {"detail": "Not in turn"}
 
+    def test_positionInvalid(self):
+        self.createGame()
+        self.current_turn = mixer.blend(
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=4, dices2=3)
+        card = Card.objects.create(owner=self.player1,
+                                   game=self.game,
+                                   card_name='knight')
+
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+
+        data = {'type': 'play_knight_card',
+                'payload': {
+                    'position': {
+                        'level': 6,
+                        'index': 10
+                    },
+                    'player': ''
+                }
+                }
+
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user1, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.status_code == 403
+        assert response.data == {
+            "detail": "There is no hexagon in that position"}
+
     def test_move_robberWithOutBuildings(self):
         self.createGame()
         self.current_turn = mixer.blend(

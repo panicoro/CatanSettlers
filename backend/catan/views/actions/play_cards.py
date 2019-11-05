@@ -14,6 +14,21 @@ from random import shuffle
 from django.db.models import Q
 
 
+def checkPosition(level, index):
+    rta = False
+    hexe = HexePosition.objects.filter(level=level, index=index)
+    if hexe.exists():
+        rta = True
+        return rta
+    return rta
+
+
+def deleteCard(my_player):
+    knight_card = Card.objects.filter(
+        owner=my_player, card_name='knight')[0]
+    knight_card.delete()
+
+
 def move_robberCard(payload, game, my_user, my_player):
     # Check if the player has a KNIGHT card
 
@@ -23,6 +38,10 @@ def move_robberCard(payload, game, my_user, my_player):
         level = payload['position']['level']
         index = payload['position']['index']
         player_robber = payload['player']
+
+        if checkPosition(level, index) is False:
+            response = {"detail": "There is no hexagon in that position"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
 
         position = HexePosition.objects.filter(level=level,
                                                index=index).get()
@@ -52,6 +71,7 @@ def move_robberCard(payload, game, my_user, my_player):
             response = {
                 "detail": "there are no buildings in the hexagon"}
             stat = status.HTTP_204_NO_CONTENT
+            deleteCard(my_player)
             return Response(response, stat)
 
         # If there is only one construction in the thief's hexagon #
@@ -61,6 +81,7 @@ def move_robberCard(payload, game, my_user, my_player):
                 response = {
                     "detail": "there are no enemy buildings in the hexagon"}
                 stat = status.HTTP_204_NO_CONTENT
+                deleteCard(my_player)
                 return Response(response, stat)
 
             resources_list = Resource.objects.filter(owner=owners[0])
@@ -75,9 +96,11 @@ def move_robberCard(payload, game, my_user, my_player):
                 response = {"detail": "you stole the resource " +
                             str(resource_robber)}
                 stat = status.HTTP_204_NO_CONTENT
+                deleteCard(my_player)
                 return Response(response, stat)
             response = {"detail": "the player has no resources"}
             stat = status.HTTP_204_NO_CONTENT
+            deleteCard(my_player)
             return Response(response, stat)
 
         # If there is more than one construction in the thief's hexagon #
@@ -104,10 +127,12 @@ def move_robberCard(payload, game, my_user, my_player):
                                 "detail": "you stole the resource " +
                                 str(resource_robber)}
                             stat = status.HTTP_204_NO_CONTENT
+                            deleteCard(my_player)
                             return Response(response, stat)
                         response = {
                             "detail": "the player has no resources"}
                         stat = status.HTTP_204_NO_CONTENT
+                        deleteCard(my_player)
                         return Response(response, stat)
             response = {
                 "detail": "you have to choose a player that has buildings"}
