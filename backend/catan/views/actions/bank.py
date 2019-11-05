@@ -22,9 +22,7 @@ def resource_search(game, player, give):
 
 
 # delete the resource you want to give.
-def deleteResource(player, game, give):
-    list_resource = Resource.objects.filter(owner=player, game=game,
-                                            resource_name=give)
+def deleteResource(list_resource):
     for resource in list_resource:
         resource.delete()
 
@@ -42,8 +40,9 @@ def bank_trade(payload, game, player):
     receive = payload['receive']
     new_list_rec = resource_search(game, player, give)
     if len(new_list_rec) < 4:
-        response = {'No tiene la cantidad de recursos suficientes'}
+        response = {"detail": "It does not have" +
+                    " the necessary resources"}
         return Response(data=response, status=status.HTTP_403_FORBIDDEN)
-    deleteResource(player, game, give)
     update_rec_player(player, game, receive)
+    deleteResource(new_list_rec)
     return Response(status=status.HTTP_200_OK)
