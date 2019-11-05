@@ -1,7 +1,7 @@
 import pytest
 from django.test import RequestFactory
 from django.contrib.auth.models import User
-from catan.views import Register
+from catan.views.login_views import Register
 from django.urls import reverse
 
 

@@ -1,6 +1,6 @@
 import pytest
 from django.test import RequestFactory
-from catan.views import PlayerInfo
+from catan.views.players_views import PlayerInfo
 from django.urls import reverse
 from rest_framework import status
 from django.contrib.auth.models import User
