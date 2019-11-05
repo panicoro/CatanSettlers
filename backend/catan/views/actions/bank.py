@@ -34,11 +34,24 @@ def update_rec_player(player, game, receive):
     new_resource.save()
 
 
+def checkIsResource(give, receive):
+    resource_type = ['brick', 'lumber', 'wool',
+                     'grain', 'ore']
+    if give in resource_type and receive in resource_type:
+        rta = True
+    else:
+        rta = False
+    return rta
+
+
 # bank trade view
 def bank_trade(payload, game, player):
     give = payload['give']
     receive = payload['receive']
     new_list_rec = resource_search(game, player, give)
+    if not(checkIsResource(give, receive)):
+        response = {"detail": "Non-existent resource"}
+        return Response(data=response, status=status.HTTP_403_FORBIDDEN)
     if len(new_list_rec) < 4:
         response = {"detail": "It does not have" +
                     " the necessary resources"}

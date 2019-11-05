@@ -55,15 +55,6 @@ class PlayerActions(APIView):
         """
         return game.current_turn.user == player.username
 
-    """def Road(self, game, player, level1, index1, level2, index2):
-        position_1 = VertexPosition.objects.filter(level=level1,
-                                                   index=index1).get()
-        position_2 = VertexPosition.objects.filter(level=level2,
-                                                   index=index2).get()
-        new_road = Road(game=game, vertex_1=position_1,
-                        vertex_2=position_2, owner=player)
-        new_road.save()
-    """
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
@@ -75,11 +66,12 @@ class PlayerActions(APIView):
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
             return response
-
         if data['type'] == 'build_road':
             response = build_road(data['payload'], game, player)
             return response
-
         if data['type'] == 'bank_trade':
             response = bank_trade(data['payload'], game, player)
             return response
+        else:
+            response = {"detail": "player action not allowed"}
+            return Response(data=response, status=status.HTTP_403_FORBIDDEN)
