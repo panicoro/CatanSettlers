@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import TestCase, RequestFactory
 from catan.models import *
+from aux.generateBoard import *
 from catan.views.players_views import PlayerActions, PlayerInfo
 from catan.views.game_views import GameInfo
 from django.urls import reverse
@@ -15,13 +16,14 @@ from catan.cargaJson import *
 class TestViews(TestCase):
 
     def setUp(self):
+        generateVertexPositions()
         self.username = 'test_user'
         self.email = 'test_user@example.com'
         self.user = User.objects.create_user(self.username, self.email)
         self.token = AccessToken()
-        self.vert_position1 = VertexPosition.objects.create(level=2, index=0)
-        self.vert_position2 = VertexPosition.objects.create(level=2, index=1)
-        self.vp2 = VertexPosition.objects.create(level=2, index=2)
+        self.vert_position1 = VertexPosition.objects.get(level=2, index=0)
+        self.vert_position2 = VertexPosition.objects.get(level=2, index=1)
+        self.vp2 = VertexPosition.objects.get(level=2, index=2)
         self.hexe_position = HexePosition.objects.create(level=0, index=0)
         self.board = Board.objects.create(name='Colonos')
         self.game = Game.objects.create(id=1, name='Juego1', board=self.board,
@@ -76,8 +78,8 @@ class TestViews(TestCase):
 
     def test_not_neighbor(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
-        vert_position1 = VertexPosition.objects.create(level=2, index=18)
-        vert_position2 = VertexPosition.objects.create(level=2, index=20)
+        vert_position1 = VertexPosition.objects.get(level=2, index=18)
+        vert_position2 = VertexPosition.objects.get(level=2, index=20)
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 18},
                             {"level": 2, "index": 20}]}
@@ -232,3 +234,95 @@ class TestViews(TestCase):
         assert len(response_game.data['players'][0]['roads']) == 1
         assert response.data == {"detail": "Non-existent vetertexs positions"}
         assert response.status_code == 403
+
+    def test_get_noResource(self):
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        self.lumber.delete()
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == []
+        assert response.status_code == 200
+
+    def test_get_withResource1(self):
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = [{
+            'type': 'build_road',
+            'payload': [[{'level': 2, 'index': 0},
+                         {'level': 2, 'index': 29}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 1, 'index': 1}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 2}]],
+            }
+        ]
+        assert response.data == expected_data
+        assert response.status_code == 200
+
+    def test_get_withResource2(self):
+        """
+        This test delete the one road and then create a building in
+        the board
+        """
+        self.road.delete()
+        Building.objects.create(owner=self.player, game=self.game,
+                                position=self.vert_position2)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = [{
+            'type': 'build_road',
+            'payload': [[{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 0}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 1, 'index': 1}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 2}]],
+            }
+        ]
+        assert response.data == expected_data
+        assert response.status_code == 200
+
+    def test_get_withResource3(self):
+        """
+        This test only create a building in the board
+        """
+        Building.objects.create(owner=self.player, game=self.game,
+                                position=self.vert_position2)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = [{
+            'type': 'build_road',
+            'payload': [[{'level': 2, 'index': 0},
+                         {'level': 2, 'index': 29}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 1, 'index': 1}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 2}]],
+            }
+        ]
+        assert response.data == expected_data
+        assert response.status_code == 200
+
+    def test_get_withResource4(self):
+        """
+        This test delete the only road existent
+        """
+        self.road.delete()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == []
+        assert response.status_code == 200
