@@ -65,7 +65,7 @@ class TestViews(TestCase):
         assert len(response_player.data['cards']) == 1
         assert response_game.data['players'][0]['development_cards'] == 1
         assert response.status_code == 200
-    
+
     def test_NoResource(self):
         self.grain.delete()
         path = reverse('PlayerActions', kwargs={'pk': 1})

@@ -18,6 +18,8 @@ from catan.views.actions.build import (
 from catan.views.actions.bank import bank_trade
 from catan.views.actions.robber import move_robber
 from catan.views.actions.play_cards import move_robberCard
+from catan.views.actions.buy_card import buy_card
+from catan.views.actions.change_turn import change_turn
 
 
 class PlayerInfo(APIView):
@@ -85,6 +87,10 @@ class PlayerActions(APIView):
         if not self.check_player_in_turn(game, player):
             response = {"detail": "Not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
+        if data['type'] == 'end_turn':
+            change_turn(game)
+            throw_dices(game, game.current_turn, game.board)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
             return response
