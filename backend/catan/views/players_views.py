@@ -15,9 +15,9 @@ from catan.views.actions.buy_card import buy_card
 from catan.views.actions.build import (
             build_settlement, canBuild_Settlement,
             posiblesSettlements)
+from catan.views.actions.bank import bank_trade
 from catan.views.actions.robber import move_robber
 from catan.views.actions.play_cards import move_robberCard
-from catan.views.actions.buy_card import buy_card
 
 
 class PlayerInfo(APIView):
@@ -93,6 +93,8 @@ class PlayerActions(APIView):
             return response
         if data['type'] == 'buy_card':
             response = buy_card(game, player)
+        if data['type'] == 'bank_trade':
+            response = bank_trade(data['payload'], game, player)
             return response
         if data['type'] == 'move_robber':
             response = move_robber(data['payload'], game, user, player)
