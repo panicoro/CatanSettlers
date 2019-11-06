@@ -253,9 +253,12 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         expected_data = [{
             'type': 'build_road',
-            'payload': [[{'level': 2, 'index': 0}, {'level': 2, 'index': 29}],
-               [{'level': 2, 'index': 1}, {'level': 1, 'index': 1}],
-               [{'level': 2, 'index': 1}, {'level': 2, 'index': 2}]],
+            'payload': [[{'level': 2, 'index': 0},
+                         {'level': 2, 'index': 29}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 1, 'index': 1}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 2}]],
             }
         ]
         assert response.data == expected_data
@@ -267,7 +270,7 @@ class TestViews(TestCase):
         the board
         """
         self.road.delete()
-        Building.objects.create(owner=self.player, game=self.game, 
+        Building.objects.create(owner=self.player, game=self.game,
                                 position=self.vert_position2)
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
@@ -276,9 +279,12 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         expected_data = [{
             'type': 'build_road',
-            'payload': [[{'level': 2, 'index': 1}, {'level': 2, 'index': 0}],
-               [{'level': 2, 'index': 1}, {'level': 1, 'index': 1}],
-               [{'level': 2, 'index': 1}, {'level': 2, 'index': 2}]],
+            'payload': [[{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 0}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 1, 'index': 1}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 2}]],
             }
         ]
         assert response.data == expected_data
@@ -288,7 +294,7 @@ class TestViews(TestCase):
         """
         This test only create a building in the board
         """
-        Building.objects.create(owner=self.player, game=self.game, 
+        Building.objects.create(owner=self.player, game=self.game,
                                 position=self.vert_position2)
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
@@ -297,9 +303,12 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         expected_data = [{
             'type': 'build_road',
-            'payload': [[{'level': 2, 'index': 0}, {'level': 2, 'index': 29}],
-               [{'level': 2, 'index': 1}, {'level': 1, 'index': 1}],
-               [{'level': 2, 'index': 1}, {'level': 2, 'index': 2}]],
+            'payload': [[{'level': 2, 'index': 0},
+                         {'level': 2, 'index': 29}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 1, 'index': 1}],
+                        [{'level': 2, 'index': 1},
+                         {'level': 2, 'index': 2}]],
             }
         ]
         assert response.data == expected_data

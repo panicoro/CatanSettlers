@@ -138,7 +138,7 @@ def create_Road(game, player, level1, index1, level2, index2):
 
 def get_roadsAndBuildings(player):
     """
-    A function that obtains two set of vertex positions of 
+    A function that obtains two set of vertex positions of
     the roads and buildings of a given player.
     Args:
     @player: a player of a started game.
