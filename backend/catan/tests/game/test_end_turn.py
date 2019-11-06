@@ -3,7 +3,8 @@ from django.urls import reverse
 from mixer.backend.django import mixer
 from django.contrib.auth.models import User
 from catan.models import *
-from catan.views import PlayerActions, GameInfo
+from catan.views.players_views import PlayerActions
+from catan.views.game_views import GameInfo
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
 import pytest
@@ -79,7 +80,7 @@ class TestView(TestCase):
         response = view_actions(request, pk=1)
         response.render()
         assert response.status_code == 403
-        assert response.data['detail'] == 'not in turn'
+        assert response.data['detail'] == 'Not in turn'
         url = reverse('GameInfo', kwargs={'pk': 1})
         request = RequestFactory().get(url)
         force_authenticate(request, user=self.user2, token=self.token)
