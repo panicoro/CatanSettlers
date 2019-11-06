@@ -127,5 +127,5 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == {"detail": "player action not allowed"}
+        assert response.data == {'detail': 'Please select a valid action'}
         assert response.status_code == 403
