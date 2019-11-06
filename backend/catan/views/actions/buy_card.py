@@ -20,7 +20,6 @@ def checkResource(game_id, player_id):
     wool = Q(owner=player_id, game=game_id, resource_name='wool')
     grain = Q(owner=player_id, game=game_id, resource_name='grain')
     list_resource = Resource.objects.filter(ore | wool | grain)
-    print(list_resource)
     return list_resource
 
 
