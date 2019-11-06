@@ -1,31 +1,17 @@
 from catan.models import *
-import json
-import os
-
-
-MYDIR = os.path.dirname(__file__)
-
-
-def HexagonInfo(level, index):
-    with open(os.path.join(MYDIR, 'HexaVerVecinos.json')) as file:
-        data = json.load(file)
-
-        for aux in data['data']:
-            hexagon = aux['hexagono']
-            if level == hexagon[0] and index == hexagon[1]:
-                return aux['vecinos']
-
-
-# get the neighbors of a given vertex
-def VertexInfo(level, index):
-    with open(os.path.join(MYDIR, 'VertexVecinos.json')) as file:
-        data = json.load(file)
-
-        for aux in data["data"]:
-            vertex = aux['vertice']
-            if level == vertex[0] and index == vertex[1]:
-                return aux['vecinos']
-<<<<<<< HEAD
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt import authentication
+from django.http import Http404
+from random import random
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from catan.cargaJson import *
+from catan.dices import throw_dices
+from rest_framework.permissions import AllowAny
+from random import shuffle
+from django.db.models import Q
 
 
 # get the necessary resources
@@ -123,16 +109,6 @@ def is_neighbor(list_neighbor, level, index):
     return vec
 
 
-def check_player_in_turn(game, player):
-    """
-    A method to check if the player is in turn in the given game.
-    Args:
-    @game: a started game.
-    @player: a player in the game.
-    """
-    return game.current_turn.user == player.username
-
-
 # check that the vertices exist within the allowed range
 def checkVertexsPositions(level1, index1, level2, index2):
     exist_v = False
@@ -144,5 +120,52 @@ def checkVertexsPositions(level1, index1, level2, index2):
         exist_v = True
         return exist_v
     return exist_v
-=======
->>>>>>> dev
+
+
+def create_Road(game, player, level1, index1, level2, index2):
+    position_1 = VertexPosition.objects.filter(level=level1,
+                                               index=index1).get()
+    position_2 = VertexPosition.objects.filter(level=level2,
+                                               index=index2).get()
+    new_road = Road(game=game, vertex_1=position_1,
+                    vertex_2=position_2, owner=player)
+    new_road.save()
+
+
+def build_road(payload, game, owner):
+    print(payload)
+    level1 = payload[0]['level']
+    index1 = payload[0]['index']
+    level2 = payload[1]['level']
+    index2 = payload[1]['index']
+    # Check that the position exists
+    if not checkVertexsPositions(level1, index1, level2, index2):
+        response = {"detail": "Non-existent vetertexs positions"}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+    list_neighbor = VertexInfo(level1, index1)
+    # check that the neighbor exists
+    if not is_neighbor(list_neighbor, level2, index2):
+        response = {"detail": "not neighbor"}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+    position_road = CheckPositionRoad(game.id, level1, index1,
+                                      level2, index2)
+    # I check if the position is free
+    if position_road:
+        response = {"detail": "invalid position, reserved"}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+    list_resources = ResourcesRoad(owner.id, game.id)
+    # I verify necessary resources
+    if len(list_resources) != 2:
+        response = {"detail": "Doesn't have enough resources"}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+    is_roads = CheckRoads_Road(owner.id, game.id, level1, index1,
+                               level2, index2)
+    is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
+                                  level2, index2)
+    # I verify that I have my own road or building
+    if not is_roads and not is_building:
+        response = {"detail": "must have something built"}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
+    create_Road(game, owner, level1, index1, level2, index2)
+    deleteResource(owner.id, game.id)
+    return Response(status=status.HTTP_200_OK)

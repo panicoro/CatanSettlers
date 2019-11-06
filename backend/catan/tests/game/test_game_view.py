@@ -3,7 +3,7 @@ from django.urls import reverse
 from mixer.backend.django import mixer
 from django.contrib.auth.models import User
 from catan.models import *
-from catan.views import GameList, GameInfo
+from catan.views.game_views import GameList, GameInfo
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
 import pytest
