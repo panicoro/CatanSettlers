@@ -89,7 +89,7 @@ class PlayerActions(APIView):
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'end_turn':
             change_turn(game)
-            throw_dices(game, game.current_turn, game.board)
+            throw_dices(game)
             return Response(status=status.HTTP_204_NO_CONTENT)
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
