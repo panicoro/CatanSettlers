@@ -99,6 +99,7 @@ class PlayerActions(APIView):
             return response
         if data['type'] == 'buy_card':
             response = buy_card(game, player)
+            return response
         if data['type'] == 'bank_trade':
             response = bank_trade(data['payload'], game, player)
             return response
