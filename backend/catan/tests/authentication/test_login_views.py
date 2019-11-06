@@ -2,7 +2,7 @@ import pytest
 from django.test import RequestFactory
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.views import TokenRefreshView
-from catan.views import AuthAPIView
+from catan.views.login_views import AuthAPIView
 from django.urls import reverse
 
 

@@ -125,11 +125,6 @@ class Player(models.Model):
     username = models.ForeignKey(User, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     colour = models.CharField(max_length=50, choices=COLOUR)
-
-    development_cards = models.IntegerField(default=0,
-                                            validators=[MinValueValidator(0)])
-    resources_cards = models.IntegerField(default=0,
-                                          validators=[MinValueValidator(0)])
     victory_points = models.IntegerField(default=0,
                                          validators=[MinValueValidator(0)])
 
