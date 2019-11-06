@@ -50,6 +50,11 @@ def ResourceBuild(player_id, game_id):
     return rta
 
 
+def canBuild_Settlement(player):
+    resources = ResourceBuild(player, player.game)
+    return len(resources) == 4
+
+
 def CheckPosition(game_id, level, index):
     rta = True
     position = VertexPosition.objects.filter(level=level,
@@ -100,6 +105,54 @@ def deleteResource(list_resource):
     """
     for resource in list_resource:
         resource.delete()
+
+
+def get_roadsAndBuildings(player):
+    """
+    A function that obtains two set of vertex positions of
+    the roads and buildings of a given player.
+    Args:
+    @player: a player of a started game.
+
+    """
+    roads = Road.objects.filter(owner=player)
+    vertex_roads = set()
+    for road in roads:
+        vertex_roads.add(road.vertex_1)
+        vertex_roads.add(road.vertex_2)
+    buildings = Building.objects.filter(owner=player)
+    vertex_buildings = set()
+    for build in buildings:
+        vertex_buildings.add(build.position)
+    return (vertex_roads, vertex_buildings)
+
+
+def posiblesSettlements(player):
+    """
+    A function that obtains positions that a player might have
+    available to build settlements on the board.
+    Args:
+    @player: a player of a started game.
+    """
+    (vertex_roads, vertex_buildings) = get_roadsAndBuildings(player)
+    # I get the vertices of my own roads that are not occupied by my buildings
+    available_vertex = vertex_roads - vertex_buildings
+    # For each vertices check that their neighbors are not occupied,
+    # if they are it can not be built (distance rule)
+    potencial_buildings = list(available_vertex)
+    for vertex in available_vertex:
+        # Get the neighbors of a vertex position
+        neighbors = VertexInfo(vertex.level, vertex.index)
+        for neighbor in neighbors:
+            vertex_position = VertexPosition.objects.filter(
+                                level=neighbor[0],
+                                index=neighbor[1]).get()
+            # If there a building in one of the neighbors then
+            # the vertex couldn't have a new building...
+            if Building.objects.filter(position=vertex_position).exists():
+                potencial_buildings.remove(vertex)
+                break
+    return potencial_buildings
 
 
 def build_settlement(payload, game, player):
