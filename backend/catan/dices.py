@@ -56,8 +56,6 @@ def gain_resources(game, owner, resource_name, amount):
         Resource.objects.create(owner=owner, game=game,
                                 resource_name=resource_name,
                                 last_gained=True)
-    owner.resources_cards += amount
-    owner.save()
 
 
 def throw_twoDices(dice1=0, dice2=0):
