@@ -22,6 +22,7 @@ from rest_framework.permissions import AllowAny
 from random import shuffle
 from catan.views.actions.road import build_road, canBuild_Road, posiblesRoads
 from catan.views.actions.build import build_settlement
+from catan.views.actions.buy_card import buy_card
 from catan.views.actions.robber import move_robber
 from catan.views.actions.play_cards import move_robberCard
 
@@ -56,6 +57,7 @@ class PlayerActions(APIView):
         """
         return game.current_turn.user == player.username
 
+
     def get(self, request, pk):
         game = get_object_or_404(Game, pk=pk)
         user = request.user
@@ -74,6 +76,7 @@ class PlayerActions(APIView):
                 data.append(item)
         return Response(data, status=status.HTTP_200_OK)
 
+
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
@@ -87,19 +90,17 @@ class PlayerActions(APIView):
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
             return response
-        user = self.request.user
-        owner = Player.objects.filter(username=user, game=pk).get()
         if data['type'] == 'build_road':
-            response = build_road(data['payload'], game, owner)
+            response = build_road(data['payload'], game, player)
             return response
-
+        if data['type'] == 'buy_card':
+            response = buy_card(game, player)
+            return response
         if data['type'] == 'move_robber':
             response = move_robber(data['payload'], game, my_user, my_player)
             return response
-
         if data['type'] == 'play_knight_card':
             response = move_robberCard(data['payload'], game, my_user, my_player)
             return response
-
         response = {"detail": 'Please select a valid action'}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
