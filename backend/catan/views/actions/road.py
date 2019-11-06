@@ -133,7 +133,6 @@ def create_Road(game, player, level1, index1, level2, index2):
 
 
 def build_road(payload, game, owner):
-    print(payload)
     level1 = payload[0]['level']
     index1 = payload[0]['index']
     level2 = payload[1]['level']
@@ -169,3 +168,18 @@ def build_road(payload, game, owner):
     create_Road(game, owner, level1, index1, level2, index2)
     deleteResource(owner.id, game.id)
     return Response(status=status.HTTP_200_OK)
+
+
+def play_road_building_card(payload, game, player):
+    response = build_road(payload, game, player)
+    print("<xsaxaxasx")
+    print(response)
+    if response.data == {"detail": "Doesn't have enough resources"}:
+        level1 = payload[0]['level']
+        index1 = payload[0]['index']
+        level2 = payload[1]['level']
+        index2 = payload[1]['index']
+        create_Road(game, player, level1, index1, level2, index2)
+        deleteResource(player.id, game.id)
+        return Response(status=status.HTTP_200_OK)
+    return Response(response.data, status=status.HTTP_403_FORBIDDEN)

@@ -20,7 +20,7 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
-from catan.views.actions.road import build_road
+from catan.views.actions.road import build_road, play_road_building_card
 from catan.views.actions.build import build_settlement
 from catan.views.actions.robber import move_robber
 from catan.views.actions.play_cards import move_robberCard
@@ -90,8 +90,11 @@ class PlayerActions(APIView):
             return response
 
         if data['type'] == 'play_knight_card':
-            response = move_robberCard(data['payload'], game, my_user, my_player)
+            response = move_robberCard(data['payload'], game, my_user,
+                                       my_player)
             return response
-
+        if data['type'] == 'play_road_building_card':
+            response = play_road_building_card(data['payload'], game, player)
+            return response
         response = {"detail": 'Please select a valid action'}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
