@@ -5,7 +5,8 @@ from catan.dices import *
 from mixer.backend.django import mixer
 from django.contrib.auth.models import User
 from aux.generateBoard import *
-from catan.views import *
+from catan.views.players_views import PlayerInfo
+from catan.views.game_views import GameInfo
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
 import pytest
