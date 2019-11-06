@@ -28,8 +28,12 @@ def ResourcesRoad(owner_id, game_id):
         if resource.resource_name == "lumber" and lumber:
             rta.append(resource)
             lumber = False
-
     return rta
+
+
+def canBuild_Road(player):
+    resources = ResourcesRoad(player, player.game)
+    return len(resources) == 2
 
 
 # check the existence of a built road
@@ -130,6 +134,52 @@ def create_Road(game, player, level1, index1, level2, index2):
     new_road = Road(game=game, vertex_1=position_1,
                     vertex_2=position_2, owner=player)
     new_road.save()
+
+
+def get_roadsAndBuildings(player):
+    """
+    A function that obtains two set of vertex positions of 
+    the roads and buildings of a given player.
+    Args:
+    @player: a player of a started game.
+
+    """
+    roads = Road.objects.filter(owner=player)
+    vertex_roads = set()
+    for road in roads:
+        vertex_roads.add(road.vertex_1)
+        vertex_roads.add(road.vertex_2)
+    buildings = Building.objects.filter(owner=player)
+    vertex_buildings = set()
+    for build in buildings:
+        vertex_buildings.add(build.position)
+    return (vertex_roads, vertex_buildings)
+
+
+def posiblesRoads(player):
+    """
+    A function that obtains positions that a player might have
+    available to build roads on the board.
+    Args:
+    @player: a player of a started game.
+    """
+    (vertex_roads, vertex_buildings) = get_roadsAndBuildings(player)
+    available_vertex = vertex_buildings.union(vertex_roads)
+    potencial_roads = []
+    for vertex in available_vertex:
+        # Get the neighbors of a vertex
+        neighbors = VertexInfo(vertex.level, vertex.index)
+        for neighbor in neighbors:
+            vertex_position = VertexPosition.objects.filter(
+                                level=neighbor[0],
+                                index=neighbor[1]).get()
+            if not Road.objects.filter(Q(vertex_1=vertex,
+                                       vertex_2=vertex_position) |
+                                       Q(vertex_1=vertex_position,
+                                       vertex_2=vertex)).exists():
+                new_road = [vertex, vertex_position]
+                potencial_roads.append(new_road)
+    return potencial_roads
 
 
 def build_road(payload, game, owner):

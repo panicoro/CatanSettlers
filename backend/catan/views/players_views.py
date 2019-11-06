@@ -20,7 +20,7 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
-from catan.views.actions.road import build_road
+from catan.views.actions.road import build_road, canBuild_Road, posiblesRoads
 from catan.views.actions.build import build_settlement
 from catan.views.actions.robber import move_robber
 from catan.views.actions.play_cards import move_robberCard
@@ -56,15 +56,23 @@ class PlayerActions(APIView):
         """
         return game.current_turn.user == player.username
 
-    """def Road(self, game, player, level1, index1, level2, index2):
-        position_1 = VertexPosition.objects.filter(level=level1,
-                                                   index=index1).get()
-        position_2 = VertexPosition.objects.filter(level=level2,
-                                                   index=index2).get()
-        new_road = Road(game=game, vertex_1=position_1,
-                        vertex_2=position_2, owner=player)
-        new_road.save()
-    """
+    def get(self, request, pk):
+        game = get_object_or_404(Game, pk=pk)
+        user = request.user
+        player = get_object_or_404(Player, username=user, game=game)
+        data = []
+        if canBuild_Road(player):
+            item = {"type": 'build_road'}
+            posibles_roads = posiblesRoads(player)
+            item['payload'] = []
+            for road in posibles_roads:
+                new_road = []
+                new_road.append(VertexPositionSerializer(road[0]).data)
+                new_road.append(VertexPositionSerializer(road[1]).data)
+                item['payload'].append(new_road)
+            if len(item['payload']) != 0:
+                data.append(item)
+        return Response(data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):
         data = request.data
