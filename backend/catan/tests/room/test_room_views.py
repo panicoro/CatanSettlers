@@ -198,3 +198,56 @@ class TestView(TestCase):
         view = RoomDetail.as_view()
         response = view(request, pk=1)
         assert response.status_code == 400
+
+    def test_deleteRoom(self):
+        user = User.objects.create_user(username='user1', password='hola1234')
+        board = Board.objects.create(name='Board 1')
+        room = Room.objects.create(name="Room 1", owner=user,
+                                   board_id=board.id)
+        path = reverse('join_room', kwargs={'pk': 1})
+
+        request = RequestFactory().delete(path)
+
+        force_authenticate(request, user=user, token=self.token)
+
+        view = RoomDetail.as_view()
+        response = view(request, pk=1)
+        assert response.status_code == 204
+        assert Room.objects.filter(id=1).exists() is False
+
+    def test_deleteRoomNotOwner(self):
+        user = User.objects.create_user(username='user1', password='hola1234')
+        board = Board.objects.create(name='Board 1')
+        room = Room.objects.create(name="Room 1", owner=user,
+                                   board_id=board.id)
+        path = reverse('join_room', kwargs={'pk': 1})
+
+        request = RequestFactory().delete(path)
+
+        force_authenticate(request, user=self.user, token=self.token)
+
+        view = RoomDetail.as_view()
+        response = view(request, pk=1)
+        assert response.status_code == 403
+        assert response.data == {
+            "detail": "only the room's owner can delete it"}
+        assert Room.objects.filter(id=1).exists() is True
+
+    def test_deleteRoomHasStarted(self):
+        user = User.objects.create_user(username='user1', password='hola1234')
+        board = Board.objects.create(name='Board 1')
+        room = Room.objects.create(name="Room 1", owner=user,
+                                   board_id=board.id,
+                                   game_has_started=True)
+        path = reverse('join_room', kwargs={'pk': 1})
+
+        request = RequestFactory().delete(path)
+
+        force_authenticate(request, user=user, token=self.token)
+
+        view = RoomDetail.as_view()
+        response = view(request, pk=1)
+        assert response.status_code == 403
+        assert response.data == {
+            "detail": "Can't delete the room once the game has started"}
+        assert Room.objects.filter(id=1).exists() is True

@@ -114,3 +114,20 @@ class RoomDetail(APIView):
         return Response(
             ValidationError("Can't start the game without all players"),
             status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        user = request.user
+        room = get_object_or_404(Room, pk=pk)
+        if room.game_has_started is False:
+            if room.owner == user:
+                room.delete()
+                return Response(
+                    status=status.HTTP_204_NO_CONTENT)
+            data = {"detail": "only the room's owner can delete it"}
+            return Response(
+                data,
+                status=status.HTTP_403_FORBIDDEN)
+        data = {"detail": "Can't delete the room once the game has started"}
+        return Response(
+            data,
+            status=status.HTTP_403_FORBIDDEN)
