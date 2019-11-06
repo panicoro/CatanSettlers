@@ -17,19 +17,20 @@ import json
 class TestViews(TestCase):
 
     def setUp(self):
+        generateVertexPositions()
         self.username = 'test_user'
         self.email = 'test_user@example.com'
         self.user = User.objects.create_user(self.username, self.email)
         self.token = AccessToken()
-        self.vertex_1 = VertexPosition.objects.create(level=1, index=16)
-        self.vertex_2 = VertexPosition.objects.create(level=2, index=26)
+        self.vertex_1 = VertexPosition.objects.get(level=1, index=16)
+        self.vertex_2 = VertexPosition.objects.get(level=2, index=26)
         self.hexe_position = HexePosition.objects.create(level=2, index=11)
         self.board = Board.objects.create(name='Colonos')
         self.game = Game.objects.create(id=1, name='juego1', board=self.board,
                                         robber=self.hexe_position,
                                         winner=self.user)
         self.player = Player.objects.create(turn=1, username=self.user,
-                                            colour='Red', game=self.game,
+                                            colour='red', game=self.game,
                                             victory_points=0)
         self.turn = Current_Turn.objects.create(game=self.game,
                                                 user=self.user,
@@ -270,3 +271,63 @@ class TestViews(TestCase):
         assert response.data == {"detail": "It does not have" +
                                  "the necessary resources"}
         assert response.status_code == 403
+
+    def test_get_noResource(self):
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        self.lumber.delete()
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == []
+        assert response.status_code == 200
+
+    def test_get_withResources(self):
+        new_vertex1 = VertexPosition.objects.get(level=1, index=17)
+        new_vertex2 = VertexPosition.objects.get(level=2, index=29)
+        Road.objects.create(owner=self.player, game=self.game,
+                            vertex_1=new_vertex1, vertex_2=new_vertex2)
+        Road.objects.create(owner=self.player, game=self.game,
+                            vertex_1=self.vertex_1, vertex_2=new_vertex1)
+        Road.objects.create(owner=self.player, game=self.game,
+                            vertex_1=self.vertex_2, vertex_2=self.vertex_1)
+        Building.objects.create(owner=self.player, game=self.game,
+                                position=self.vertex_2)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = [
+            {"type": "build_settlement",
+             "payload": [{"level": 1, "index": 17},
+                         {"level": 2, "index": 29}]}
+        ]
+        assert response.data == expected_data
+        assert response.status_code == 200
+
+    def test_get_withResources2(self):
+        """
+        In this test we build a new settlement in the position
+        (1, 17) so there isn't a place to build...
+        """
+        new_vertex1 = VertexPosition.objects.get(level=1, index=17)
+        new_vertex2 = VertexPosition.objects.get(level=2, index=29)
+        Road.objects.create(owner=self.player, game=self.game,
+                            vertex_1=new_vertex1, vertex_2=new_vertex2)
+        Road.objects.create(owner=self.player, game=self.game,
+                            vertex_1=self.vertex_1, vertex_2=new_vertex1)
+        Road.objects.create(owner=self.player, game=self.game,
+                            vertex_1=self.vertex_2, vertex_2=self.vertex_1)
+        Building.objects.create(owner=self.player, game=self.game,
+                                position=self.vertex_2)
+        Building.objects.create(owner=self.player, game=self.game,
+                                position=new_vertex1)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = []
+        assert response.data == expected_data
+        assert response.status_code == 200
