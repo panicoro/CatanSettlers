@@ -17,7 +17,7 @@ from django.db.models import Q
 # Look for the resources you want to give.
 def resource_search(game, player, give):
     list_resource = Resource.objects.filter(owner=player, game=game,
-                                            resource_name=give)
+                                            resource_name=give)[:4]
     return list_resource
 
 
