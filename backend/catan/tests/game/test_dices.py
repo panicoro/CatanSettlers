@@ -70,7 +70,7 @@ class TestView(TestCase):
                                                                    'grain']
         assert response_game.status_code == 200
 
-    def test_throw_dicesSettlements(self):
+    def test_throw_dices(self):
         board_test = generateBoardTest()
         vertex_positions = VertexPosition.objects.all()
         game_test = Game.objects.create(name='Juego', board=board_test,
@@ -146,3 +146,39 @@ class TestView(TestCase):
             assert response_game.data['players'][0]['last_gained'] == [
                                        expected_resources[i]] * 3
             assert response_game.status_code == 200
+
+    def test_throw_dices_7(self):
+        board_test = generateBoardTest()
+        vertex_positions = VertexPosition.objects.all()
+        game_test = Game.objects.create(name='Juego', board=board_test,
+                                        robber=self.robber)
+        current_turn = Current_Turn.objects.create(game=game_test,
+                                                   user=self.user1)
+        player_test = mixer.blend(Player, username=self.user1,
+                                  game=game_test, colour='red')
+        Building.objects.create(game=game_test,
+                                owner=player_test,
+                                name='city',
+                                position=vertex_positions[0])
+        Building.objects.create(game=game_test,
+                                owner=player_test,
+                                name='city',
+                                position=vertex_positions[18])
+        Building.objects.create(game=game_test,
+                                owner=player_test,
+                                name='settlement',
+                                position=vertex_positions[3])
+        Building.objects.create(game=game_test,
+                                owner=player_test,
+                                name='settlement',
+                                position=vertex_positions[9])
+        throw_dices(game_test, dice1=3, dice2=4)
+        url_game = reverse('GameInfo', kwargs={'pk': 2})
+        request_game = RequestFactory().get(url_game)
+        force_authenticate(request_game, user=self.user1, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=2)
+        assert response_game.data['players'][0][
+                                  'resources_cards'] == 0
+        assert response_game.data['players'][0]['last_gained'] == []
+        assert response_game.status_code == 200
