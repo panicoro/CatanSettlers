@@ -20,8 +20,10 @@ from catan.views.actions.robber import (
                 move_robber, get_sum_dices,
                 posiblesRobberPositions
             )
+from catan.views.actions.road import build_road, play_road_building_card
+from catan.views.actions.build import build_settlement
+from catan.views.actions.robber import move_robber
 from catan.views.actions.play_cards import move_robberCard
-from catan.views.actions.buy_card import buy_card
 from catan.views.actions.change_turn import change_turn
 
 
@@ -123,7 +125,11 @@ class PlayerActions(APIView):
             response = move_robber(data['payload'], game, user, player)
             return response
         if data['type'] == 'play_knight_card':
-            response = move_robberCard(data['payload'], game, user, player)
+            response = move_robberCard(data['payload'], game, user,
+                                       player)
+            return response
+        if data['type'] == 'play_road_building_card':
+            response = play_road_building_card(data['payload'], game, player)
             return response
         response = {"detail": 'Please select a valid action'}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
