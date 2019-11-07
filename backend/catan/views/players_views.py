@@ -16,7 +16,10 @@ from catan.views.actions.build import (
             build_settlement, canBuild_Settlement,
             posiblesSettlements)
 from catan.views.actions.bank import bank_trade
-from catan.views.actions.robber import move_robber
+from catan.views.actions.robber import (
+                move_robber, get_sum_dices,
+                posiblesRobberPositions
+            )
 from catan.views.actions.play_cards import move_robberCard
 from catan.views.actions.buy_card import buy_card
 from catan.views.actions.change_turn import change_turn
@@ -78,6 +81,17 @@ class PlayerActions(APIView):
             item['payload'] = serialized_positions.data
             if len(item['payload']) != 0:
                 data.append(item)
+        if sum(get_sum_dices(game)) == 7:
+            item = {"type": 'move_robber'}
+            posibles_robber = posiblesRobberPositions(game)
+            item["payload"] = posibles_robber
+            data.append(item)
+        if Card.objects.filter(owner=player,
+                               card_name='knight').exists():
+            item = {"type": 'play_knight_card'}
+            posibles_robber = posiblesRobberPositions(game)
+            item["payload"] = posibles_robber
+            data.append(item)
         return Response(data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):

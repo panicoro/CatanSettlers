@@ -9,6 +9,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.cargaJson import *
 from catan.dices import throw_dices
+from catan.serializers import HexePositionSerializer, PlayerSerializer
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from django.db.models import Q
@@ -23,11 +24,15 @@ def checkPosition(level, index):
     return rta
 
 
-def move_robber(payload, game, my_user, my_player):
+def get_sum_dices(game):
     dice1 = Current_Turn.objects.filter(game=game)[0].dices1
     dice2 = Current_Turn.objects.filter(game=game)[0].dices2
+    return (dice1, dice2)
 
-    sum_dices = dice1 + dice2
+
+def move_robber(payload, game, my_user, my_player):
+
+    sum_dices = sum(get_sum_dices(game))
 
     if sum_dices == 7:
 
@@ -131,3 +136,33 @@ def move_robber(payload, game, my_user, my_player):
 
     response = {"detail": "the dices don't give 7"}
     return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+
+def posiblesRobberPositions(game):
+    """
+    A function that obtains the possible positions
+    where the thief can move and for each of them, the players to steal.
+    Params:
+    @game: a started game.
+    """
+    hexes_positions_robber = HexePosition.objects.exclude(id=game.robber.id)
+    data = []
+    for hexe in hexes_positions_robber:
+        item = {'position': HexePositionSerializer(hexe).data}
+        neighbors = HexagonInfo(hexe.level, hexe.index)
+        item['players'] = []
+        for neighbor in neighbors:
+            vertex_position = VertexPosition.objects.filter(
+                                level=neighbor[0],
+                                index=neighbor[1]).get()
+            try:
+                building = Building.objects.get(position=vertex_position,
+                                                game=game)
+                serialized_player = PlayerSerializer(building.owner)
+                new_user = serialized_player.data['username']
+                if new_user not in item['players']:
+                    item['players'].append(new_user)
+            except Building.DoesNotExist:
+                pass
+        data.append(item)
+    return data
