@@ -65,7 +65,6 @@ class TestViews(TestCase):
         force_authenticate(request_player, user=self.user, token=self.token)
         view_player = PlayerInfo.as_view()
         response_player = view_player(request_player, pk=1)
-        print(response_player.data)
         assert len(response_player.data['cards']) == 0
         assert len(response_game.data['players'][0]['roads']) == 3
         assert response_game.data['players'][0]['development_cards'] == 0
