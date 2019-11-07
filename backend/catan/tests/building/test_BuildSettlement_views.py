@@ -298,12 +298,21 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = [
-            {"type": "build_settlement",
-             "payload": [{"level": 1, "index": 17},
+        expected_data_buildings = { 
+            "type": "build_settlement",
+            "payload": [{"level": 1, "index": 17},
                          {"level": 2, "index": 29}]}
-        ]
-        assert response.data == expected_data
+        expected_data_roads = {
+            "type": "build_road",
+            "payload": [
+                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
+                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
+                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
+                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
+                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
+                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}]]}
+        assert expected_data_buildings in response.data
+        assert expected_data_roads in response.data
         assert response.status_code == 200
 
     def test_get_withResources2(self):
@@ -328,6 +337,15 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = []
+        expected_data = [
+            {"type": "build_road",
+             "payload": [
+                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
+                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
+                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
+                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
+                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
+                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}]]}
+        ]
         assert response.data == expected_data
         assert response.status_code == 200

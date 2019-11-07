@@ -67,6 +67,8 @@ class PlayerActions(APIView):
                 new_road.append(VertexPositionSerializer(road[0]).data)
                 new_road.append(VertexPositionSerializer(road[1]).data)
                 item['payload'].append(new_road)
+            if len(item['payload']) != 0:
+                data.append(item)
         if canBuild_Settlement(player):
             item = {"type": 'build_settlement'}
             posibles_setlements = posiblesSettlements(player)
