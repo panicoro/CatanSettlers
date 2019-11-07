@@ -27,7 +27,7 @@ class TestViews(TestCase):
         generateHexesPositions()
         generateVertexPositions()
 
-        self.board = Board.objects.create(name='Board1')
+        self.board = generateBoard('colones')
         self.room = Room.objects.create(
             name='Room1', owner=self.user1, board_id=1)
 
@@ -333,3 +333,139 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.status_code == 403
         assert response.data == {"detail": "you can't choose yourself"}
+
+    def test_get_robberPositions(self):
+        self.createGame()
+        new_robber = HexePosition.objects.get(level=1, index=0)
+        self.game.robber = new_robber
+        self.game.save()
+        current_turn = mixer.blend(
+            Current_Turn, user=self.user, game=self.game,
+            dices1=4, dices2=3)
+        position1 = VertexPosition.objects.get(level=2, index=5)
+        position2 = VertexPosition.objects.get(level=1, index=17)
+        position3 = VertexPosition.objects.get(level=0, index=0)
+        position4 = VertexPosition.objects.get(level=1, index=15)
+        Building.objects.create(game=self.game,
+                                owner=self.player1,
+                                name='city',
+                                position=position1)
+        Building.objects.create(game=self.game,
+                                owner=self.player2,
+                                name='city',
+                                position=position2)
+        Building.objects.create(game=self.game,
+                                owner=self.player2,
+                                name='settlement',
+                                position=position3)
+        Building.objects.create(game=self.game,
+                                owner=self.player3,
+                                name='settlement',
+                                position=position4)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expeceted_data = [
+            {'payload': [
+                {'players': ['user2'], 'position': {'level': 0, 'index': 0}},
+                {'players': [], 'position': {'level': 1, 'index': 1}},
+                {'players': [], 'position': {'level': 1, 'index': 2}},
+                {'players': [], 'position': {'level': 1, 'index': 3}},
+                {'players': ['user3'], 'position': {'level': 1, 'index': 4}},
+                {'players': ['user2', 'user3'], 'position': {'level': 1,
+                                                             'index': 5}},
+                {'players': ['user2'], 'position': {'level': 2, 'index': 0}},
+                {'players': [], 'position': {'level': 2, 'index': 1}},
+                {'players': ['user1'], 'position': {'level': 2, 'index': 2}},
+                {'players': [], 'position': {'level': 2, 'index': 3}},
+                {'players': [], 'position': {'level': 2, 'index': 4}},
+                {'players': [], 'position': {'level': 2, 'index': 5}},
+                {'players': [], 'position': {'level': 2, 'index': 6}},
+                {'players': [], 'position': {'level': 2, 'index': 7}},
+                {'players': [], 'position': {'level': 2, 'index': 8}},
+                {'players': [], 'position': {'level': 2, 'index': 9}},
+                {'players': ['user3'], 'position': {'level': 2, 'index': 10}},
+                {'players': ['user2'], 'position': {'level': 2, 'index': 11}}],
+             'type': 'move_robber'}]
+        assert response.data == expeceted_data
+        assert response.status_code == 200
+
+    def test_get_robberPositions_not_7(self):
+        self.createGame()
+        new_robber = HexePosition.objects.get(level=1, index=0)
+        self.game.robber = new_robber
+        self.game.save()
+        current_turn = mixer.blend(
+            Current_Turn, user=self.user, game=self.game,
+            dices1=1, dices2=3)
+        position1 = VertexPosition.objects.get(level=2, index=5)
+        position2 = VertexPosition.objects.get(level=1, index=17)
+        position3 = VertexPosition.objects.get(level=0, index=0)
+        position4 = VertexPosition.objects.get(level=1, index=15)
+        Building.objects.create(game=self.game,
+                                owner=self.player1,
+                                name='city',
+                                position=position1)
+        Building.objects.create(game=self.game,
+                                owner=self.player2,
+                                name='city',
+                                position=position2)
+        Building.objects.create(game=self.game,
+                                owner=self.player2,
+                                name='settlement',
+                                position=position3)
+        Building.objects.create(game=self.game,
+                                owner=self.player3,
+                                name='settlement',
+                                position=position4)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == []
+        assert response.status_code == 200
+
+    def test_get_robberPositions_not_Buildings(self):
+        self.createGame()
+        new_robber = HexePosition.objects.get(level=1, index=0)
+        self.game.robber = new_robber
+        self.game.save()
+        current_turn = mixer.blend(
+            Current_Turn, user=self.user, game=self.game,
+            dices1=1, dices2=6)
+        position1 = VertexPosition.objects.get(level=2, index=5)
+        position2 = VertexPosition.objects.get(level=1, index=17)
+        position3 = VertexPosition.objects.get(level=0, index=0)
+        position4 = VertexPosition.objects.get(level=1, index=15)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = [
+            {'payload': [
+                {'players': [], 'position': {'level': 0, 'index': 0}},
+                {'players': [], 'position': {'level': 1, 'index': 1}},
+                {'players': [], 'position': {'level': 1, 'index': 2}},
+                {'players': [], 'position': {'level': 1, 'index': 3}},
+                {'players': [], 'position': {'level': 1, 'index': 4}},
+                {'players': [], 'position': {'level': 1, 'index': 5}},
+                {'players': [], 'position': {'level': 2, 'index': 0}},
+                {'players': [], 'position': {'level': 2, 'index': 1}},
+                {'players': [], 'position': {'level': 2, 'index': 2}},
+                {'players': [], 'position': {'level': 2, 'index': 3}},
+                {'players': [], 'position': {'level': 2, 'index': 4}},
+                {'players': [], 'position': {'level': 2, 'index': 5}},
+                {'players': [], 'position': {'level': 2, 'index': 6}},
+                {'players': [], 'position': {'level': 2, 'index': 7}},
+                {'players': [], 'position': {'level': 2, 'index': 8}},
+                {'players': [], 'position': {'level': 2, 'index': 9}},
+                {'players': [], 'position': {'level': 2, 'index': 10}},
+                {'players': [], 'position': {'level': 2, 'index': 11}}],
+             'type': 'move_robber'}
+        ]
+        assert response.data == expected_data
+        assert response.status_code == 200
