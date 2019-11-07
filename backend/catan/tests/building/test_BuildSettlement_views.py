@@ -298,10 +298,10 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data_buildings = { 
+        expected_data_buildings = {
             "type": "build_settlement",
             "payload": [{"level": 1, "index": 17},
-                         {"level": 2, "index": 29}]}
+                        {"level": 2, "index": 29}]}
         expected_data_roads = {
             "type": "build_road",
             "payload": [

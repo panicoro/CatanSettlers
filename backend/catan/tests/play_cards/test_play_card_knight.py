@@ -518,7 +518,7 @@ class TestViews(TestCase):
              'type': 'play_knight_card'}]
         assert response.data == expeceted_data
         assert response.status_code == 200
-    
+
     def test_get_robberPositions_NoCard(self):
         self.createGame()
         new_robber = HexePosition.objects.get(level=1, index=0)
