@@ -199,30 +199,25 @@ def deleteCard(game_id, player_id):
 
 
 def build_road(payload, game, owner, road_building_card = False):
-    print(payload)
     level1 = payload[0]['level']
     index1 = payload[0]['index']
     level2 = payload[1]['level']
     index2 = payload[1]['index']
     # Check that the position exists
-    print("1")
     if not checkVertexsPositions(level1, index1, level2, index2):
         response = {"detail": "Non-existent vetertexs positions"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     list_neighbor = VertexInfo(level1, index1)
     # check that the neighbor exists
-    print("2")
     if not is_neighbor(list_neighbor, level2, index2):
         response = {"detail": "not neighbor"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     position_road = CheckPositionRoad(game.id, level1, index1,
                                       level2, index2)
-    print("3")
     # I check if the position is free
     if position_road:
         response = {"detail": "invalid position, reserved"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    print("4")
     if road_building_card == False:
         list_resources = ResourcesRoad(owner.id, game.id)
         # I verify necessary resources
@@ -233,7 +228,6 @@ def build_road(payload, game, owner, road_building_card = False):
                                level2, index2)
     is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
                                   level2, index2)
-    print("5")
     # I verify that I have my own road or building
     if not is_roads and not is_building:
         response = {"detail": "must have something built"}
@@ -241,7 +235,6 @@ def build_road(payload, game, owner, road_building_card = False):
     create_Road(game, owner, level1, index1, level2, index2)
     if road_building_card == False:
         deleteResource(owner.id, game.id)
-    print("6")
     return Response(status=status.HTTP_200_OK)
 
 
@@ -267,7 +260,7 @@ def play_road_building_card(payload, game, player):
     if "403" in str(br):
         vertex1 = VertexPosition.objects.filter(level=level1, index=index1)
         vertex2 = VertexPosition.objects.filter(level=level2, index=index2)
-        r1 = Road.objects.filter(owner=player.id,
+        Road.objects.filter(owner=player.id,
                             vertex_1=vertex1[0],
                             vertex_2=vertex2[0],
                             game=game.id)[0].delete()
