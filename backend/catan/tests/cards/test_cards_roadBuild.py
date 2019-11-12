@@ -43,6 +43,7 @@ class TestViews(TestCase):
                                             card_name='road_building')
 
     def test_roadBuilding_card(self):
+        cards = len(Card.objects.filter(game=self.game, owner=self.player)) - 1
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "play_road_building_card",
                 "payload": [[{"level": 2, "index": 1},
@@ -65,9 +66,8 @@ class TestViews(TestCase):
         force_authenticate(request_player, user=self.user, token=self.token)
         view_player = PlayerInfo.as_view()
         response_player = view_player(request_player, pk=1)
-        assert len(response_player.data['cards']) == 0
         assert len(response_game.data['players'][0]['roads']) == 3
-        assert response_game.data['players'][0]['development_cards'] == 0
+        assert response_game.data['players'][0]['development_cards'] == cards
         assert response.status_code == 200
 
     def test_noCard(self):
@@ -97,7 +97,7 @@ class TestViews(TestCase):
         assert len(response_player.data['cards']) == 0
         assert len(response_game.data['players'][0]['roads']) == 1
         assert response_game.data['players'][0]['development_cards'] == 0
-        assert response.data == {'detail': 'Does not have the letter'}
+        assert response.data == {'detail': 'Missing Road Building card'}
         assert response.status_code == 403
 
     def test_noVertex(self):
