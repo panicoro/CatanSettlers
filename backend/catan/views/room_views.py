@@ -97,6 +97,7 @@ class RoomDetail(APIView):
             room.game_has_started = True
             room.game_id = game.id
             room.save()
+            """
             building1 = Building.objects.create(
                 name="settlement", game=game,
                 owner=player1, position=vertex_positions[0])
@@ -109,6 +110,7 @@ class RoomDetail(APIView):
             building4 = Building.objects.create(
                 name="settlement", game=game,
                 owner=player4, position=vertex_positions[3])
+            """
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
             ValidationError("Can't start the game without all players"),

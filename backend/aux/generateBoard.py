@@ -48,7 +48,7 @@ def generateBoard(name):
     hexe_desert = Hexe(board=new_board, terrain='desert',
                        position=hexe_position_desert)
     hexe_desert.save()
-    for i in range(0, len(hexes_positions)-1):
+    for i in range(0, len(hexes_positions)):
         new_terrain = TYPE_RESOURCE[randint(0, 4)]
         new_token = choice([i for i in range(2, 12) if i not in [7]])
         new_hexe = Hexe(board=new_board, token=new_token,

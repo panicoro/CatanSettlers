@@ -4,6 +4,8 @@ import os
 
 
 MYDIR = os.path.dirname(__file__)
+
+
 def HexagonInfo(level, index):
     with open(os.path.join(MYDIR, 'HexaVerVecinos.json')) as file:
         data = json.load(file)
