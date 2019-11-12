@@ -70,6 +70,34 @@ class TestViews(TestCase):
         assert response_game.data['players'][0]['development_cards'] == cards
         assert response.status_code == 200
 
+    def test_roadBuilding_card_one_road(self):
+        cards = len(Card.objects.filter(game=self.game, owner=self.player)) - 1
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "play_road_building_card",
+                "payload": [[{"level": 2, "index": 1},
+                            {"level": 2, "index": 2}],
+                            [{"level": 2, "index": 2},
+                            {"level": 2, "index": 1000}]]}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        path_game = reverse('GameInfo', kwargs={'pk': 1})
+        request_game = RequestFactory().get(path_game)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        response_game = view_game(request_game, pk=1)
+        response_game.render()
+        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        response_player = view_player(request_player, pk=1)
+        assert len(response_game.data['players'][0]['roads']) == 1
+        assert response_game.data['players'][0]['development_cards'] == cards+1
+        assert response.status_code == 403
+
     def test_noCard(self):
         self.cardRoad.delete()
         path = reverse('PlayerActions', kwargs={'pk': 1})
