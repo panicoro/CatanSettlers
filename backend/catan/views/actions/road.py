@@ -207,6 +207,12 @@ def build_road(payload, game, owner, road_building_card = False):
     if not checkVertexsPositions(level1, index1, level2, index2):
         response = {"detail": "Non-existent vetertexs positions"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
+    if road_building_card == False:
+        list_resources = ResourcesRoad(owner.id, game.id)
+        # I verify necessary resources
+        if len(list_resources) != 2:
+            response = {"detail": "Doesn't have enough resources"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
     list_neighbor = VertexInfo(level1, index1)
     # check that the neighbor exists
     if not is_neighbor(list_neighbor, level2, index2):
@@ -218,12 +224,6 @@ def build_road(payload, game, owner, road_building_card = False):
     if position_road:
         response = {"detail": "invalid position, reserved"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    if road_building_card == False:
-        list_resources = ResourcesRoad(owner.id, game.id)
-        # I verify necessary resources
-        if len(list_resources) != 2:
-            response = {"detail": "Doesn't have enough resources"}
-            return Response(response, status=status.HTTP_403_FORBIDDEN)
     is_roads = CheckRoads_Road(owner.id, game.id, level1, index1,
                                level2, index2)
     is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
@@ -239,6 +239,10 @@ def build_road(payload, game, owner, road_building_card = False):
 
 
 def play_road_building_card(payload, game, player):
+    cards = Card.objects.filter(game=game, owner=player, card_name="road_building")
+    if len(cards) == 0:
+        response = {"detail": "Missing Road Building card"}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
     position_1 = payload[0]
     position_2 = payload[1]
     level1 = position_1[0]['level']
@@ -266,4 +270,5 @@ def play_road_building_card(payload, game, player):
                             game=game.id)[0].delete()
         return br
     deleteCard(game.id, player.id)
+    cards = Card.objects.filter(game=game, owner=player)
     return Response(status=status.HTTP_200_OK)
