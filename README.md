@@ -2,7 +2,7 @@
 
 ## Instalación
 
-Descargar el repositorio con 
+Descargar el repositorio con:
 
 ```
 git clone https://gitlab.com/panicoro/catanes.git
