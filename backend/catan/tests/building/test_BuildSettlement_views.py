@@ -305,12 +305,12 @@ class TestViews(TestCase):
         expected_data_roads = {
             "type": "build_road",
             "payload": [
+                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}],
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
                  [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
                  [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
-                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
-                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}]]}
+                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}]]}
         assert expected_data_buildings in response.data
         assert expected_data_roads in response.data
         assert response.status_code == 200

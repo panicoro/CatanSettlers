@@ -182,23 +182,13 @@ def posiblesRoads(player):
     return potencial_roads
 
 
-def checkCard(game_id, player_id):
-    rta = False
-    card = Card.objects.filter(owner=player_id, game=game_id,
-                               card_name='road_building')[:1]
-    if card.exists():
-        rta = True
-        return rta
-    return rta
-
-
 def deleteCard(game_id, player_id):
     card = Card.objects.filter(owner=player_id, game=game_id,
                                card_name='road_building')
     card.delete()
 
 
-def build_road(payload, game, owner, road_building_card = False):
+def build_road(payload, game, owner, road_building_card=False):
     level1 = payload[0]['level']
     index1 = payload[0]['index']
     level2 = payload[1]['level']
@@ -207,7 +197,7 @@ def build_road(payload, game, owner, road_building_card = False):
     if not checkVertexsPositions(level1, index1, level2, index2):
         response = {"detail": "Non-existent vetertexs positions"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    if road_building_card == False:
+    if road_building_card is False:
         list_resources = ResourcesRoad(owner.id, game.id)
         # I verify necessary resources
         if len(list_resources) != 2:
@@ -233,13 +223,15 @@ def build_road(payload, game, owner, road_building_card = False):
         response = {"detail": "must have something built"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     create_Road(game, owner, level1, index1, level2, index2)
-    if road_building_card == False:
+    if road_building_card is False:
         deleteResource(owner.id, game.id)
     return Response(status=status.HTTP_200_OK)
 
 
 def play_road_building_card(payload, game, player):
-    cards = Card.objects.filter(game=game, owner=player, card_name="road_building")
+    cards = Card.objects.filter(game=game,
+                                owner=player,
+                                card_name="road_building")
     if len(cards) == 0:
         response = {"detail": "Missing Road Building card"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
@@ -250,8 +242,8 @@ def play_road_building_card(payload, game, player):
     level2 = position_1[1]['level']
     index2 = position_1[1]['index']
     payload2 = [{"level": level1, "index": index1},
-                            {"level": level2, "index": index2}]
-    br = build_road(payload2, game, player, road_building_card = True)
+                {"level": level2, "index": index2}]
+    br = build_road(payload2, game, player, road_building_card=True)
     if "403" in str(br):
         return br
     level3 = position_2[0]['level']
@@ -259,8 +251,8 @@ def play_road_building_card(payload, game, player):
     level4 = position_2[1]['level']
     index4 = position_2[1]['index']
     payload2 = [{"level": level3, "index": index3},
-                            {"level": level4, "index": index4}]
-    br = build_road(payload2, game, player, road_building_card = True)
+                {"level": level4, "index": index4}]
+    br = build_road(payload2, game, player, road_building_card=True)
     if "403" in str(br):
         vertex1 = VertexPosition.objects.filter(level=level1, index=index1)
         vertex2 = VertexPosition.objects.filter(level=level2, index=index2)
