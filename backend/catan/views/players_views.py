@@ -62,6 +62,7 @@ class PlayerActions(APIView):
         game = get_object_or_404(Game, pk=pk)
         user = request.user
         player = get_object_or_404(Player, username=user, game=game)
+        turn = Current_Turn.objects.get(game=game)
         data = []
         if canBuild_Road(player):
             item = {"type": 'build_road'}
@@ -83,7 +84,7 @@ class PlayerActions(APIView):
             item['payload'] = serialized_positions.data
             if len(item['payload']) != 0:
                 data.append(item)
-        if sum(get_sum_dices(game)) == 7:
+        if sum(get_sum_dices(game)) == 7 and not turn.robber_moved:
             item = {"type": 'move_robber'}
             posibles_robber = posiblesRobberPositions(game)
             item["payload"] = posibles_robber

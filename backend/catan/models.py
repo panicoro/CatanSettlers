@@ -229,3 +229,4 @@ class Current_Turn(models.Model):
     dices2 = models.IntegerField(null=True,
                                  validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])
+    robber_moved = models.BooleanField(default=False)
