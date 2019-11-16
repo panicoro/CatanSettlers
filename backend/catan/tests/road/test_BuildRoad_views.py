@@ -35,7 +35,8 @@ class TestViews(TestCase):
         self.turn = Current_Turn.objects.create(game=self.game,
                                                 user=self.user,
                                                 dices1=3,
-                                                dices2=3)
+                                                dices2=3,
+                                                game_stage='full_play')
         self.brick = Resource.objects.create(owner=self.player,
                                              game=self.game,
                                              resource_name="brick")
@@ -166,7 +167,6 @@ class TestViews(TestCase):
         self.road.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-
         path_game = reverse('GameInfo', kwargs={'pk': 1})
         request_game = RequestFactory().get(path_game)
         force_authenticate(request_game, user=self.user, token=self.token)

@@ -377,7 +377,6 @@ class TestViews(TestCase):
                     'player': ''
                 }
                 }
-
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user1, token=self.token)
@@ -392,8 +391,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=6, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=6, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -434,8 +433,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=6, dices2=1)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=6, dices2=1, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -481,8 +480,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=6, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=6, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -525,8 +524,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=1, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=1, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
