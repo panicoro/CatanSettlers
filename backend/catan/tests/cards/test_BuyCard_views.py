@@ -91,3 +91,17 @@ class TestViews(TestCase):
         assert response.data == {"detail": "It does not have" +
                                  " the necessary resources"}
         assert response.status_code == 403
+
+    def test_BuyCardWinner(self):
+        self.player.victory_points = 9
+        self.player.save()
+        Card.objects.create(owner=self.player,
+                            game=self.game, card_name='victory_point')
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "buy_card"}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.status_code == 200
