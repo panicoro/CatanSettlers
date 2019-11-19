@@ -14,7 +14,6 @@ def get_next_player(current_turn, players):
     actual_turn = player_in_turn.turn
     # Calculate the next turn in the game...
     if actual_turn == 4:
-        print("Hola")
         next_turn = 1
     else:
         next_turn = actual_turn + 1
