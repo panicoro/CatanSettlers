@@ -220,7 +220,7 @@ def deleteCard(game_id, player_id):
     # Corregir para que solo borre una carta
     # Esta borrando todas las cartas...
     card = Card.objects.filter(owner=player_id, game=game_id,
-                               card_name='road_building')
+                               card_name='road_building')[0]
     card.delete()
 
 
