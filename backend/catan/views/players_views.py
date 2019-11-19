@@ -10,7 +10,12 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
-from catan.views.actions.road import build_road, canBuild_Road, posiblesRoads
+from catan.views.actions.road import (
+                    build_road, canBuild_Road,
+                    posiblesRoads,
+                    posiblesRoads_cardRoadBuilding,
+                    play_road_building_card
+                )
 from catan.views.actions.buy_card import buy_card
 from catan.views.actions.build import (
             build_settlement, canBuild_Settlement,
@@ -20,9 +25,6 @@ from catan.views.actions.robber import (
                 move_robber, get_sum_dices,
                 posiblesRobberPositions
             )
-from catan.views.actions.road import build_road, play_road_building_card
-from catan.views.actions.build import build_settlement
-from catan.views.actions.robber import move_robber
 from catan.views.actions.play_cards import move_robberCard
 from catan.views.actions.change_turn import change_turn
 
@@ -58,6 +60,22 @@ class PlayerActions(APIView):
         """
         return game.current_turn.user == player.username
 
+    def get_roads(self, posibles_roads, item):
+        """
+        A function to get the payload in a given item with the positions
+        available to build roads.
+        Args:
+        @posibles_roads = a list of [vertex_position, vertex_position]
+        that represent the posibles roads to build.
+        @item = a given item to push in the data
+        """
+        for road in posibles_roads:
+            new_road = []
+            new_road.append(VertexPositionSerializer(road[0]).data)
+            new_road.append(VertexPositionSerializer(road[1]).data)
+            item['payload'].append(new_road)
+        return item
+
     def get(self, request, pk):
         game = get_object_or_404(Game, pk=pk)
         user = request.user
@@ -68,11 +86,7 @@ class PlayerActions(APIView):
             item = {"type": 'build_road'}
             posibles_roads = posiblesRoads(player)
             item['payload'] = []
-            for road in posibles_roads:
-                new_road = []
-                new_road.append(VertexPositionSerializer(road[0]).data)
-                new_road.append(VertexPositionSerializer(road[1]).data)
-                item['payload'].append(new_road)
+            item = self.get_roads(posibles_roads, item)
             if len(item['payload']) != 0:
                 data.append(item)
         if canBuild_Settlement(player):
@@ -95,6 +109,14 @@ class PlayerActions(APIView):
             posibles_robber = posiblesRobberPositions(game)
             item["payload"] = posibles_robber
             data.append(item)
+        if Card.objects.filter(owner=player,
+                               card_name='road_building').exists():
+            item = {"type": 'play_road_building_card'}
+            posibles_roads = posiblesRoads_cardRoadBuilding(player)
+            item['payload'] = []
+            item = self.get_roads(posibles_roads, item)
+            if len(item['payload']) != 0:
+                data.append(item)
         return Response(data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):

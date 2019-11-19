@@ -156,15 +156,14 @@ def get_roadsAndBuildings(player):
     return (vertex_roads, vertex_buildings)
 
 
-def posiblesRoads(player):
+def get_potencialRoads(available_vertex):
     """
-    A function that obtains positions that a player might have
-    available to build roads on the board.
+    A function that receives a list of available vertices and
+    returns a list of positions (ROAD_POSITIONS) in which roads
+    can be constructed from the vertices given in the list
     Args:
-    @player: a player of a started game.
+    @avalaible_vertex: a list of vertex positions (objects)
     """
-    (vertex_roads, vertex_buildings) = get_roadsAndBuildings(player)
-    available_vertex = vertex_buildings.union(vertex_roads)
     potencial_roads = []
     for vertex in available_vertex:
         # Get the neighbors of a vertex
@@ -182,7 +181,44 @@ def posiblesRoads(player):
     return potencial_roads
 
 
+def posiblesRoads(player):
+    """
+    A function that obtains positions that a player might have
+    available to build roads on the board.
+    Args:
+    @player: a player of a started game.
+    """
+    (vertex_roads, vertex_buildings) = get_roadsAndBuildings(player)
+    available_vertex = vertex_buildings.union(vertex_roads)
+    potencial_roads = get_potencialRoads(available_vertex)
+    return potencial_roads
+
+
+def posiblesRoads_cardRoadBuilding(player):
+    """
+    A function that obtains posistions that a player might have
+    available to build the two roads using the Card road_building
+    Args:
+    @player: a player of a started game.
+    """
+    potencial_roads = posiblesRoads(player)
+    new_positions = []
+    for road in potencial_roads:
+        new_positions.append(road[1])
+    new_potencial_roads = get_potencialRoads(new_positions)
+    total_roads = potencial_roads + new_potencial_roads
+    # Remove the repeat road
+    final_roads = total_roads
+    for road in total_roads:
+        invert_road = [road[1], road[0]]
+        if invert_road in final_roads:
+            final_roads.remove(invert_road)
+    return final_roads
+
+
 def deleteCard(game_id, player_id):
+    # Corregir para que solo borre una carta
+    # Esta borrando todas las cartas...
     card = Card.objects.filter(owner=player_id, game=game_id,
                                card_name='road_building')
     card.delete()
