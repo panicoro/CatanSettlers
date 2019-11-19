@@ -42,26 +42,53 @@ class TestView(TestCase):
         A test to see the change of users in turn according
         to the user requesting the end of their shift
         """
-        users = [self.user1, self.user2, self.user3, self.user4]
-        expected_users = ['user2', 'user3', 'user4', 'user1']
-        for user, next_user in zip(users, expected_users):
-            url = reverse('PlayerActions', kwargs={'pk': 1})
-            data = {"type": "end_turn",
-                    "payload": None}
-            request = RequestFactory().post(url, data,
-                                            content_type='application/json')
-            force_authenticate(request, user=user, token=self.token)
-            view_actions = PlayerActions.as_view()
-            response = view_actions(request, pk=1)
-            response.render()
-            assert response.status_code == 204
-            url = reverse('GameInfo', kwargs={'pk': 1})
-            request = RequestFactory().get(url)
-            force_authenticate(request, user=self.user1, token=self.token)
-            view_game = GameInfo.as_view()
-            response = view_game(request, pk=1)
-            response.render()
-            assert response.data['current_turn']['user'] == next_user
+        self.turn.dices1 = 2
+        self.turn.dices2 = 2
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        response.render()
+        assert response.status_code == 204
+        url = reverse('GameInfo', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_game = GameInfo.as_view()
+        response = view_game(request, pk=1)
+        response.render()
+        assert response.data['current_turn']['user'] == "user2"
+
+    def test_endTurn4(self):
+        """
+        A test to see the change of users in turn according
+        to the user requesting the end of their shift
+        """
+        self.turn.dices1 = 2
+        self.turn.dices2 = 2
+        self.turn.user = self.user4
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user4, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        response.render()
+        assert response.status_code == 204
+        url = reverse('GameInfo', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user4, token=self.token)
+        view_game = GameInfo.as_view()
+        response = view_game(request, pk=1)
+        response.render()
+        assert response.data['current_turn']['user'] == "user1"
 
     def test_endTurn_NotInTurn(self):
         """
@@ -88,3 +115,23 @@ class TestView(TestCase):
         response = view_game(request, pk=1)
         response.render()
         assert response.data['current_turn']['user'] == 'user1'
+
+    def test_endTurnNotMoveRobber(self):
+        """
+        A test to see the change of users in turn according
+        to the user requesting the end of their shift
+        """
+        self.turn.dices1 = 3
+        self.turn.dices2 = 4
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        response.render()
+        assert response.status_code == 403
+        assert response.data == {"detail": "you have to move the thief"}

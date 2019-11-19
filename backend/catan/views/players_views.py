@@ -107,6 +107,10 @@ class PlayerActions(APIView):
             response = {"detail": "Not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'end_turn':
+            turn = Current_Turn.objects.get(game=game)
+            if sum(get_sum_dices(game)) == 7 and not turn.robber_moved:
+                response = {"detail": "you have to move the thief"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
             change_turn(game)
             throw_dices(game)
             return Response(status=status.HTTP_204_NO_CONTENT)
