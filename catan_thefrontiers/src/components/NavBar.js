@@ -29,7 +29,7 @@ function Buttons({currentUser}) {
                title="Logout">
               Cerrar Sesión
             </a>
-            <p className="link dim dark-gray f6 f5-ns dib mr3 mr4-ns">/////</p>
+            <p className="link dim dark-gray f6 f5-ns dib mr3 mr4-ns"></p>
             <p className="link dim dark-gray f6 f5-ns dib mr3 mr4-ns">{currentUser}</p>
           </div>)
     )

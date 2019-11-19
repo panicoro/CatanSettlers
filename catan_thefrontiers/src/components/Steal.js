@@ -3,7 +3,7 @@ import Select from 'react-select'
 import Form from 'react-bootstrap/Form'
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import Button from 'react-bootstrap/Button'
-import {ACTIONS, API} from "../constants";
+import {ACTIONS, API, API_URL} from "../constants";
 import axios from 'axios'
 
 export default class Steal extends React.Component {
@@ -15,7 +15,7 @@ export default class Steal extends React.Component {
      }
     
     handleClick() {
-        axios.post(API.playerActions(this.props.id), {type: ACTIONS.move_robber, payload: {
+        axios.post(API_URL+API.playerActions(this.props.id), {type: ACTIONS.move_robber, payload: {
             player: this.state.player
         }})
             .then(() => {

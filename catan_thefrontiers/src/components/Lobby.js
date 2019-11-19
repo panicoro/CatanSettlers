@@ -2,7 +2,7 @@ import React from 'react'
 import axios from 'axios'
 import {Redirect} from 'react-router-dom'
 import Loading from "./Loading";
-import {API, isNull, isUndefined, PATHS, REFRESH_RATE_ROOMS, ERRORS} from "../constants";
+import {API_URL,API, isNull, isUndefined, PATHS, REFRESH_RATE_ROOMS, ERRORS} from "../constants";
 
 export default class Lobby extends React.Component {
     constructor(props) {
@@ -35,7 +35,7 @@ export default class Lobby extends React.Component {
     }
 
     handleCancel() {
-        axios.delete(API.room(this.props.id))
+        axios.delete(API_URL+API.room(this.props.id))
             .then(() => {
                 this.props.history.replace(PATHS.allRooms);
                 this.props.terminateLobby(this.props.id);
@@ -46,7 +46,7 @@ export default class Lobby extends React.Component {
     }
 
     handleStart() {
-        axios.patch(API.room(this.props.id))
+        axios.patch(API_URL+API.room(this.props.id))
             .then(() => {
                 this.props.startGame(this.props.id, this.props.game_id);
                 this.props.history.replace(PATHS.game(this.props.game_id));

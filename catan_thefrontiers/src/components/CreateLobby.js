@@ -1,6 +1,6 @@
 import React from "react";
 import axios from 'axios'
-import {API, isNull, PATHS, ERRORS, CODES} from "../constants";
+import {API_URL, API, isNull, PATHS, ERRORS, CODES} from "../constants";
 import Loading from "./Loading";
 import {Redirect} from 'react-router-dom'
 
@@ -31,7 +31,9 @@ export default class CreateLobby extends React.Component {
     }
 
     handleSubmit() {
-        axios.post(API.rooms, {name: this.state.lobbyName, board_id: this.state.selectedBoard})
+        axios.post(API_URL+API.rooms, 
+                   {name: this.state.lobbyName, 
+                    board_id: this.state.selectedBoard})
             .then(res => {
                 this.props.createRoom(this.state.lobbyName, this.props.currentUser, res.data.id, res.data.game_id, this.state.selectedBoard);
                 this.props.history.replace(PATHS.room(res.data.id));

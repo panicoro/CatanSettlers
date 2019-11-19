@@ -1,7 +1,7 @@
 import React from 'react'
 import axios from 'axios'
 import {Redirect} from 'react-router-dom'
-import {API, isNull, PATHS, ERRORS, CODES} from "../constants";
+import {API_URL, API, isNull, PATHS, ERRORS, CODES} from "../constants";
 import "react-mdl/extra/material.css";
 import "react-mdl/extra/material.js";
 import {Textfield, Button} from 'react-mdl';
@@ -30,12 +30,8 @@ export default class Login extends React.Component {
 
   handleSubmit(e) {
     e.preventDefault()
-    console.log("entra")
-    axios.post('http://localhost:8000'+API.login, {user: this.state.user, pass: this.state.password})
+    axios.post(API_URL+API.login, {user: this.state.user, pass: this.state.password})
       .then(res => {
-        console.log(res)
-        console.log(res.data.access)
-        console.log(this.state.user)
         this.props.addUser(this.state.user, res.data.access);
         this.props.history.replace(PATHS.allRooms);
       })

@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios'
 import {Redirect} from 'react-router-dom'
-import {API, isNull, PATHS, ERRORS, CODES} from "../constants";
+import {isNull, PATHS, ERRORS, CODES, API_URL, API} from "../constants";
 import "react-mdl/extra/material.css";
 import "react-mdl/extra/material.js";
 import {Textfield, Button} from 'react-mdl';
@@ -30,9 +30,10 @@ export default class Register extends React.Component {
 
   handleSubmit(e) {
     e.preventDefault()
-    axios.post('http://localhost:8000/users/', {user: this.state.user, pass: this.state.password})
+    axios.post(API_URL+API.register, {user: this.state.user, pass: this.state.password})
       .then(() => {
-        axios.post(API.login)
+        axios.post(API_URL+API.login, 
+                   {user: this.state.user, pass: this.state.password})
           .then(res => {
             this.props.addUser(this.state.user, res.token);
             this.props.history.replace(PATHS.allRooms);

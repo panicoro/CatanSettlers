@@ -7,6 +7,7 @@ import Cards from './Cards'
 import {
     ACTIONS,
     API,
+    API_URL,
     ERRORS,
     isNull,
     isUndefined,
@@ -39,7 +40,7 @@ export default class Board extends React.Component {
     }
 
     handleTurnEnd() {
-        axios.post(API.playerActions(this.props.id), {type: ACTIONS.endTurn, payload: null})
+        axios.post(API_URL+API.playerActions(this.props.id), {type: ACTIONS.endTurn, payload: null})
             .catch(() => {
                 this.props.setError(ERRORS.serverError, PATHS.game(this.props.id));
             })

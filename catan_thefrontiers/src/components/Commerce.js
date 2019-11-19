@@ -3,7 +3,7 @@ import Select from 'react-select'
 import Form from 'react-bootstrap/Form'
 import {NotificationContainer, NotificationManager} from 'react-notifications'
 import Button from 'react-bootstrap/Button'
-import {ACTIONS, API} from "../constants"
+import {ACTIONS, API, API_URL} from "../constants"
 import axios from 'axios'
 
 
@@ -19,7 +19,7 @@ export default class Commerce extends React.Component {
      }
 
     handleClick() {
-        axios.post(API.playerActions(this.props.id), {type: ACTIONS.bank_trade, payload: {
+        axios.post(API_URL+API.playerActions(this.props.id), {type: ACTIONS.bank_trade, payload: {
             give: this.state.give,
             receive: this.state.receive
         }})

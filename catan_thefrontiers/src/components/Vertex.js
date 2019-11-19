@@ -1,7 +1,5 @@
 import React from 'react'
 import village from '../assets/village.png';
-import axios from 'axios'
-
 
 export default class Vertex extends React.Component {
     constructor(props) {

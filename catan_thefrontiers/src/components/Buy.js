@@ -5,12 +5,12 @@ import 'react-notifications/lib/notifications.css';
 import {NotificationContainer, NotificationManager} from 'react-notifications';
 import Button from 'react-bootstrap/Button'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import {ACTIONS, API} from "../constants";
+import {ACTIONS, API, API_URL} from "../constants";
 
 export default class Buy extends React.Component {
 
     handleClick() {
-        axios.post(API.playerActions(this.props.id), {type: ACTIONS.buyCard, payload: null})
+        axios.post(API_URL+API.playerActions(this.props.id), {type: ACTIONS.buyCard, payload: null})
             .then(() => {
                 NotificationManager.success('Se ha comprado la carta correctamente', 'Bien!');
                 this.props.update(this.props.id, this.props.user);
