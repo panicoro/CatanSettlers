@@ -32,6 +32,11 @@ $ python manage.py migrate
 $ python manage.py runserver
 ```
 
+## Testing
 
+Para correr los test dentro de la backend y con el entorno virtual activado, 
+hacer:
 
-
+```
+pytest --cov=catan --cov-report term-missing
+```
