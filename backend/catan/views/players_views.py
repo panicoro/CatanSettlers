@@ -75,7 +75,7 @@ class PlayerActions(APIView):
             new_road.append(VertexPositionSerializer(road[1]).data)
             item['payload'].append(new_road)
         return item
-            
+
     def get(self, request, pk):
         game = get_object_or_404(Game, pk=pk)
         user = request.user
@@ -85,7 +85,7 @@ class PlayerActions(APIView):
             item = {"type": 'build_road'}
             posibles_roads = posiblesRoads(player)
             item['payload'] = []
-            item = self.get_roads(posibles_roads, item) 
+            item = self.get_roads(posibles_roads, item)
             if len(item['payload']) != 0:
                 data.append(item)
         if canBuild_Settlement(player):
