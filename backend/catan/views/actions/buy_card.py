@@ -23,6 +23,22 @@ def checkResource(game_id, player_id):
     return list_resource
 
 
+def checkWinner(game, player):
+    winner = False
+    points = player.victory_points
+    card_vic_points = Card.objects.filter(
+        game=game, owner=player,
+        card_name='victory_point').count()
+    suma_total = points + card_vic_points
+
+    if suma_total >= 10:
+        winner = True
+        user = User.objects.get(username=player.username)
+        game.winner = user
+        game.save()
+    return winner
+
+
 def selectCard(game, player):
     card_type = ['road_building',
                  'year_of_plenty',
@@ -51,4 +67,10 @@ def buy_card(game, player):
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     selectCard(game, player)
     deleteResource(necessary_resources)
+
+    # Check if the player won
+    if checkWinner(game, player):
+        response = {"detail": "GANASTE"}
+        return Response(response, status=status.HTTP_200_OK)
+
     return Response(status=status.HTTP_200_OK)

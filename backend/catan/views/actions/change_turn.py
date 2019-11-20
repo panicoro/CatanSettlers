@@ -31,6 +31,7 @@ def set_new_turn(current_turn, player):
     @ player: a player to set as new in the turn.
     """
     current_turn.user = player.username
+    current_turn.robber_moved = False
     current_turn.save()
 
 
