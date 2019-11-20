@@ -99,6 +99,22 @@ def CheckBuild(game_id, level, index):
     return rta
 
 
+def checkWinner(game, player):
+    winner = False
+    points = player.victory_points
+    card_vic_points = Card.objects.filter(
+        game=game, owner=player,
+        card_name='victory_point').count()
+    suma_total = points + card_vic_points
+
+    if suma_total == 10:
+        winner = True
+        user = User.objects.get(username=player.username)
+        game.winner = user
+        game.save()
+    return winner
+
+
 def deleteResource(list_resource):
     """
     Remove resources from the list.
@@ -170,7 +186,6 @@ def posiblesSettlements(player):
 
 
 def build_settlement(payload, game, player):
-    print(payload)
     level = payload['level']
     index = payload['index']
     # Check that the position exists
@@ -207,4 +222,8 @@ def build_settlement(payload, game, player):
     point = player.victory_points + 1
     player.victory_points = point
     player.save()
+    # Check if the player won
+    if checkWinner(game, player):
+        response = {"detail": "GANASTE"}
+        return Response(response, status=status.HTTP_200_OK)
     return Response(status=status.HTTP_200_OK)

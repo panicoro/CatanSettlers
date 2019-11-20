@@ -34,6 +34,11 @@ def move_robber(payload, game, my_user, my_player):
 
     sum_dices = sum(get_sum_dices(game))
 
+    turn = Current_Turn.objects.get(game=game)
+
+    turn.robber_moved = True
+    turn.save()
+
     if sum_dices == 7:
 
         level = payload['position']['level']

@@ -53,6 +53,7 @@ def set_new_turn(current_turn, player):
     """
     current_turn.user = player.username
     current_turn.last_action = 'non_blocking_action'
+    current_turn.robber_moved = False
     current_turn.save()
 
 

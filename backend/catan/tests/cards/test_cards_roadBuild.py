@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import TestCase, RequestFactory
 from catan.models import *
+from aux.generateBoard import *
 from catan.views.players_views import PlayerActions, PlayerInfo
 from catan.views.game_views import GameInfo
 from django.urls import reverse
@@ -18,11 +19,9 @@ class TestViews(TestCase):
         self.email = 'test_user@example.com'
         self.user = User.objects.create_user(self.username, self.email)
         self.token = AccessToken()
-        self.vert_position1 = VertexPosition.objects.create(level=2, index=0)
-        self.vert_position2 = VertexPosition.objects.create(level=2, index=1)
-        self.vert_position3 = VertexPosition.objects.create(level=2, index=2)
-        self.vert_position4 = VertexPosition.objects.create(level=2, index=3)
-        self.vert_position4 = VertexPosition.objects.create(level=2, index=5)
+        generateVertexPositions()
+        self.vert_position1 = VertexPosition.objects.get(level=2, index=0)
+        self.vert_position2 = VertexPosition.objects.get(level=2, index=1)
         self.hexe_position = HexePosition.objects.create(level=0, index=0)
         self.board = Board.objects.create(name='Colonos')
         self.game = Game.objects.create(id=1, name='Juego1', board=self.board,
@@ -48,9 +47,9 @@ class TestViews(TestCase):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "play_road_building_card",
                 "payload": [[{"level": 2, "index": 1},
-                            {"level": 2, "index": 2}],
+                             {"level": 2, "index": 2}],
                             [{"level": 2, "index": 2},
-                            {"level": 2, "index": 3}]]}
+                             {"level": 2, "index": 3}]]}
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
@@ -61,13 +60,16 @@ class TestViews(TestCase):
         force_authenticate(request_game, user=self.user, token=self.token)
         view_game = GameInfo.as_view()
         response_game = view_game(request_game, pk=1)
-        response_game.render()
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
         assert len(response_game.data['players'][0]['roads']) == 3
+        expected_data = [
+            [{'level': 2, 'index': 0},
+             {'level': 2, 'index': 1}],
+            [{'level': 2, 'index': 1},
+             {'level': 2, 'index': 2}],
+            [{'level': 2, 'index': 2},
+             {'level': 2, 'index': 3}]
+        ]
+        assert response_game.data['players'][0]['roads'] == expected_data
         assert response_game.data['players'][0]['development_cards'] == cards
         assert response.status_code == 200
 
@@ -90,12 +92,12 @@ class TestViews(TestCase):
         view_game = GameInfo.as_view()
         response_game = view_game(request_game, pk=1)
         response_game.render()
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
         assert len(response_game.data['players'][0]['roads']) == 1
+        expected_data = [
+            [{'level': 2, 'index': 0},
+             {'level': 2, 'index': 1}]
+        ]
+        assert response_game.data['players'][0]['roads'] == expected_data
         assert response_game.data['players'][0]['development_cards'] == cards+1
         assert response.status_code == 403
 
@@ -153,6 +155,11 @@ class TestViews(TestCase):
         view_player = PlayerInfo.as_view()
         response_player = view_player(request_player, pk=1)
         assert len(response_player.data['cards']) == 1
+        expected_data = [
+            [{'level': 2, 'index': 0},
+             {'level': 2, 'index': 1}]
+        ]
+        assert response_game.data['players'][0]['roads'] == expected_data
         assert len(response_game.data['players'][0]['roads']) == 1
         assert response_game.data['players'][0]['development_cards'] == 1
         assert response.data == {'detail': 'Non-existent vetertexs positions'}
@@ -184,6 +191,11 @@ class TestViews(TestCase):
         assert len(response_player.data['cards']) == 1
         assert len(response_game.data['players'][0]['roads']) == 1
         assert response_game.data['players'][0]['development_cards'] == 1
+        expected_data = [
+            [{'level': 2, 'index': 0},
+             {'level': 2, 'index': 1}]
+        ]
+        assert response_game.data['players'][0]['roads'] == expected_data
         assert response.data == {'detail': 'invalid position, reserved'}
         assert response.status_code == 403
 
@@ -214,6 +226,7 @@ class TestViews(TestCase):
         assert len(response_player.data['cards']) == 1
         assert len(response_game.data['players'][0]['roads']) == 0
         assert response_game.data['players'][0]['development_cards'] == 1
+        assert response_game.data['players'][0]['roads'] == []
         assert response.data == {'detail': 'must have something built'}
         assert response.status_code == 403
 
@@ -243,5 +256,53 @@ class TestViews(TestCase):
         assert len(response_player.data['cards']) == 1
         assert len(response_game.data['players'][0]['roads']) == 1
         assert response_game.data['players'][0]['development_cards'] == 1
+        expected_data = [
+            [{'level': 2, 'index': 0},
+             {'level': 2, 'index': 1}]
+        ]
+        assert response_game.data['players'][0]['roads'] == expected_data
         assert response.data == {'detail': 'not neighbor'}
         assert response.status_code == 403
+
+    def test_get_noCard(self):
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user, token=self.token)
+        self.cardRoad.delete()
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == []
+        assert response.status_code == 200
+
+    def test_get_withCard1(self):
+        """
+        This test delete the only road existent
+        """
+        self.road.delete()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == []
+        assert response.status_code == 200
+
+    def test_get_withCard2(self):
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = [{
+            'type': 'play_road_building_card',
+            'payload': [[{'level': 2, 'index': 0}, {'level': 2, 'index': 29}],
+                        [{'level': 2, 'index': 1}, {'level': 1, 'index': 1}],
+                        [{'level': 2, 'index': 1}, {'level': 2, 'index': 2}],
+                        [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
+                        [{'level': 2, 'index': 29}, {'level': 1, 'index': 17}],
+                        [{'level': 1, 'index': 1}, {'level': 1, 'index': 0}],
+                        [{'level': 1, 'index': 1}, {'level': 1, 'index': 2}],
+                        [{'level': 2, 'index': 2}, {'level': 2, 'index': 3}]]
+        }]
+        assert response.data == expected_data
+        assert response.status_code == 200
