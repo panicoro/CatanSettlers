@@ -91,40 +91,6 @@ class TestView(TestCase):
         response.render()
         assert response.data['current_turn']['user'] == "user1"
 
-    def test_endTurn_STAGE_CONSTRUCTION(self):
-        """
-        A test to see the change of users in turn according
-        to the user requesting the end of their shift in the
-        first construction stage.
-        """
-        self.turn.game_stage = 'first_construction'
-        self.turn.save()
-        users = [self.user1, self.user2, self.user3, self.user4,
-                 self.user4, self.user3, self.user2, self.user1]
-        expected_users = ['user2', 'user3', 'user4', 'user4',
-                          'user3', 'user2', 'user1', 'user1']
-        for user, next_user in zip(users, expected_users):
-            self.turn.last_action = 'build_road'
-            self.turn.save()
-            url = reverse('PlayerActions', kwargs={'pk': 1})
-            data = {"type": "end_turn",
-                    "payload": None}
-            request = RequestFactory().post(url, data,
-                                            content_type='application/json')
-            force_authenticate(request, user=user, token=self.token)
-            view_actions = PlayerActions.as_view()
-            response = view_actions(request, pk=1)
-            if response.status_code == 403:
-                assert response.data['detail'] == "Hola"
-            assert response.status_code == 204
-            url = reverse('GameInfo', kwargs={'pk': 1})
-            request = RequestFactory().get(url)
-            force_authenticate(request, user=user, token=self.token)
-            view_game = GameInfo.as_view()
-            response = view_game(request, pk=1)
-            print(self.turn.user)
-            assert response.data['current_turn']['user'] == next_user
-
     def test_endTurn_NotInTurn(self):
         """
         If the user requesting the end of his shift is not in
