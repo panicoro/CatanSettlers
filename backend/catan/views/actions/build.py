@@ -143,6 +143,20 @@ def get_roadsAndBuildings(player):
     return (vertex_roads, vertex_buildings)
 
 
+def posiblesInitialSettlements():
+    """
+    A function that obtains positions that a player might have
+    available to build settlements on the board during the
+    construction stage
+    """
+    vertex_available = VertexPosition.objects.all()
+    # Get all the buildings
+    buildings = Building.objects.all()
+    for building in buildings:
+        vertex_available = vertex_available.exclude(id=building.position.id)
+    return vertex_available
+
+
 def posiblesSettlements(player):
     """
     A function that obtains positions that a player might have
@@ -182,33 +196,34 @@ def build_settlement(payload, game, player):
     if not CheckPosition(game.id, level, index):
         response = {"detail": "Busy position"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    necessary_resources = ResourceBuild(player.id, game.id)
-    # Check that the pleyer has the necessary resources
-    if len(necessary_resources) != 4:
-        response = {"detail": "It does not have" +
-                    "the necessary resources"}
-        return Response(response, status=status.HTTP_403_FORBIDDEN)
-    is_road = CheckRoad(player.id, game.id, level, index)
-    is_building = CheckBuild(game.id, level, index)
-    # Check that there are no building in the neighboring vertex
-    # Checking that the player has a road in the vertex
-    if not is_building or not is_road:
-        response = {"detail": "Invalid position"}
-        return Response(response, status=status.HTTP_403_FORBIDDEN)
+    game_stage = game.current_turn.game_stage
+    if game_stage == 'full_play':
+        necessary_resources = ResourceBuild(player.id, game.id)
+        # Check that the pleyer has the necessary resources if he not in the
+        if len(necessary_resources) != 4:
+            response = {"detail": "It does not have" +
+                        "the necessary resources"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        is_road = CheckRoad(player.id, game.id, level, index)
+        is_building = CheckBuild(game.id, level, index)
+        # Check that there are no building in the neighboring vertex
+        # Checking that the player has a road in the vertex
+        if not is_building or not is_road:
+            response = {"detail": "Invalid position"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        deleteResource(necessary_resources)
     position = VertexPosition.objects.filter(level=level,
                                              index=index).get()
     new_build = Building(game=game, name='settlement', owner=player,
                          position=position)
     new_build.save()
+    game.current_turn.last_action = 'build_settlement'
+    game.current_turn.save()
     point = player.victory_points + 1
     player.victory_points = point
     player.save()
-
     # Check if the player won
-
     if checkWinner(game, player):
         response = {"detail": "GANASTE"}
         return Response(response, status=status.HTTP_200_OK)
-
-    deleteResource(necessary_resources)
     return Response(status=status.HTTP_200_OK)

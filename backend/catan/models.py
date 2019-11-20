@@ -219,10 +219,25 @@ class Road(models.Model):
 
 
 class Current_Turn(models.Model):
+    GAME_STAGE = [
+        ('first_construction', 'FIRST_CONSTRUCTION'),
+        ('second_construction', 'SECOND_CONSTRUCTION'),
+        ('full_play', 'FULL_PLAY')
+    ]
+    ACTIONS = [
+        ('build_settlement', 'BUILD_SETTLEMENT'),
+        ('build_road', 'BUILD_ROAD'),
+        ('move_robber', 'MOVE_ROBBER'),
+        ('non_blocking_action', 'NON_BLOCKING_ACTION')
+    ]
     game = models.OneToOneField(Game, related_name='current_turn',
                                 on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="user")
+    game_stage = models.CharField(max_length=50, choices=GAME_STAGE,
+                                  default='not_blocking_action')
+    last_action = models.CharField(max_length=50, choices=ACTIONS,
+                                   default='not_blocking_action')
     dices1 = models.IntegerField(null=True,
                                  validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])

@@ -377,7 +377,6 @@ class TestViews(TestCase):
                     'player': ''
                 }
                 }
-
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user1, token=self.token)
@@ -392,8 +391,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=6, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=6, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -428,56 +427,14 @@ class TestViews(TestCase):
         assert response.data == expeceted_data
         assert response.status_code == 200
 
-    def test_get_robberPositions_Mix(self):
-        self.createGame()
-        new_robber = HexePosition.objects.get(level=1, index=0)
-        self.game.robber = new_robber
-        self.game.save()
-        current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=6, dices2=1, robber_moved=False)
-        position1 = VertexPosition.objects.get(level=2, index=5)
-        position2 = VertexPosition.objects.get(level=1, index=17)
-        position3 = VertexPosition.objects.get(level=0, index=0)
-        position4 = VertexPosition.objects.get(level=1, index=15)
-        Building.objects.create(game=self.game,
-                                owner=self.player1,
-                                name='city',
-                                position=position1)
-        Building.objects.create(game=self.game,
-                                owner=self.player2,
-                                name='city',
-                                position=position2)
-        Building.objects.create(game=self.game,
-                                owner=self.player2,
-                                name='settlement',
-                                position=position3)
-        Building.objects.create(game=self.game,
-                                owner=self.player3,
-                                name='settlement',
-                                position=position4)
-        Card.objects.create(owner=self.player1,
-                            game=self.game,
-                            card_name='knight')
-        path = reverse('PlayerActions', kwargs={'pk': 1})
-        request = RequestFactory().get(path)
-        force_authenticate(request, user=self.user1, token=self.token)
-        view = PlayerActions.as_view()
-        response = view(request, pk=1)
-        response.render()
-        # move_robber = self.expected_payload
-        # move_robber['type'] = 'move_rober'
-        # assert move_robber in response.data
-        assert response.status_code == 200
-
     def test_get_robberPositions_NoBuildings(self):
         self.createGame()
         new_robber = HexePosition.objects.get(level=1, index=0)
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=6, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=6, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -520,8 +477,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=1, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=1, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)

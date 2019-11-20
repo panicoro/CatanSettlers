@@ -340,8 +340,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=4, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=4, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -367,8 +367,8 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expeceted_data = [
-            {'payload': [
+        expeceted_data = {
+            'payload': [
                 {'players': ['user2'], 'position': {'level': 0, 'index': 0}},
                 {'players': [], 'position': {'level': 1, 'index': 1}},
                 {'players': [], 'position': {'level': 1, 'index': 2}},
@@ -388,8 +388,8 @@ class TestViews(TestCase):
                 {'players': [], 'position': {'level': 2, 'index': 9}},
                 {'players': ['user3'], 'position': {'level': 2, 'index': 10}},
                 {'players': ['user2'], 'position': {'level': 2, 'index': 11}}],
-             'type': 'move_robber'}]
-        assert response.data == expeceted_data
+            'type': 'move_robber'}
+        assert expeceted_data in response.data
         assert response.status_code == 200
 
     def test_get_robberPositions_not_7(self):
@@ -398,8 +398,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=1, dices2=3)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=1, dices2=3, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -434,8 +434,8 @@ class TestViews(TestCase):
         self.game.robber = new_robber
         self.game.save()
         current_turn = mixer.blend(
-            Current_Turn, user=self.user, game=self.game,
-            dices1=1, dices2=6)
+            Current_Turn, user=self.user1, game=self.game,
+            dices1=1, dices2=6, game_stage='full_play')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -445,8 +445,8 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = [
-            {'payload': [
+        expected_data = {
+            'payload': [
                 {'players': [], 'position': {'level': 0, 'index': 0}},
                 {'players': [], 'position': {'level': 1, 'index': 1}},
                 {'players': [], 'position': {'level': 1, 'index': 2}},
@@ -465,7 +465,6 @@ class TestViews(TestCase):
                 {'players': [], 'position': {'level': 2, 'index': 9}},
                 {'players': [], 'position': {'level': 2, 'index': 10}},
                 {'players': [], 'position': {'level': 2, 'index': 11}}],
-             'type': 'move_robber'}
-        ]
-        assert response.data == expected_data
+            'type': 'move_robber'}
+        assert expected_data in response.data
         assert response.status_code == 200

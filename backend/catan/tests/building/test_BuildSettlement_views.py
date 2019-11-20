@@ -35,7 +35,8 @@ class TestViews(TestCase):
         self.turn = Current_Turn.objects.create(game=self.game,
                                                 user=self.user,
                                                 dices1=3,
-                                                dices2=3)
+                                                dices2=3,
+                                                game_stage='full_play')
         self.road = Road.objects.create(owner=self.player,
                                         vertex_1=self.vertex_1,
                                         vertex_2=self.vertex_2,

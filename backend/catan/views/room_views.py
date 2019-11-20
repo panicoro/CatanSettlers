@@ -93,28 +93,15 @@ class RoomDetail(APIView):
             first_player = Player.objects.filter(game=game, turn=1)[0]
             current_turn = Current_Turn.objects.create(
                 game=game,
-                user=first_player.username)
+                user=first_player.username,
+                game_stage='FIRST_CONSTRUCCTION',
+                last_action='NON_BLOCKING_ACTION')
             room.game_has_started = True
             room.game_id = game.id
             room.save()
-            """
-            building1 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player1, position=vertex_positions[0])
-            building2 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player2, position=vertex_positions[1])
-            building3 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player3, position=vertex_positions[2])
-            building4 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player4, position=vertex_positions[3])
-            """
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            ValidationError("Can't start the game without all players"),
-            status=status.HTTP_400_BAD_REQUEST)
+        data = {"detail": "Can't start the game without all players"}
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         user = request.user

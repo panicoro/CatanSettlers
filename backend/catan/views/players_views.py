@@ -11,15 +11,14 @@ from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from catan.views.actions.road import (
-                    build_road, canBuild_Road,
-                    posiblesRoads,
-                    posiblesRoads_cardRoadBuilding,
-                    play_road_building_card
-                )
+            build_road, canBuild_Road,
+            posiblesRoads, posiblesInitialRoads,
+            posiblesRoads_cardRoadBuilding,
+            play_road_building_card)
 from catan.views.actions.buy_card import buy_card
 from catan.views.actions.build import (
             build_settlement, canBuild_Settlement,
-            posiblesSettlements)
+            posiblesSettlements, posiblesInitialSettlements)
 from catan.views.actions.bank import bank_trade
 from catan.views.actions.robber import (
                 move_robber, get_sum_dices,
@@ -82,48 +81,87 @@ class PlayerActions(APIView):
         player = get_object_or_404(Player, username=user, game=game)
         turn = Current_Turn.objects.get(game=game)
         data = []
-        if canBuild_Road(player):
-            item = {"type": 'build_road'}
-            posibles_roads = posiblesRoads(player)
-            item['payload'] = []
-            item = self.get_roads(posibles_roads, item)
-            if len(item['payload']) != 0:
+        if not self.check_player_in_turn(game, player):
+            return Response(data, status=status.HTTP_200_OK)
+        game_stage = game.current_turn.game_stage
+        last_action = game.current_turn.last_action
+        # Las acciones posibles cambian si estan en la fase de construccion
+        # Si un jugador esta al comienzo de su fase, se le muestran las
+        # opciones para construir un poblado, luego las para construir
+        # una carretera luego debe terminar el turno no puede hacer nada mas...
+        if game_stage != 'full_play':
+            if last_action == 'non_blocking_action':
+                item = {"type": 'build_settlement'}
+                posibles_settlements = posiblesInitialSettlements()
+                serialized_positions = VertexPositionSerializer(
+                                        posibles_settlements,
+                                        many=True)
+                item['payload'] = serialized_positions.data
                 data.append(item)
-        if canBuild_Settlement(player):
-            item = {"type": 'build_settlement'}
-            posibles_setlements = posiblesSettlements(player)
-            serialized_positions = VertexPositionSerializer(
+            if last_action == 'build_settlement':
+                item = {"type": 'build_road'}
+                posibles_roads = posiblesInitialRoads(player)
+                item['payload'] = []
+                for road in posibles_roads:
+                    new_road = []
+                    new_road.append(VertexPositionSerializer(road[0]).data)
+                    new_road.append(VertexPositionSerializer(road[1]).data)
+                    item['payload'].append(new_road)
+                data.append(item)
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            if canBuild_Road(player):
+                item = {"type": 'build_road'}
+                posibles_roads = posiblesRoads(player)
+                item['payload'] = []
+                for road in posibles_roads:
+                    new_road = []   
+                    new_road.append(VertexPositionSerializer(road[0]).data)
+                    new_road.append(VertexPositionSerializer(road[1]).data)
+                    item['payload'].append(new_road)
+                if len(item['payload']) != 0:
+                    data.append(item)
+            if canBuild_Settlement(player):
+                item = {"type": 'build_settlement'}
+                posibles_setlements = posiblesSettlements(player)
+                serialized_positions = VertexPositionSerializer(
                                         posibles_setlements,
                                         many=True)
-            item['payload'] = serialized_positions.data
-            if len(item['payload']) != 0:
+                item['payload'] = serialized_positions.data
+                if len(item['payload']) != 0:
+                    data.append(item)
+            if sum(get_sum_dices(game)) == 7:
+                item = {"type": 'move_robber'}
+                posibles_robber = posiblesRobberPositions(game)
+                item["payload"] = posibles_robber
                 data.append(item)
-        if sum(get_sum_dices(game)) == 7 and not turn.robber_moved:
-            item = {"type": 'move_robber'}
-            posibles_robber = posiblesRobberPositions(game)
-            item["payload"] = posibles_robber
-            data.append(item)
-        if Card.objects.filter(owner=player,
-                               card_name='knight').exists():
-            item = {"type": 'play_knight_card'}
-            posibles_robber = posiblesRobberPositions(game)
-            item["payload"] = posibles_robber
-            data.append(item)
-        if Card.objects.filter(owner=player,
-                               card_name='road_building').exists():
-            item = {"type": 'play_road_building_card'}
-            posibles_roads = posiblesRoads_cardRoadBuilding(player)
-            item['payload'] = []
-            item = self.get_roads(posibles_roads, item)
-            if len(item['payload']) != 0:
+            if sum(get_sum_dices(game)) == 7 and not turn.robber_moved:
+                item = {"type": 'move_robber'}
+                posibles_robber = posiblesRobberPositions(game)
+                item["payload"] = posibles_robber
                 data.append(item)
-        return Response(data, status=status.HTTP_200_OK)
+            if Card.objects.filter(owner=player,
+                                   card_name='knight').exists():
+                item = {"type": 'play_knight_card'}
+                posibles_robber = posiblesRobberPositions(game)
+                item["payload"] = posibles_robber
+                data.append(item)
+            if Card.objects.filter(owner=player,
+                                   card_name='road_building').exists():
+                item = {"type": 'play_road_building_card'}
+                posibles_roads = posiblesRoads_cardRoadBuilding(player)
+                item['payload'] = []
+                item = self.get_roads(posibles_roads, item)
+                if len(item['payload']) != 0:
+                    data.append(item)
+            return Response(data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):
         data = request.data
         game = get_object_or_404(Game, pk=pk)
         user = request.user
         player = get_object_or_404(Player, username=user, game=game)
+        game_stage = game.current_turn.game_stage
         # Check if the player is on his turn
         if not self.check_player_in_turn(game, player):
             response = {"detail": "Not in turn"}
@@ -133,9 +171,11 @@ class PlayerActions(APIView):
             if sum(get_sum_dices(game)) == 7 and not turn.robber_moved:
                 response = {"detail": "you have to move the thief"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
-            change_turn(game)
-            throw_dices(game)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            response = change_turn(game)
+            # Solo tirar los dados si estoy en el juego...
+            if game_stage == 'FULL_PLAY':
+                throw_dices(game)
+            return response
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
             return response
