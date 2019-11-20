@@ -34,7 +34,8 @@ $ python manage.py runserver
 
 ## Testing
 
-Para correr los test dentro de la backend y con el entorno virtual activado, 
+Para correr los test dentro de la backend, con el entorno virtual activado y 
+con las migraciones aplicadas (makemigrations catan y migrate), 
 hacer:
 
 ```
