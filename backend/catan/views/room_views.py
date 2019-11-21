@@ -77,24 +77,24 @@ class RoomDetail(APIView):
         desert_terrain = hexes.filter(terrain="desert")[0]
         desert_pos = desert_terrain.position
         players = room.players.all()
-        if (len(players) == 3):
+        if (len(players) == 4):
             game = Game.objects.create(name=room.name, board=board,
                                        robber=desert_pos)
             turns = [1, 2, 3, 4]
             shuffle(turns)
-            player1 = Player.objects.create(turn=turns[0], username=room.owner,
-                                            game=game, colour="blue")
-            player2 = Player.objects.create(turn=turns[1], username=players[0],
-                                            game=game, colour="red")
-            player3 = Player.objects.create(turn=turns[2], username=players[1],
-                                            game=game, colour="yellow")
-            player4 = Player.objects.create(turn=turns[3], username=players[2],
-                                            game=game, colour="green")
+            player1 = Player.objects.create(turn=turns[0], username=players[0],
+                                            game=game, colour="Blue")
+            player2 = Player.objects.create(turn=turns[1], username=players[1],
+                                            game=game, colour="Red")
+            player3 = Player.objects.create(turn=turns[2], username=players[2],
+                                            game=game, colour="Yellow")
+            player4 = Player.objects.create(turn=turns[3], username=players[3],
+                                            game=game, colour="Green")
             first_player = Player.objects.filter(game=game, turn=1)[0]
             current_turn = Current_Turn.objects.create(
                 game=game,
                 user=first_player.username,
-                game_stage='FIRST_CONSTRUCCTION',
+                game_stage='FIRST_CONSTRUCTION',
                 last_action='NON_BLOCKING_ACTION')
             room.game_has_started = True
             room.game_id = game.id
