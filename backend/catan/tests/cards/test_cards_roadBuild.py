@@ -34,7 +34,7 @@ class TestViews(TestCase):
                                                 user=self.user,
                                                 dices1=3,
                                                 dices2=3,
-                                                game_stage='full_play')
+                                                game_stage='FULL_PLAY')
         self.road = Road.objects.create(owner=self.player,
                                         vertex_1=self.vert_position1,
                                         vertex_2=self.vert_position2,
@@ -271,7 +271,7 @@ class TestViews(TestCase):
         self.cardRoad.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == []
+        assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200
 
     def test_get_withCard1(self):
@@ -284,7 +284,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == []
+        assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200
 
     def test_get_withCard2(self):
@@ -293,7 +293,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = [{
+        expected_data = {
             'type': 'play_road_building_card',
             'payload': [[{'level': 2, 'index': 0}, {'level': 2, 'index': 29}],
                         [{'level': 2, 'index': 1}, {'level': 1, 'index': 1}],
@@ -303,6 +303,7 @@ class TestViews(TestCase):
                         [{'level': 1, 'index': 1}, {'level': 1, 'index': 0}],
                         [{'level': 1, 'index': 1}, {'level': 1, 'index': 2}],
                         [{'level': 2, 'index': 2}, {'level': 2, 'index': 3}]]
-        }]
-        assert response.data == expected_data
+        }
+        assert expected_data in response.data
+        assert {'type': 'end_turn'} in response.data
         assert response.status_code == 200

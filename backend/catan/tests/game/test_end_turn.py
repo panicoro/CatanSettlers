@@ -36,9 +36,9 @@ class TestView(TestCase):
                                                 user=self.user1,
                                                 dices1=3,
                                                 dices2=3,
-                                                game_stage='full_play')
+                                                game_stage='FULL_PLAY')
 
-    def test_endTurn_FULL_PLAY(self):
+    def test_endTurn(self):
         """
         A test to see the change of users in turn according
         to the user requesting the end of their shift

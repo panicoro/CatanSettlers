@@ -99,6 +99,3 @@ class TestView(TestCase):
                                  self.vert_pos1.index) is True
         assert CheckPositionRoad(self.game.id, self.vert_pos1.level,
                                  self.vert_pos1.index, 1, 1) is False
-
-    def test_deleteResource(self):
-        assert deleteResource(self.player.id, self.game.id) is None

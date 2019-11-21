@@ -341,7 +341,7 @@ class TestViews(TestCase):
         self.game.save()
         current_turn = mixer.blend(
             Current_Turn, user=self.user1, game=self.game,
-            dices1=4, dices2=3, game_stage='full_play')
+            dices1=4, dices2=3, game_stage='FULL_PLAY')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -367,7 +367,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expeceted_data = {
+        expected_data = {
             'payload': [
                 {'players': ['user2'], 'position': {'level': 0, 'index': 0}},
                 {'players': [], 'position': {'level': 1, 'index': 1}},
@@ -389,7 +389,8 @@ class TestViews(TestCase):
                 {'players': ['user3'], 'position': {'level': 2, 'index': 10}},
                 {'players': ['user2'], 'position': {'level': 2, 'index': 11}}],
             'type': 'move_robber'}
-        assert expeceted_data in response.data
+        assert expected_data in response.data
+        assert {"type": "end_turn"} not in response.data
         assert response.status_code == 200
 
     def test_get_robberPositions_not_7(self):
@@ -399,7 +400,7 @@ class TestViews(TestCase):
         self.game.save()
         current_turn = mixer.blend(
             Current_Turn, user=self.user1, game=self.game,
-            dices1=1, dices2=3, game_stage='full_play')
+            dices1=1, dices2=3, game_stage='FULL_PLAY')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -420,12 +421,38 @@ class TestViews(TestCase):
                                 owner=self.player3,
                                 name='settlement',
                                 position=position4)
+        Card.objects.create(owner=self.player1,
+                            game=self.game,
+                            card_name='knight')
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == []
+        expected_data = {
+            'payload': [
+                {'players': ['user2'], 'position': {'level': 0, 'index': 0}},
+                {'players': [], 'position': {'level': 1, 'index': 1}},
+                {'players': [], 'position': {'level': 1, 'index': 2}},
+                {'players': [], 'position': {'level': 1, 'index': 3}},
+                {'players': ['user3'], 'position': {'level': 1, 'index': 4}},
+                {'players': ['user2', 'user3'], 'position': {'level': 1,
+                                                             'index': 5}},
+                {'players': ['user2'], 'position': {'level': 2, 'index': 0}},
+                {'players': [], 'position': {'level': 2, 'index': 1}},
+                {'players': ['user1'], 'position': {'level': 2, 'index': 2}},
+                {'players': [], 'position': {'level': 2, 'index': 3}},
+                {'players': [], 'position': {'level': 2, 'index': 4}},
+                {'players': [], 'position': {'level': 2, 'index': 5}},
+                {'players': [], 'position': {'level': 2, 'index': 6}},
+                {'players': [], 'position': {'level': 2, 'index': 7}},
+                {'players': [], 'position': {'level': 2, 'index': 8}},
+                {'players': [], 'position': {'level': 2, 'index': 9}},
+                {'players': ['user3'], 'position': {'level': 2, 'index': 10}},
+                {'players': ['user2'], 'position': {'level': 2, 'index': 11}}],
+            'type': 'play_knight_card'}
+        assert expected_data in response.data
+        assert {"type": "end_turn"} in response.data
         assert response.status_code == 200
 
     def test_get_robberPositions_not_Buildings(self):
@@ -435,7 +462,7 @@ class TestViews(TestCase):
         self.game.save()
         current_turn = mixer.blend(
             Current_Turn, user=self.user1, game=self.game,
-            dices1=1, dices2=6, game_stage='full_play')
+            dices1=1, dices2=6, game_stage='FULL_PLAY')
         position1 = VertexPosition.objects.get(level=2, index=5)
         position2 = VertexPosition.objects.get(level=1, index=17)
         position3 = VertexPosition.objects.get(level=0, index=0)
@@ -467,4 +494,5 @@ class TestViews(TestCase):
                 {'players': [], 'position': {'level': 2, 'index': 11}}],
             'type': 'move_robber'}
         assert expected_data in response.data
+        assert {"type": "end_turn"} not in response.data
         assert response.status_code == 200
