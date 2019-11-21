@@ -11,6 +11,7 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
+from catan.views.actions.build import deleteResource
 from django.db.models import Q
 
 
@@ -20,7 +21,6 @@ def ResourcesRoad(owner_id, game_id):
     brick = True
     lumber = True
     rta = []
-
     for resource in list_resource:
         if resource.resource_name == "brick" and brick:
             rta.append(resource)
@@ -94,13 +94,6 @@ def CheckPositionRoad(game_id, level1, index1, level2, index2):
                         rta = True
                         return rta
     return rta
-
-
-# delete resource
-def deleteResource(owner_id, game_id):
-    list_resource = Resource.objects.filter(owner=owner_id, game=game_id)
-    for resource in list_resource:
-        resource.delete()
 
 
 # check if it's neighbor
@@ -259,7 +252,7 @@ def build_road(payload, game, owner, road_building_card=False):
     if not is_neighbor(list_neighbor, level2, index2):
         response = {"detail": "not neighbor"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    if game_stage == 'full_play':
+    if game_stage == 'FULL_PLAY':
         is_roads = CheckRoads_Road(owner.id, game.id, level1, index1,
                                    level2, index2)
         is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
@@ -278,15 +271,15 @@ def build_road(payload, game, owner, road_building_card=False):
         if not is_building:
             response = {"detail": "must built since your last building"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-    if (road_building_card is False) and (game_stage == 'full_play'):
+    if (road_building_card is False) and (game_stage == 'FULL_PLAY'):
         list_resources = ResourcesRoad(owner.id, game.id)
         # I verify necessary resources
         if len(list_resources) != 2:
             response = {"detail": "Doesn't have enough resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-        deleteResource(owner.id, game.id)
+        deleteResource(list_resources)
     create_Road(game, owner, level1, index1, level2, index2)
-    game.current_turn.last_action = 'build_road'
+    game.current_turn.last_action = 'BUILD_ROAD'
     game.current_turn.save()
     return Response(status=status.HTTP_200_OK)
 

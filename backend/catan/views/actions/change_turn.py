@@ -1,4 +1,5 @@
 from catan.models import *
+from catan.dices import throw_dices
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -19,19 +20,21 @@ def get_next_player(current_turn, players):
     # is the natural, and in the stage 'SECOND_CONSTRUCTION' the order
     # is the inverse
     game_stage = current_turn.game_stage
-    if game_stage == 'first_construction':
+    print(game_stage)
+    if game_stage == 'FIRST_CONSTRUCTION':
         if actual_turn != 4:
             next_turn = actual_turn + 1
         else:
             next_turn = actual_turn
-            current_turn.game_stage = 'second_construction'
+            current_turn.game_stage = 'SECOND_CONSTRUCTION'
             current_turn.save()
-    elif game_stage == 'second_construction':
+    elif game_stage == 'SECOND_CONSTRUCTION':
         if actual_turn != 1:
             next_turn = actual_turn - 1
         else:
             next_turn = actual_turn
-            current_turn.game_stage = 'full_play'
+            current_turn.game_stage = 'FULL_PLAY'
+            throw_dices(current_turn.game)
             current_turn.save()
     else:
         if actual_turn == 4:
@@ -52,7 +55,7 @@ def set_new_turn(current_turn, player):
     @ player: a player to set as new in the turn.
     """
     current_turn.user = player.username
-    current_turn.last_action = 'non_blocking_action'
+    current_turn.last_action = 'NON_BLOCKING_ACTION'
     current_turn.robber_moved = False
     current_turn.save()
 
@@ -66,8 +69,8 @@ def change_turn(game):
     players = Player.objects.filter(game=game)
     game_stage = game.current_turn.game_stage
     last_action = game.current_turn.last_action
-    if game_stage != 'full_play':
-        if last_action != 'build_road':
+    if game_stage != 'FULL_PLAY':
+        if last_action != 'BUILD_ROAD':
             data = {"detail": "must built your first constructions"}
             return Response(data, status=status.HTTP_403_FORBIDDEN)
     next_player = get_next_player(game.current_turn, players)

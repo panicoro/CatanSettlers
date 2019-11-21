@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.cargaJson import *
-from catan.dices import throw_dices
+from catan.dices import throw_dices, gain_resources_free
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from django.db.models import Q
@@ -143,7 +143,7 @@ def get_roadsAndBuildings(player):
     return (vertex_roads, vertex_buildings)
 
 
-def posiblesInitialSettlements():
+def posiblesInitialSettlements(game):
     """
     A function that obtains positions that a player might have
     available to build settlements on the board during the
@@ -151,10 +151,22 @@ def posiblesInitialSettlements():
     """
     vertex_available = VertexPosition.objects.all()
     # Get all the buildings
-    buildings = Building.objects.all()
-    for building in buildings:
-        vertex_available = vertex_available.exclude(id=building.position.id)
-    return vertex_available
+    buildings = Building.objects.filter(game=game)
+    if len(buildings) == 0:
+        return vertex_available
+    else:
+        for building in buildings:
+            vertex_available = vertex_available.exclude(
+                               id=building.position.id)
+            vertex = building.position
+            neighbors = VertexInfo(vertex.level, vertex.index)
+            for neighbor in neighbors:
+                vertex_position = VertexPosition.objects.filter(
+                                level=neighbor[0],
+                                index=neighbor[1]).get()
+                vertex_available = vertex_available.exclude(
+                                   id=vertex_position.id)
+        return vertex_available
 
 
 def posiblesSettlements(player):
@@ -197,7 +209,7 @@ def build_settlement(payload, game, player):
         response = {"detail": "Busy position"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     game_stage = game.current_turn.game_stage
-    if game_stage == 'full_play':
+    if game_stage == 'FULL_PLAY':
         necessary_resources = ResourceBuild(player.id, game.id)
         # Check that the pleyer has the necessary resources if he not in the
         if len(necessary_resources) != 4:
@@ -217,8 +229,10 @@ def build_settlement(payload, game, player):
     new_build = Building(game=game, name='settlement', owner=player,
                          position=position)
     new_build.save()
-    game.current_turn.last_action = 'build_settlement'
+    game.current_turn.last_action = 'BUILD_SETTLEMENT'
     game.current_turn.save()
+    if game_stage == 'SECOND_CONSTRUCTION':
+        gain_resources_free(game, player, position)
     point = player.victory_points + 1
     player.victory_points = point
     player.save()
