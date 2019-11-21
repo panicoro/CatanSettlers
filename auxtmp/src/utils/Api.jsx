@@ -31,7 +31,7 @@ export const login = (username, password, onSuccess, onFailure) => {
 /* Boards */
 
 export const getBoards = (onSuccess, onFailure) => {
-  const url = `${path}/boards`;
+  const url = `${path}/boards/`;
   const options = { method: 'GET' };
 
   request(url, options, onSuccess, onFailure);
@@ -90,16 +90,16 @@ export const joinRoom = (id, onSuccess, onFailure) => {
 
 export const getGameStatus = (id, onSuccess, onFailure) => {
   const endPoints = [
-    `${path}/games/${id}/player/actions`,
-    `${path}/games/${id}/board`,
-    `${path}/games/${id}/player`,
-    `${path}/games/${id}`,
+    `${path}/games/${id}/player/actions/`,
+    `${path}/games/${id}/board/`,
+    `${path}/games/${id}/player/`,
+    `${path}/games/${id}/`,
   ];
 
   const options = {
     method: 'GET',
     headers: {
-      Authorization: `Token ${getToken()}`,
+      Authorization: `Bearer ${getToken()}`,
       'Content-Type': 'application/json',
     },
   };
@@ -143,7 +143,7 @@ export const getGameStatus = (id, onSuccess, onFailure) => {
 // Actions
 
 export const playAction = (id, type, payload, onSuccess, onFailure) => {
-  const url = `${path}/games/${id}/player/actions`;
+  const url = `${path}/games/${id}/player/actions/`;
   const data = { type, payload };
   const options = {
     method: 'POST',
