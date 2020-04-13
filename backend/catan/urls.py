@@ -18,7 +18,7 @@ urlpatterns = [
     path('games/<int:pk>/player/actions/',
          players_views.PlayerActions.as_view(),
          name='PlayerActions'),
-    path('games/<int:pk>/player', players_views.PlayerInfo.as_view(),
+    path('games/<int:pk>/player/', players_views.PlayerInfo.as_view(),
          name='PlayerInfo'),
     path('games/<int:pk>/', game_views.GameInfo.as_view(),
          name='GameInfo'),

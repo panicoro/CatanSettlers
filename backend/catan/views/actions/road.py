@@ -11,6 +11,7 @@ from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
+from catan.views.actions.build import deleteResource
 from django.db.models import Q
 
 
@@ -20,7 +21,6 @@ def ResourcesRoad(owner_id, game_id):
     brick = True
     lumber = True
     rta = []
-
     for resource in list_resource:
         if resource.resource_name == "brick" and brick:
             rta.append(resource)
@@ -96,13 +96,6 @@ def CheckPositionRoad(game_id, level1, index1, level2, index2):
     return rta
 
 
-# delete resource
-def deleteResource(owner_id, game_id):
-    list_resource = Resource.objects.filter(owner=owner_id, game=game_id)
-    for resource in list_resource:
-        resource.delete()
-
-
 # check if it's neighbor
 def is_neighbor(list_neighbor, level, index):
     vec = False
@@ -154,6 +147,20 @@ def get_roadsAndBuildings(player):
     for build in buildings:
         vertex_buildings.add(build.position)
     return (vertex_roads, vertex_buildings)
+
+
+def posiblesInitialRoads(player):
+    building = Building.objects.filter(owner=player).last()
+    potencial_roads = []
+    vertex = building.position
+    neighbors = VertexInfo(vertex.level, vertex.index)
+    for neighbor in neighbors:
+        vertex_position = VertexPosition.objects.filter(
+                                level=neighbor[0],
+                                index=neighbor[1]).get()
+        new_road = [vertex, vertex_position]
+        potencial_roads.append(new_road)
+    return potencial_roads
 
 
 def get_potencialRoads(available_vertex):
@@ -229,20 +236,10 @@ def build_road(payload, game, owner, road_building_card=False):
     index1 = payload[0]['index']
     level2 = payload[1]['level']
     index2 = payload[1]['index']
+    game_stage = game.current_turn.game_stage
     # Check that the position exists
     if not checkVertexsPositions(level1, index1, level2, index2):
         response = {"detail": "Non-existent vetertexs positions"}
-        return Response(response, status=status.HTTP_403_FORBIDDEN)
-    if road_building_card is False:
-        list_resources = ResourcesRoad(owner.id, game.id)
-        # I verify necessary resources
-        if len(list_resources) != 2:
-            response = {"detail": "Doesn't have enough resources"}
-            return Response(response, status=status.HTTP_403_FORBIDDEN)
-    list_neighbor = VertexInfo(level1, index1)
-    # check that the neighbor exists
-    if not is_neighbor(list_neighbor, level2, index2):
-        response = {"detail": "not neighbor"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     position_road = CheckPositionRoad(game.id, level1, index1,
                                       level2, index2)
@@ -250,17 +247,40 @@ def build_road(payload, game, owner, road_building_card=False):
     if position_road:
         response = {"detail": "invalid position, reserved"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    is_roads = CheckRoads_Road(owner.id, game.id, level1, index1,
-                               level2, index2)
-    is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
-                                  level2, index2)
-    # I verify that I have my own road or building
-    if not is_roads and not is_building:
-        response = {"detail": "must have something built"}
+    list_neighbor = VertexInfo(level1, index1)
+    # check that the neighbor exists
+    if not is_neighbor(list_neighbor, level2, index2):
+        response = {"detail": "not neighbor"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
+    if game_stage == 'FULL_PLAY':
+        is_roads = CheckRoads_Road(owner.id, game.id, level1, index1,
+                                   level2, index2)
+        is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
+                                      level2, index2)
+        # I verify that I have my own road or building
+        if not is_roads and not is_building:
+            response = {"detail": "must have something built"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+    else:
+        last_building = Building.objects.filter(owner=owner.id).last()
+        last_level1 = last_building.position.level
+        last_index1 = last_building.position.index
+        is_building = CheckBuild_Road(owner.id, game.id, last_level1,
+                                      last_index1, level2, index2)
+        # I verify that I have my last building
+        if not is_building:
+            response = {"detail": "must built since your last building"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+    if (road_building_card is False) and (game_stage == 'FULL_PLAY'):
+        list_resources = ResourcesRoad(owner.id, game.id)
+        # I verify necessary resources
+        if len(list_resources) != 2:
+            response = {"detail": "Doesn't have enough resources"}
+            return Response(response, status=status.HTTP_403_FORBIDDEN)
+        deleteResource(list_resources)
     create_Road(game, owner, level1, index1, level2, index2)
-    if road_building_card is False:
-        deleteResource(owner.id, game.id)
+    game.current_turn.last_action = 'BUILD_ROAD'
+    game.current_turn.save()
     return Response(status=status.HTTP_200_OK)
 
 

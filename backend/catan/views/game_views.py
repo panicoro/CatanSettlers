@@ -146,7 +146,7 @@ class GameInfo(APIView):
         # Change data presentation of a dices
         dices1 = data['current_turn'].pop('dices1')
         dices2 = data['current_turn'].pop('dices2')
-        data['current_turn']['dices'] = [dices1, dices2]
+        data['current_turn']['dice'] = [dices1, dices2]
         # Add players...
         serialized_players = self.get_players(pk=pk)
         data['players'] = serialized_players
