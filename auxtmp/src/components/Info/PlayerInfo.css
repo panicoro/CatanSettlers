@@ -1,0 +1,9 @@
+#player-button {
+    font-size: 20px;
+}
+
+#player-button[disabled] {
+    color: black;
+    background-color: transparent;
+    border: transparent;
+}

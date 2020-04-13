@@ -35,7 +35,8 @@ class TestViews(TestCase):
         self.turn = Current_Turn.objects.create(game=self.game,
                                                 user=self.user,
                                                 dices1=3,
-                                                dices2=3)
+                                                dices2=3,
+                                                game_stage='FULL_PLAY')
         self.road = Road.objects.create(owner=self.player,
                                         vertex_1=self.vertex_1,
                                         vertex_2=self.vertex_2,
@@ -279,7 +280,7 @@ class TestViews(TestCase):
         self.lumber.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == []
+        assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200
 
     def test_get_withResources(self):
@@ -337,17 +338,17 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = [
-            {"type": "build_road",
-             "payload": [
+        expected_data = {
+            "type": "build_road",
+            "payload": [
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
                  [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
                  [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
                  [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
-                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}]]}
-        ]
-        assert response.data == expected_data
+                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}]]
+        }
+        assert expected_data in response.data
         assert response.status_code == 200
 
     def test_BuildWinner(self):

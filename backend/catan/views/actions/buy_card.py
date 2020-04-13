@@ -16,11 +16,27 @@ from random import randint
 
 
 def checkResource(game_id, player_id):
-    ore = Q(owner=player_id, game=game_id, resource_name='ore')
-    wool = Q(owner=player_id, game=game_id, resource_name='wool')
-    grain = Q(owner=player_id, game=game_id, resource_name='grain')
-    list_resource = Resource.objects.filter(ore | wool | grain)
-    return list_resource
+    list_resource = Resource.objects.filter(owner=player_id, game=game_id)
+    ore = True
+    wool = True
+    grain = True
+    rta = []
+    for resource in list_resource:
+        if resource.resource_name == "ore" and ore:
+            rta.append(resource)
+            ore = False
+        if resource.resource_name == "wool" and wool:
+            rta.append(resource)
+            wool = False
+        if resource.resource_name == "grain" and grain:
+            rta.append(resource)
+            grain = False
+    return rta
+
+
+def canBuyCard(game, player):
+    list_resource = checkResource(game, player)
+    return len(list_resource) == 3
 
 
 def checkWinner(game, player):
@@ -59,7 +75,7 @@ def deleteResource(list_resource):
 
 
 def buy_card(game, player):
-    necessary_resources = checkResource(player.id, game.id)
+    necessary_resources = checkResource(game.id, player.id)
     # Check that the pleyer has the necessary resources
     if len(necessary_resources) != 3:
         response = {"detail": "It does not have" +
@@ -67,10 +83,8 @@ def buy_card(game, player):
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     selectCard(game, player)
     deleteResource(necessary_resources)
-
     # Check if the player won
     if checkWinner(game, player):
         response = {"detail": "GANASTE"}
         return Response(response, status=status.HTTP_200_OK)
-
     return Response(status=status.HTTP_200_OK)

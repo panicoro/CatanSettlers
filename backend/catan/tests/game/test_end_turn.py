@@ -35,7 +35,8 @@ class TestView(TestCase):
         self.turn = Current_Turn.objects.create(game=self.game,
                                                 user=self.user1,
                                                 dices1=3,
-                                                dices2=3)
+                                                dices2=3,
+                                                game_stage='FULL_PLAY')
 
     def test_endTurn(self):
         """
