@@ -5,6 +5,10 @@ from django.core.exceptions import ValidationError
 
 
 class Room(models.Model):
+    """
+    Stores information about one lobby of the game, ralated to
+    :model: `auth.User`
+    """
     name = models.CharField(max_length=50)
     max_players = models.IntegerField(default=4,
                                       validators=[MinValueValidator(4),
@@ -16,33 +20,39 @@ class Room(models.Model):
     board_id = models.IntegerField()
     game_has_started = models.BooleanField(default=False)
 
-    def __str__(self):
-        return '{}'.format(self.name)
 
-
-class VertexPosition(models.Model):
-    level = models.IntegerField(default=0, validators=[MinValueValidator(0),
-                                                       MaxValueValidator(2)])
-    index = models.IntegerField(default=0, validators=[MinValueValidator(0),
-                                                       MaxValueValidator(29)])
+class Board(models.Model):
+    name = models.CharField(max_length=15)
 
     class Meta:
-        unique_together = ['level', 'index']
-        ordering = ['level']
-
-    def clean(self):
-        if (self.level == 0) and not (0 <= self.index <= 5):
-            raise ValidationError(
-                'The index with level 0 must be between 0 and 5.')
-        if (self.level == 1) and not (0 <= self.index <= 17):
-            raise ValidationError(
-                'The index with level 1 must be between 0 and 17.')
-        if (self.level == 2) and not (0 <= self.index <= 29):
-            raise ValidationError(
-                'The index with level 2 must be between 0 and 29.')
+        unique_together = ['id', 'name']
+        ordering = ['id']
 
 
-class HexePosition(models.Model):
+"""
+An array of tuples that contains the type of resources need
+for cards and types of terrains.
+"""
+RESOURCE_TYPE = [
+    ('brick', 'BRICK'),
+    ('lumber', 'LUMBER'),
+    ('wool', 'WOOL'),
+    ('grain', 'GRAIN'),
+    ('ore', 'ORE')
+]
+
+
+class Hexe(models.Model):
+    """
+    Stores information about one hexagon of the board game,
+    related to :model `Board`
+    """
+    TERRAIN_TYPE = [('desert', 'DESERT')] + RESOURCE_TYPE
+    terrain = models.CharField(max_length=6, choices=TERRAIN_TYPE)
+    token = models.IntegerField(default=0, validators=[MinValueValidator(2),
+                                                       MaxValueValidator(12)])
+    board = models.ForeignKey(Board, related_name='board_hexe',
+                              on_delete=models.CASCADE)
     level = models.IntegerField(default=0,
                                 validators=[MinValueValidator(0),
                                             MaxValueValidator(2)])
@@ -51,10 +61,14 @@ class HexePosition(models.Model):
                                             MaxValueValidator(11)])
 
     class Meta:
-        unique_together = ['level', 'index']
-        ordering = ['level']
+        unique_together = ['board', 'level', 'index']
+        ordering = ['id']
 
     def clean(self):
+        """
+        Check if the values of levels and index are correct
+        according to the board diposition.
+        """
         if (self.level == 0) and not (0 <= self.index <= 0):
             raise ValidationError(
                 'The index with level 0 must be between 0 and 0.')
@@ -66,43 +80,15 @@ class HexePosition(models.Model):
                 'The index with level 2 must be between 0 and 11.')
 
 
-class Board(models.Model):
-    name = models.CharField(max_length=25)
-
-    class Meta:
-        unique_together = ['id', 'name']
-        ordering = ['id']
-
-
-RESOURCE_TYPE = [
-    ('brick', 'BRICK'),
-    ('lumber', 'LUMBER'),
-    ('wool', 'WOOL'),
-    ('grain', 'GRAIN'),
-    ('ore', 'ORE')
-]
-
-
-class Hexe(models.Model):
-    TERRAIN_TYPE = [('desert', 'DESERT')] + RESOURCE_TYPE
-    terrain = models.CharField(max_length=6, choices=TERRAIN_TYPE)
-    token = models.IntegerField(default=0, validators=[MinValueValidator(2),
-                                                       MaxValueValidator(12)])
-    board = models.ForeignKey(Board, related_name='board_hexe',
-                              on_delete=models.CASCADE)
-    position = models.ForeignKey(HexePosition, related_name='hexe_position',
-                                 on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ['board', 'position']
-        ordering = ['id']
-
-
 class Game(models.Model):
-    name = models.CharField(max_length=25)
+    """
+    Stores the information about an started game, related to
+    :model `Hexe` and :model `auth.User`
+    """
+    name = models.CharField(max_length=15)
     board = models.ForeignKey(Board, related_name='game_board',
                               on_delete=models.CASCADE)
-    robber = models.ForeignKey(HexePosition, related_name="robber",
+    robber = models.ForeignKey(Hexe, related_name="robber",
                                on_delete=models.CASCADE)
     winner = models.ForeignKey(User, related_name="game_winner",
                                on_delete=models.CASCADE,
@@ -114,6 +100,10 @@ class Game(models.Model):
 
 
 class Player(models.Model):
+    """
+    Stores information about a player of a started game,
+    related to :model `auth.User` and :model `Game`
+    """
     COLOUR = [
         ('yellow', 'YELLOW'),
         ('blue', 'BLUE'),
@@ -140,6 +130,10 @@ class Player(models.Model):
 
 
 class Card(models.Model):
+    '''
+    Stores information about a card of a player in a started game,
+    related to :model `Game` and :model `Player`
+    '''
     CARD_TYPE = [
         ('road_building', 'ROAD_BUILDING'),
         ('year_of_plenty', 'YEAR_OF_PLENTY'),
@@ -151,15 +145,19 @@ class Card(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     card_name = models.CharField(max_length=50, choices=CARD_TYPE)
 
-    def __str__(self):
-        return self.card_name
-
     def clean(self):
+        '''
+        Check if the owner of a card is in the same game
+        '''
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
 
 
 class Resource(models.Model):
+    """
+    Stores information about a resource of a player in a started game,
+    related to :model `Player` and :model `Game`
+    """
     owner = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     resource_name = models.CharField(max_length=6, choices=RESOURCE_TYPE)
@@ -174,6 +172,10 @@ class Resource(models.Model):
 
 
 class Building(models.Model):
+    """
+    Stores information about a building of a player in a started game,
+    related to :model `Player` and :model `Game`
+    """
     TYPE_BUILDING = [
         ('settlement', 'SETTLEMENT'),
         ('city', 'CITY')
@@ -183,37 +185,69 @@ class Building(models.Model):
     name = models.CharField(max_length=50, choices=TYPE_BUILDING)
     owner = models.ForeignKey(Player, related_name='buildings',
                               on_delete=models.CASCADE)
-    position = models.ForeignKey(VertexPosition, related_name='position',
-                                 on_delete=models.CASCADE)
+    level = models.IntegerField(default=0, validators=[MinValueValidator(0),
+                                                       MaxValueValidator(2)])
+    index = models.IntegerField(default=0, validators=[MinValueValidator(0),
+                                                       MaxValueValidator(29)])
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['position', 'game'],
-                                    name='One building per position in game')
-        ]
+        unique_together = ['level', 'index', 'game']
+        ordering = ['level']
 
     def clean(self):
+        if (self.level == 0) and not (0 <= self.index <= 5):
+            raise ValidationError(
+                'The index with level 0 must be between 0 and 5.')
+        if (self.level == 1) and not (0 <= self.index <= 17):
+            raise ValidationError(
+                'The index with level 1 must be between 0 and 17.')
+        if (self.level == 2) and not (0 <= self.index <= 29):
+            raise ValidationError(
+                'The index with level 2 must be between 0 and 29.')
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
 
 
 class Road(models.Model):
+    """
+    Stores information about road of a player in a started game,
+    related to :model `Player` and :model `Game`
+    """
     owner = models.ForeignKey(Player, related_name='roads',
                               on_delete=models.CASCADE)
-    vertex_1 = models.ForeignKey(VertexPosition, on_delete=models.CASCADE,
-                                 related_name="vertex_position1")
-    vertex_2 = models.ForeignKey(VertexPosition, on_delete=models.CASCADE,
-                                 related_name="vertex_position2")
+    level_1 = models.IntegerField(default=0, validators=[MinValueValidator(0),
+                                                         MaxValueValidator(2)])
+    index_1 = models.IntegerField(default=0,
+                                  validators=[MinValueValidator(0),
+                                              MaxValueValidator(29)])
+    level_2 = models.IntegerField(default=0,
+                                  validators=[MinValueValidator(0),
+                                              MaxValueValidator(2)])
+    index_2 = models.IntegerField(default=0,
+                                  validators=[MinValueValidator(0),
+                                              MaxValueValidator(29)])
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name="road_game")
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['vertex_1', 'vertex_2', 'game'],
+            models.UniqueConstraint(fields=['level_1', 'index_1',
+                                            'level_2', 'index_2', 'game'],
                                     name='One Road per vertex in game')
             ]
 
     def clean(self):
+        if (self.level == 0) and not (0 <= self.index <= 5):
+            raise ValidationError(
+                'The index with level 0 must be between 0 and 5.')
+        if (self.level == 1) and not (0 <= self.index <= 17):
+            raise ValidationError(
+                'The index with level 1 must be between 0 and 17.')
+        if (self.level == 2) and not (0 <= self.index <= 29):
+            raise ValidationError(
+                'The index with level 2 must be between 0 and 29.')
+        if self.owner.game.id != self.game.id:
+            raise ValidationError('Cannot be player of other game')
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
 
