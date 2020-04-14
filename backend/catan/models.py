@@ -253,6 +253,12 @@ class Road(models.Model):
 
 
 class Current_Turn(models.Model):
+    """
+    Stores information about the state of a started game, 
+    the player who is playing at the moment, the dices values
+    and if the robber has been moved. Related to :model `Game`
+    and :model `auth.User`
+    """
     game = models.OneToOneField(Game, related_name='current_turn',
                                 on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE,
