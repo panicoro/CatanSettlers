@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.utils.six import text_type
+from six import text_type
 from catan.models import *
 from django.core.exceptions import ValidationError
 
