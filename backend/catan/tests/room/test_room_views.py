@@ -109,20 +109,6 @@ class TestView(TestCase):
             username=self.user.username).exists() is True
         assert response.status_code == 204
 
-    def test_addOwnerInPlayers(self):
-        owner = mixer.blend(User, username="owner_test", password="hola1234")
-        board = mixer.blend(Board, name="test_board")
-        room = mixer.blend('catan.Room', name="Test Room", max_players=4,
-                           owner=owner, board_id=board.id)
-        room.players.add(owner)
-        path = reverse('join_room', kwargs={'pk': 1})
-        request = RequestFactory().put(path)
-        force_authenticate(request, user=self.user, token=self.token)
-        view = RoomDetail.as_view()
-        response = view(request, pk=1)
-        response.render()
-        assert response.status_code == 400
-
     def test_createRoomSuccess(self):
         user = User.objects.create_user(username='Nico', password='hola1234')
         board = Board.objects.create(name='Board 1')
@@ -158,17 +144,14 @@ class TestView(TestCase):
         generateBoard("Board 1")
         room = Room.objects.create(
             name='Room1', owner=user1, board_id=1)
+        room.players.add(user1)
         room.players.add(user2)
         room.players.add(user3)
         room.players.add(user4)
-
         path = reverse('join_room', kwargs={'pk': 1})
-
-        data = {}
-
-        request = RequestFactory().patch(path, data,
+        request = RequestFactory().patch(path,
                                          content_type='application/json')
-        force_authenticate(request, user=self.user, token=self.token)
+        force_authenticate(request, user=user1, token=self.token)
         view = RoomDetail.as_view()
         response = view(request, pk=1)
         assert response.status_code == 204

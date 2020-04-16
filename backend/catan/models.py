@@ -106,10 +106,10 @@ class Player(models.Model):
     related to :model `auth.User` and :model `Game`
     """
     COLOUR = [
-        ('yellow', 'YELLOW'),
-        ('blue', 'BLUE'),
-        ('green', 'GREEN'),
-        ('red', 'RED'),
+        ('Yellow', 'Yellow'),
+        ('Blue', 'Blue'),
+        ('Green', 'Green'),
+        ('Red', 'Red'),
     ]
     turn = models.IntegerField(validators=[MinValueValidator(1),
                                            MaxValueValidator(4)])
@@ -121,8 +121,6 @@ class Player(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['username', 'game'],
-                                    name='User in one game at time'),
             models.UniqueConstraint(fields=['turn', 'game'],
                                     name='User with unique turn per game'),
             models.UniqueConstraint(fields=['colour', 'game'],
@@ -301,16 +299,32 @@ class Current_Turn(models.Model):
     and if the robber has been moved. Related to :model `Game`
     and :model `auth.User`
     """
+    GAME_STAGE = [
+        ('FIRST_CONSTRUCTION', 'FIRST_CONSTRUCTION'),
+        ('SECOND_CONSTRUCTION', 'SECOND_CONSTRUCTION'),
+        ('FULL_PLAY', 'FULL_PLAY')
+    ]
+    ACTIONS = [
+        ('BUILD_SETTLEMENT', 'BUILD_SETTLEMENT'),
+        ('BUILD_ROAD', 'BUILD_ROAD'),
+        ('NON_BLOCKING_ACTION', 'NON_BLOCKING_ACTION')
+    ]
     game = models.OneToOneField(Game, related_name='current_turn',
                                 on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="user")
+    game_stage = models.CharField(max_length=50, choices=GAME_STAGE,
+                                  default='FULL_PLAY')
+    last_action = models.CharField(max_length=50, choices=ACTIONS,
+                                   default='NON_BLOCKING_ACTION')
     dices1 = models.IntegerField(null=True,
                                  validators=[MinValueValidator(1),
-                                             MaxValueValidator(6)])
+                                             MaxValueValidator(6)],
+                                 default=1)
     dices2 = models.IntegerField(null=True,
                                  validators=[MinValueValidator(1),
-                                             MaxValueValidator(6)])
+                                             MaxValueValidator(6)],
+                                 default=1)
     robber_moved = models.BooleanField(default=False)
 
     def throw_dice(self):

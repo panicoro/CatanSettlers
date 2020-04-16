@@ -72,6 +72,20 @@ def gain_resources(game, owner, resource_name, amount):
                                 last_gained=True)
 
 
+def gain_resources_free(game, owner, position):
+    """
+
+    """
+    vertex = [position.level, position.index]
+    hexes = Hexe.objects.filter(board=game.board)
+    for hexe in hexes:
+        hexe_level = hexe.position.level
+        hexe_index = hexe.position.index
+        hexagon_neighbors = HexagonInfo(hexe_level, hexe_index)
+        if vertex in hexagon_neighbors:
+            gain_resources(game, owner, hexe.terrain, 1)
+
+
 def throw_twoDices(dice1=0, dice2=0):
     """
     A function to get the throw of two dices

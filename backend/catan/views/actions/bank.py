@@ -21,6 +21,14 @@ def resource_search(game, player, give):
     return list_resource
 
 
+def canTradeWithBank(game, player):
+    resource_type = ['brick', 'lumber', 'wool',
+                     'grain', 'ore']
+    for resource in resource_type:
+        if len(resource_search(game, player, resource)) >= 4:
+            return True
+
+
 # delete the resource you want to give.
 def deleteResource(list_resource):
     for resource in list_resource:

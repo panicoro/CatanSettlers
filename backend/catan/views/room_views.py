@@ -77,44 +77,31 @@ class RoomDetail(APIView):
         desert_terrain = hexes.filter(terrain="desert")[0]
         desert_pos = desert_terrain.position
         players = room.players.all()
-        if (len(players) == 3):
+        if (len(players) == 4):
             game = Game.objects.create(name=room.name, board=board,
                                        robber=desert_pos)
             turns = [1, 2, 3, 4]
             shuffle(turns)
-            player1 = Player.objects.create(turn=turns[0], username=room.owner,
-                                            game=game, colour="blue")
-            player2 = Player.objects.create(turn=turns[1], username=players[0],
-                                            game=game, colour="red")
-            player3 = Player.objects.create(turn=turns[2], username=players[1],
-                                            game=game, colour="yellow")
-            player4 = Player.objects.create(turn=turns[3], username=players[2],
-                                            game=game, colour="green")
+            player1 = Player.objects.create(turn=turns[0], username=players[0],
+                                            game=game, colour="Blue")
+            player2 = Player.objects.create(turn=turns[1], username=players[1],
+                                            game=game, colour="Red")
+            player3 = Player.objects.create(turn=turns[2], username=players[2],
+                                            game=game, colour="Yellow")
+            player4 = Player.objects.create(turn=turns[3], username=players[3],
+                                            game=game, colour="Green")
             first_player = Player.objects.filter(game=game, turn=1)[0]
             current_turn = Current_Turn.objects.create(
                 game=game,
-                user=first_player.username)
+                user=first_player.username,
+                game_stage='FIRST_CONSTRUCTION',
+                last_action='NON_BLOCKING_ACTION')
             room.game_has_started = True
             room.game_id = game.id
             room.save()
-            """
-            building1 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player1, position=vertex_positions[0])
-            building2 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player2, position=vertex_positions[1])
-            building3 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player3, position=vertex_positions[2])
-            building4 = Building.objects.create(
-                name="settlement", game=game,
-                owner=player4, position=vertex_positions[3])
-            """
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            ValidationError("Can't start the game without all players"),
-            status=status.HTTP_400_BAD_REQUEST)
+        data = {"detail": "Can't start the game without all players"}
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         user = request.user

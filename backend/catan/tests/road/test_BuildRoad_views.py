@@ -35,7 +35,8 @@ class TestViews(TestCase):
         self.turn = Current_Turn.objects.create(game=self.game,
                                                 user=self.user,
                                                 dices1=3,
-                                                dices2=3)
+                                                dices2=3,
+                                                game_stage='FULL_PLAY')
         self.brick = Resource.objects.create(owner=self.player,
                                              game=self.game,
                                              resource_name="brick")
@@ -166,7 +167,6 @@ class TestViews(TestCase):
         self.road.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-
         path_game = reverse('GameInfo', kwargs={'pk': 1})
         request_game = RequestFactory().get(path_game)
         force_authenticate(request_game, user=self.user, token=self.token)
@@ -242,7 +242,7 @@ class TestViews(TestCase):
         self.lumber.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == []
+        assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200
 
     def test_get_withResource1(self):
@@ -251,7 +251,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = [{
+        expected_data = {
             'type': 'build_road',
             'payload': [[{'level': 2, 'index': 0},
                          {'level': 2, 'index': 29}],
@@ -259,9 +259,8 @@ class TestViews(TestCase):
                          {'level': 1, 'index': 1}],
                         [{'level': 2, 'index': 1},
                          {'level': 2, 'index': 2}]],
-            }
-        ]
-        assert response.data == expected_data
+        }
+        assert expected_data in response.data
         assert response.status_code == 200
 
     def test_get_withResource2(self):
@@ -277,7 +276,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = [{
+        expected_data = {
             'type': 'build_road',
             'payload': [[{'level': 2, 'index': 1},
                          {'level': 2, 'index': 0}],
@@ -285,9 +284,8 @@ class TestViews(TestCase):
                          {'level': 1, 'index': 1}],
                         [{'level': 2, 'index': 1},
                          {'level': 2, 'index': 2}]],
-            }
-        ]
-        assert response.data == expected_data
+        }
+        assert expected_data in response.data
         assert response.status_code == 200
 
     def test_get_withResource3(self):
@@ -301,7 +299,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        expected_data = [{
+        expected_data = {
             'type': 'build_road',
             'payload': [[{'level': 2, 'index': 0},
                          {'level': 2, 'index': 29}],
@@ -309,9 +307,8 @@ class TestViews(TestCase):
                          {'level': 1, 'index': 1}],
                         [{'level': 2, 'index': 1},
                          {'level': 2, 'index': 2}]],
-            }
-        ]
-        assert response.data == expected_data
+        }
+        assert expected_data in response.data
         assert response.status_code == 200
 
     def test_get_withResource4(self):
@@ -324,5 +321,5 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == []
+        assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200

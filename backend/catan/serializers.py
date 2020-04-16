@@ -68,16 +68,18 @@ class RoomSerializer(serializers.ModelSerializer):
 
     def validate_players(self, players):
         # Check if number to put are allowed
-        if len(players) > 3:
+        if len(players) > 4:
             raise serializers.ValidationError("Cannot add more players")
         return players
 
+    """
     def validate(self, data):
         # Check if owner is in players list
         if data['owner'] in data['players']:
             raise serializers.ValidationError(
                 "Cannot add the owner to the players")
         return data
+    """
 
 
 class CardSerializer(serializers.ModelSerializer):
