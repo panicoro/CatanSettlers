@@ -5,7 +5,7 @@
 Descargar el repositorio con:
 
 ```
-git clone https://gitlab.com/panicoro/catanes.git
+git clone https://github.com/panicoro/ColonosCatan.git
 ```
 
 Luego crear y levantar el [virtualenv](https://virtualenv.pypa.io/en/stable/), 
