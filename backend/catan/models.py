@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
+from random import random
 
 
 class Room(models.Model):
@@ -128,6 +129,33 @@ class Player(models.Model):
                                     name='User with unique colour per game'),
         ]
 
+    def set_not_last_gained(self):
+        """
+        A method to remove resources as obtained in the last turn.
+        """
+        # Get the last gained of the owner
+        resources_last_gained = Resource.objects.filter(last_gained=True,
+                                                        owner=self.username)
+        # Set the resources to False in last_gained field
+        if len(resources_last_gained) != 0:
+            for resource in resources_last_gained:
+                resource.last_gained = False
+                resource.save()
+
+    def gain_resources(self, resource_name, amount):
+        """
+        A method for players to gain resources.
+        Args:
+        game: the game in which the owner is.
+        owner: a player who will get the resources.
+        resource_name: the type of resources to obtain.
+        amount: the amount of resources to obtain.
+        """
+        for i in range(amount):
+            Resource.objects.create(owner=self.owner, game=self.game,
+                                    resource_name=resource_name,
+                                    last_gained=True)
+
 
 class Card(models.Model):
     '''
@@ -169,6 +197,20 @@ class Resource(models.Model):
     def clean(self):
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
+    
+    def set_not_last_gained(self):
+        """
+        A method to remove resources as obtained in the last turn.
+        """
+        # Get the last gained of the owner
+        resources_last_gained = Resource.objects.filter(last_gained=True,
+                                                    owner=self.owner)
+        # Set the resources to False in last_gained field
+        if len(resources_last_gained) != 0:
+            for resource in resources_last_gained:
+                resource.last_gained = False
+                resource.save()
+
 
 
 class Building(models.Model):
@@ -270,3 +312,23 @@ class Current_Turn(models.Model):
                                  validators=[MinValueValidator(1),
                                              MaxValueValidator(6)])
     robber_moved = models.BooleanField(default=False)
+
+    def throw_dice(self):
+        """
+        A function to generate a thow of dice
+        (uniform discrete distribution).
+        """
+        return 1 * int(6 * random()) + 1
+
+    def throw_twoDices(self, dice1=0, dice2=0):
+        """
+        A function to get the throw of two dices
+        Params:
+        @dice1: the value of the dice1 (used only for testing).
+        @dice2: the value of the dice2 (used only for testing).
+        """
+        if (dice1 == 0) and (dice2 == 0):
+            self.dices1 = throw_dice()
+            self.dices2 = throw_dice()
+        else:
+            return (dice1, dice2)
