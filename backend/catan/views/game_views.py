@@ -144,6 +144,8 @@ class GameInfo(APIView):
         serialized_game = GameSerializer(game)
         data = serialized_game.data
         # Change data presentation of a dices
+        data['robber'].pop('terrain')
+        data['robber'].pop('token')
         dices1 = data['current_turn'].pop('dices1')
         dices2 = data['current_turn'].pop('dices2')
         data['current_turn']['dice'] = [dices1, dices2]

@@ -1,26 +1,8 @@
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView
-)
-from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt import authentication
-from catan.serializers import *
-from catan.dices import throw_dices
-from django.http import Http404
-from random import random
+from catan.serializers import BoardSerializer, HexeSerializer
 from rest_framework.response import Response
-from rest_framework import status
 from django.shortcuts import get_object_or_404
-from catan.models import *
-from catan.cargaJson import *
-from catan.dices import throw_dices
-from rest_framework.permissions import AllowAny
-from random import shuffle
-from django.db.models import Q
+from catan.models import Board, Hexe, Game
 
 
 class BoardList(APIView):
@@ -35,4 +17,10 @@ class BoardInfo(APIView):
         game = get_object_or_404(Game, pk=pk)
         board_hexes = Hexe.objects.filter(board=game.board.id)
         hexes_serializer = HexeSerializer(board_hexes, many=True)
-        return Response({"hexes": hexes_serializer.data})
+        hexes = hexes_serializer.data
+        for hexe in hexes:
+            hexe['position'] = {'level': hexe['level'], 
+                                'index': hexe['index']}
+            hexe.pop('level')
+            hexe.pop('index')
+        return Response({"hexes": hexes})

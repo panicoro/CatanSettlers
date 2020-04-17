@@ -70,8 +70,8 @@ class PlayerActions(APIView):
         """
         for road in posibles_roads:
             new_road = []
-            new_road.append(VertexPositionSerializer(road[0]).data)
-            new_road.append(VertexPositionSerializer(road[1]).data)
+            #new_road.append(VertexPositionSerializer(road[0]).data)
+            #new_road.append(VertexPositionSerializer(road[1]).data)
             item['payload'].append(new_road)
         return item
 
@@ -94,10 +94,10 @@ class PlayerActions(APIView):
             if last_action == 'NON_BLOCKING_ACTION':
                 item = {"type": 'build_settlement'}
                 posibles_settlements = posiblesInitialSettlements(game)
-                serialized_positions = VertexPositionSerializer(
-                                        posibles_settlements,
-                                        many=True)
-                item['payload'] = serialized_positions.data
+                #serialized_positions = VertexPositionSerializer(
+                #                        posibles_settlements,
+                #                        many=True)
+                #item['payload'] = serialized_positions.data
                 data.append(item)
             if last_action == 'BUILD_SETTLEMENT':
                 item = {"type": 'build_road'}
@@ -105,8 +105,8 @@ class PlayerActions(APIView):
                 item['payload'] = []
                 for road in posibles_roads:
                     new_road = []
-                    new_road.append(VertexPositionSerializer(road[0]).data)
-                    new_road.append(VertexPositionSerializer(road[1]).data)
+                    #new_road.append(VertexPositionSerializer(road[0]).data)
+                    #new_road.append(VertexPositionSerializer(road[1]).data)
                     item['payload'].append(new_road)
                 data.append(item)
             if last_action == 'BUILD_ROAD':
@@ -129,8 +129,8 @@ class PlayerActions(APIView):
                     item['payload'] = []
                     for road in posibles_roads:
                         new_road = []
-                        new_road.append(VertexPositionSerializer(road[0]).data)
-                        new_road.append(VertexPositionSerializer(road[1]).data)
+                        #new_road.append(VertexPositionSerializer(road[0]).data)
+                        #new_road.append(VertexPositionSerializer(road[1]).data)
                         item['payload'].append(new_road)
                     if len(item['payload']) != 0:
                         data.append(item)
@@ -143,10 +143,12 @@ class PlayerActions(APIView):
                 if canBuild_Settlement(player):
                     item = {"type": 'build_settlement'}
                     posibles_setlements = posiblesSettlements(player)
+                    """
                     serialized_positions = VertexPositionSerializer(
                                            posibles_setlements,
                                            many=True)
                     item['payload'] = serialized_positions.data
+                    """
                     if len(item['payload']) != 0:
                         data.append(item)
                 if Card.objects.filter(owner=player,
