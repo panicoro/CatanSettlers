@@ -9,7 +9,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.cargaJson import *
 from catan.dices import throw_dices
-from catan.serializers import HexePositionSerializer, PlayerSerializer
+from catan.serializers import PlayerSerializer
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from django.db.models import Q
@@ -17,10 +17,12 @@ from django.db.models import Q
 
 def checkPosition(level, index):
     rta = False
+    """
     hexe = HexePosition.objects.filter(level=level, index=index)
     if hexe.exists():
         rta = True
         return rta
+    """
     return rta
 
 
@@ -49,9 +51,9 @@ def move_robber(payload, game, my_user, my_player):
             response = {"detail": "There is no hexagon in that position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
 
-        position = HexePosition.objects.filter(level=level,
-                                               index=index).get()
-        game.robber = position
+        #position = HexePosition.objects.filter(level=level,
+        #                                       index=index).get()
+        #game.robber = position
         game.save()
 
         buildings = Building.objects.filter(game=game)
@@ -59,13 +61,15 @@ def move_robber(payload, game, my_user, my_player):
         buildings_in_hex = []
 
         for pos in range(0, 6):
+            """
             vertex = VertexPosition.objects.filter(
                 level=vertex_in_hex[pos][0],
                 index=vertex_in_hex[pos][1])[0]
+            
             if Building.objects.filter(position=vertex).exists():
                 building = Building.objects.filter(position=vertex)
                 buildings_in_hex.append(building)
-
+            """
         owners = []
 
         for pos in range(len(buildings_in_hex)):
@@ -143,12 +147,14 @@ def move_robber(payload, game, my_user, my_player):
     return Response(response, status=status.HTTP_403_FORBIDDEN)
 
 
-def posiblesRobberPositions(game):
+def posiblesRobberPositions(game):    
     """
     A function that obtains the possible positions
     where the thief can move and for each of them, the players to steal.
     Params:
     @game: a started game.
+    """
+    
     """
     hexes_positions_robber = HexePosition.objects.exclude(id=game.robber.id)
     data = []
@@ -171,3 +177,4 @@ def posiblesRobberPositions(game):
                 pass
         data.append(item)
     return data
+"""

@@ -16,12 +16,13 @@ from django.db.models import Q
 
 def checkVertex(level, index):
     rta = False
+    """
     vertex = VertexPosition.objects.filter(level=level, index=index)
     if vertex.exists():
         rta = True
         return rta
     return rta
-
+    """
 
 def ResourceBuild(player_id, game_id):
     """
@@ -57,12 +58,14 @@ def canBuild_Settlement(player):
 
 def CheckPosition(game_id, level, index):
     rta = True
+    """
     position = VertexPosition.objects.filter(level=level,
                                              index=index).get()
     building = Building.objects.filter(game=game_id, position=position)
     if building.exists():
         rta = False
         return rta
+    """
     return rta
 
 
@@ -70,6 +73,7 @@ def CheckRoad(player_id, game_id, level, index):
     """
     Returns True if there is one of the vertices of the player's paths
         matches the VertexPosition entered by it.
+    """
     """
     vertex = VertexPosition.objects.filter(level=level, index=index).get()
     rta = False
@@ -80,7 +84,7 @@ def CheckRoad(player_id, game_id, level, index):
     if road_player.exists():
         rta = True
     return rta
-
+    """
 
 def CheckBuild(game_id, level, index):
     """
@@ -149,6 +153,7 @@ def posiblesInitialSettlements(game):
     available to build settlements on the board during the
     construction stage
     """
+    """
     vertex_available = VertexPosition.objects.all()
     # Get all the buildings
     buildings = Building.objects.filter(game=game)
@@ -167,7 +172,7 @@ def posiblesInitialSettlements(game):
                 vertex_available = vertex_available.exclude(
                                    id=vertex_position.id)
         return vertex_available
-
+    """
 
 def posiblesSettlements(player):
     """
@@ -185,6 +190,7 @@ def posiblesSettlements(player):
     for vertex in available_vertex:
         # Get the neighbors of a vertex position
         neighbors = VertexInfo(vertex.level, vertex.index)
+        """
         for neighbor in neighbors:
             vertex_position = VertexPosition.objects.filter(
                                 level=neighbor[0],
@@ -194,6 +200,7 @@ def posiblesSettlements(player):
             if Building.objects.filter(position=vertex_position).exists():
                 potencial_buildings.remove(vertex)
                 break
+        """
     return potencial_buildings
 
 
@@ -224,8 +231,10 @@ def build_settlement(payload, game, player):
             response = {"detail": "Invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         deleteResource(necessary_resources)
+    """
     position = VertexPosition.objects.filter(level=level,
                                              index=index).get()
+    
     new_build = Building(game=game, name='settlement', owner=player,
                          position=position)
     new_build.save()
@@ -233,6 +242,7 @@ def build_settlement(payload, game, player):
     game.current_turn.save()
     if game_stage == 'SECOND_CONSTRUCTION':
         gain_resources_free(game, player, position)
+    """
     point = player.victory_points + 1
     player.victory_points = point
     player.save()
