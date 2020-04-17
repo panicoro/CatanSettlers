@@ -1,5 +1,5 @@
 from django.contrib import admin
-from backend.catan.models import *
+from catan.models import *
 
 admin.site.register(Room)
 admin.site.register(Card)
