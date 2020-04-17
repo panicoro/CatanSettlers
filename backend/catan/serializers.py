@@ -1,13 +1,13 @@
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from rest_framework import fields
-from rest_framework import serializers
+from django.core.exceptions import ValidationError
+from rest_framework import fields, serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from six import text_type
 from catan.models import *
-from django.core.exceptions import ValidationError
+from six import text_type
+
 
 
 class SignupSerializer(TokenObtainPairSerializer):
@@ -72,15 +72,6 @@ class RoomSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Cannot add more players")
         return players
 
-    """
-    def validate(self, data):
-        # Check if owner is in players list
-        if data['owner'] in data['players']:
-            raise serializers.ValidationError(
-                "Cannot add the owner to the players")
-        return data
-    """
-
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
@@ -94,38 +85,20 @@ class ResourceSerializer(serializers.ModelSerializer):
         fields = ['resource_name']
 
 
-class HexePositionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HexePosition
-        fields = ['level', 'index']
-
-
 class HexeSerializer(serializers.ModelSerializer):
-    position = HexePositionSerializer()
-
     class Meta:
         model = Hexe
-        fields = ['position', 'terrain', 'token']
+        fields = ['level', 'index', 'terrain', 'token']
 
-
-class VertexPositionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = VertexPosition
-        fields = ['level', 'index']
 
 
 class RoadSerializer(serializers.ModelSerializer):
-    vertex_1 = VertexPositionSerializer()
-    vertex_2 = VertexPositionSerializer()
-
     class Meta:
         model = Road
-        fields = ['vertex_1', 'vertex_2']
+        fields = ['level_1', 'level_2']
 
 
 class BuildingSerializer(serializers.ModelSerializer):
-    position = VertexPositionSerializer()
-
     class Meta:
         model = Building
         fields = ['position']
@@ -164,9 +137,9 @@ class GameListSerializer(serializers.ModelSerializer):
 
 class GameSerializer(serializers.ModelSerializer):
     current_turn = Current_TurnSerializer()
-    robber = HexePositionSerializer()
     winner = serializers.SlugRelatedField(queryset=User.objects.all(),
                                           slug_field='username')
+    robber = HexeSerializer()
 
     class Meta:
         model = Game

@@ -3,17 +3,15 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
 )
+from rest_framework_simplejwt import authentication
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt import authentication
 from catan.serializers import *
-from catan.dices import throw_dices
 from django.http import Http404
 from random import random
 from rest_framework.response import Response
-from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.models import *
 from catan.cargaJson import *
@@ -72,14 +70,12 @@ class RoomDetail(APIView):
     def patch(self, request, pk):
         room = get_object_or_404(Room, pk=pk)
         board = get_object_or_404(Board, id=room.board_id)
-        vertex_positions = VertexPosition.objects.all()
         hexes = Hexe.objects.filter(board=board)
         desert_terrain = hexes.filter(terrain="desert")[0]
-        desert_pos = desert_terrain.position
         players = room.players.all()
         if (len(players) == 4):
             game = Game.objects.create(name=room.name, board=board,
-                                       robber=desert_pos)
+                                       robber=desert_terrain)
             turns = [1, 2, 3, 4]
             shuffle(turns)
             player1 = Player.objects.create(turn=turns[0], username=players[0],
