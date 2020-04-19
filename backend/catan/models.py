@@ -186,7 +186,7 @@ class Resource(models.Model):
     """
     owner = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    resource_name = models.CharField(max_length=6, choices=RESOURCE_TYPE)
+    name = models.CharField(max_length=6, choices=RESOURCE_TYPE)
     last_gained = models.BooleanField(default=False)
 
     def __str__(self):
@@ -232,7 +232,7 @@ class Building(models.Model):
 
     class Meta:
         unique_together = ['level', 'index', 'game']
-        ordering = ['level']
+
 
     def clean(self):
         if (self.level == 0) and not (0 <= self.index <= 5):
