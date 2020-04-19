@@ -82,7 +82,7 @@ class CardSerializer(serializers.ModelSerializer):
 class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
-        fields = ['resource_name']
+        fields = ['name']
 
 
 class HexeSerializer(serializers.ModelSerializer):
@@ -95,13 +95,13 @@ class HexeSerializer(serializers.ModelSerializer):
 class RoadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Road
-        fields = ['level_1', 'level_2']
+        fields = ['level_1', 'level_2', 'index_1', 'index_2']
 
 
 class BuildingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Building
-        fields = ['position']
+        fields = ['level', 'index']
 
 
 class PlayerSerializer(serializers.ModelSerializer):
