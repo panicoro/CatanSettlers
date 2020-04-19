@@ -11,14 +11,14 @@ from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from catan.views.actions.road import (
-            build_road, canBuild_Road,
-            posiblesRoads, posiblesInitialRoads,
-            posiblesRoads_cardRoadBuilding,
+            build_road, can_build_road,
+            posibles_roads, posibles_initial_roads,
+            posibles_roads_card_road_building,
             play_road_building_card)
 from catan.views.actions.buy_card import buy_card, canBuyCard
 from catan.views.actions.build import (
-            build_settlement, canBuild_Settlement,
-            posiblesSettlements, posiblesInitialSettlements)
+            build_settlement, can_build_settlement,
+            posiblesSettlements, posibles_initial_settlements)
 from catan.views.actions.bank import bank_trade, canTradeWithBank
 from catan.views.actions.robber import (
                 move_robber, get_sum_dices,
@@ -90,24 +90,13 @@ class PlayerActions(APIView):
         # opciones para construir un poblado, luego las para construir
         # una carretera luego debe terminar el turno no puede hacer nada mas...
         if game_stage != 'FULL_PLAY':
-            print(last_action)
             if last_action == 'NON_BLOCKING_ACTION':
                 item = {"type": 'build_settlement'}
-                posibles_settlements = posiblesInitialSettlements(game)
-                #serialized_positions = VertexPositionSerializer(
-                #                        posibles_settlements,
-                #                        many=True)
-                #item['payload'] = serialized_positions.data
+                item['payload'] = posibles_initial_settlements(game)
                 data.append(item)
             if last_action == 'BUILD_SETTLEMENT':
                 item = {"type": 'build_road'}
-                posibles_roads = posiblesInitialRoads(player)
-                item['payload'] = []
-                for road in posibles_roads:
-                    new_road = []
-                    #new_road.append(VertexPositionSerializer(road[0]).data)
-                    #new_road.append(VertexPositionSerializer(road[1]).data)
-                    item['payload'].append(new_road)
+                item['payload'] = posibles_initial_roads(player)
                 data.append(item)
             if last_action == 'BUILD_ROAD':
                 item = {"type": 'end_turn'}
@@ -123,9 +112,9 @@ class PlayerActions(APIView):
             else:
                 item = {"type": 'end_turn'}
                 data.append(item)
-                if canBuild_Road(player):
+                if can_build_road(player):
                     item = {"type": 'build_road'}
-                    posibles_roads = posiblesRoads(player)
+                    posibles_roads = posibles_roads(player)
                     item['payload'] = []
                     for road in posibles_roads:
                         new_road = []
@@ -140,7 +129,7 @@ class PlayerActions(APIView):
                 if canBuyCard(game, player):
                     item = {"type": 'buy_card'}
                     data.append(item)
-                if canBuild_Settlement(player):
+                if can_build_settlement(player):
                     item = {"type": 'build_settlement'}
                     posibles_setlements = posiblesSettlements(player)
                     """
@@ -160,7 +149,7 @@ class PlayerActions(APIView):
                 if Card.objects.filter(owner=player,
                                        card_name='road_building').exists():
                     item = {"type": 'play_road_building_card'}
-                    posibles_roads = posiblesRoads_cardRoadBuilding(player)
+                    posibles_roads = posibles_roads_card_road_building(player)
                     item['payload'] = []
                     item = self.get_roads(posibles_roads, item)
                     if len(item['payload']) != 0:

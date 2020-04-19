@@ -55,12 +55,16 @@ class GameInfo(APIView):
         player: A player object.
         """
         roads = []
-        player_roads = Road.objects.filter(owner=player.id)
+        player_roads = Road.objects.filter(owner=player)
         serialized_roads = RoadSerializer(player_roads, many=True)
         for serialized_road in serialized_roads.data:
             new_road = []
-            new_road.append(serialized_road['vertex_1'])
-            new_road.append(serialized_road['vertex_2'])
+            vertex_1 = {'level': serialized_road['level_1'], 
+                        'index': serialized_road['index_1']}
+            vertex_2 = {'level': serialized_road['level_2'], 
+                        'index': serialized_road['index_2']}
+            new_road.append(vertex_1)
+            new_road.append(vertex_2)
             roads.append(new_road)
         return roads
 
@@ -70,11 +74,9 @@ class GameInfo(APIView):
         Args:
         player: A player object.
         """
-        settlements = self.get_list_serialized_objects(
-                            queryset=Building.objects.filter(name="settlement",
-                                                             owner=player.id),
-                            serializer=BuildingSerializer, key='position')
-        return settlements
+        settlements = Building.objects.filter(name="settlement", owner=player)
+        serializered = BuildingSerializer(settlements, many=True)
+        return serializered.data
 
     def get_cities(self, player):
         """
@@ -82,11 +84,9 @@ class GameInfo(APIView):
         Args:
         player: A player object.
         """
-        cities = self.get_list_serialized_objects(
-                            queryset=Building.objects.filter(name="city",
-                                                             owner=player.id),
-                            serializer=BuildingSerializer, key='position')
-        return cities
+        cities = Building.objects.filter(name="city", owner=player)
+        serializered = BuildingSerializer(cities, many=True)
+        return serializered.data
 
     def get_last_gained(self, player):
         """
@@ -97,7 +97,7 @@ class GameInfo(APIView):
         last_gained = self.get_list_serialized_objects(
                             queryset=Resource.objects.filter(last_gained=True,
                                                              owner=player.id),
-                            serializer=ResourceSerializer, key='resource_name')
+                            serializer=ResourceSerializer, key='name')
         return last_gained
 
     def get_resource_card(self, player, game):
