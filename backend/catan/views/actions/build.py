@@ -12,64 +12,39 @@ from catan.dices import throw_dices, gain_resources_free
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from django.db.models import Q
+from aux.generateBoard import generateVertexPositions
+
+VERTEX_POSITIONS = generateVertexPositions()
 
 
-def checkVertex(level, index):
-    rta = False
-    """
-    vertex = VertexPosition.objects.filter(level=level, index=index)
-    if vertex.exists():
-        rta = True
-        return rta
-    return rta
-    """
+def exists_vertex(level, index):
+    return [level, index] in VERTEX_POSITIONS
 
-def ResourceBuild(player_id, game_id):
+
+def can_build_settlement(player):
     """
     Return a variable variable size list
     if you find the items.
     """
-    list_resource = Resource.objects.filter(owner=player_id, game=game_id)
-    brick = True
-    lumber = True
-    wool = True
-    grain = True
-    rta = []
-    for resource in list_resource:
-        if resource.resource_name == "brick" and brick:
-            brick = False
-            rta.append(resource)
-        if resource.resource_name == "lumber" and lumber:
-            lumber = False
-            rta.append(resource)
-        if resource.resource_name == "wool" and wool:
-            wool = False
-            rta.append(resource)
-        if resource.resource_name == "grain" and grain:
-            grain = False
-            rta.append(resource)
-    return rta
+    needed_resources = ['brick', 'lumber', 'wool', 'grain']
+    for resource in needed_resources:
+        resource_exists  = Resource.objects.filter(owner=player, 
+                                                   name=resource).exists()
+        if (not resource_exists):
+            return False
+    return True
 
 
-def canBuild_Settlement(player):
-    resources = ResourceBuild(player, player.game)
-    return len(resources) == 4
-
-
-def CheckPosition(game_id, level, index):
-    rta = True
+def exists_building(game, level, index):
     """
-    position = VertexPosition.objects.filter(level=level,
-                                             index=index).get()
-    building = Building.objects.filter(game=game_id, position=position)
-    if building.exists():
-        rta = False
-        return rta
+    Return true is there's a bulding in the 
+    vertex position with gaven level and index
     """
-    return rta
+    return Building.objects.filter(game=game, level=level,
+                                   index=index).exists()
 
 
-def CheckRoad(player_id, game_id, level, index):
+def check_road(player_id, game_id, level, index):
     """
     Returns True if there is one of the vertices of the player's paths
         matches the VertexPosition entered by it.
@@ -86,7 +61,7 @@ def CheckRoad(player_id, game_id, level, index):
     return rta
     """
 
-def CheckBuild(game_id, level, index):
+def check_build(game_id, level, index):
     """
     Returns True if there is no construction in the neighbors of the
         VertexPosition entered by the player.
@@ -103,7 +78,7 @@ def CheckBuild(game_id, level, index):
     return rta
 
 
-def checkWinner(game, player):
+def check_winner(game, player):
     winner = False
     points = player.victory_points
     card_vic_points = Card.objects.filter(
@@ -119,12 +94,13 @@ def checkWinner(game, player):
     return winner
 
 
-def deleteResource(list_resource):
+def delete_resources(player):
     """
     Remove resources from the list.
     """
-    for resource in list_resource:
-        resource.delete()
+    needed_resources = ['brick', 'lumber', 'wool', 'grain']
+    for resource in needed_resources:
+        Resource.objects.get(owner=player, name=resource).delete()
 
 
 def get_roadsAndBuildings(player):
@@ -146,33 +122,34 @@ def get_roadsAndBuildings(player):
         vertex_buildings.add(build.position)
     return (vertex_roads, vertex_buildings)
 
+def to_json_positions(list_positions):
+    data = []
+    for position in list_positions:
+        data.append({'level': position[0], 
+                     'index': position[1]})
+    return data
 
-def posiblesInitialSettlements(game):
+def posibles_initial_settlements(game):
     """
     A function that obtains positions that a player might have
     available to build settlements on the board during the
     construction stage
     """
-    """
-    vertex_available = VertexPosition.objects.all()
+    vertex_available = VERTEX_POSITIONS
     # Get all the buildings
     buildings = Building.objects.filter(game=game)
     if len(buildings) == 0:
-        return vertex_available
+        return to_json_positions(vertex_available)
     else:
         for building in buildings:
-            vertex_available = vertex_available.exclude(
-                               id=building.position.id)
-            vertex = building.position
-            neighbors = VertexInfo(vertex.level, vertex.index)
+            building_vertex = [building.level, building.index]
+            if building_vertex in vertex_available:
+                vertex_available.remove(building_vertex)
+            neighbors = VertexInfo(building.level, building.index)
             for neighbor in neighbors:
-                vertex_position = VertexPosition.objects.filter(
-                                level=neighbor[0],
-                                index=neighbor[1]).get()
-                vertex_available = vertex_available.exclude(
-                                   id=vertex_position.id)
-        return vertex_available
-    """
+                if neighbor in vertex_available:
+                    vertex_available.remove(neighbor)
+        return to_json_positions(vertex_available)
 
 def posiblesSettlements(player):
     """
@@ -208,46 +185,41 @@ def build_settlement(payload, game, player):
     level = payload['level']
     index = payload['index']
     # Check that the position exists
-    if not checkVertex(level, index):
+    if not exists_vertex(level, index):
         response = {"detail": "Non-existent position"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     # Check that the position is available
-    if not CheckPosition(game.id, level, index):
+    if exists_building(game, level, index):
         response = {"detail": "Busy position"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     game_stage = game.current_turn.game_stage
     if game_stage == 'FULL_PLAY':
-        necessary_resources = ResourceBuild(player.id, game.id)
         # Check that the pleyer has the necessary resources if he not in the
-        if len(necessary_resources) != 4:
+        if not can_build_settlement(player):
             response = {"detail": "It does not have" +
                         "the necessary resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-        is_road = CheckRoad(player.id, game.id, level, index)
-        is_building = CheckBuild(game.id, level, index)
+        is_road = check_road(player.id, game.id, level, index)
+        is_building = check_build(game.id, level, index)
         # Check that there are no building in the neighboring vertex
         # Checking that the player has a road in the vertex
         if not is_building or not is_road:
             response = {"detail": "Invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-        deleteResource(necessary_resources)
-    """
-    position = VertexPosition.objects.filter(level=level,
-                                             index=index).get()
-    
+        delete_resources(player)
     new_build = Building(game=game, name='settlement', owner=player,
-                         position=position)
+                         level=level, index=index)
     new_build.save()
     game.current_turn.last_action = 'BUILD_SETTLEMENT'
     game.current_turn.save()
-    if game_stage == 'SECOND_CONSTRUCTION':
-        gain_resources_free(game, player, position)
-    """
+    #if game_stage == 'SECOND_CONSTRUCTION':
+    #    gain_resources_free(game, player, position)
+    # Add a new method in player
     point = player.victory_points + 1
     player.victory_points = point
     player.save()
     # Check if the player won
-    if checkWinner(game, player):
-        response = {"detail": "GANASTE"}
+    if check_winner(game, player):
+        response = {"detail": "YOU WIN!!!"}
         return Response(response, status=status.HTTP_200_OK)
     return Response(status=status.HTTP_200_OK)
