@@ -15,7 +15,7 @@ def generateHexesPositions():
     top_ranges = [1, 6, 12]
     for i in range(0, 3):
         for j in range(0, top_ranges[i]):
-            positions.append((i, j))            
+            positions.append([i, j])            
     return positions
 
 
@@ -28,7 +28,7 @@ def generateVertexPositions():
     top_ranges = [6, 18, 30]
     for i in range(0, 3):
         for j in range(0, top_ranges[i]):
-            positions.append((i, j))
+            positions.append([i, j])
     return positions
 
 def generateBoard(name):
