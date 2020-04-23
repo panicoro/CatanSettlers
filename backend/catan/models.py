@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
-from random import random
+from random import random, shuffle
 
 
 class Room(models.Model):
@@ -20,6 +20,41 @@ class Room(models.Model):
     game_id = models.IntegerField(null=True, blank=True)
     board_id = models.IntegerField()
     game_has_started = models.BooleanField(default=False)
+
+    def is_full(self):
+        return len(self.players.all()) == 4
+
+    def start_game(self):
+        players = self.players.all()
+        desert_terrain = Hexe.objects.get(board=self.board_id,
+                                          terrain='desert')
+        hexes = Hexe.objects.filter(board=self.board_id)
+        board = Board.objects.get(id=self.board_id)
+        game = Game.objects.create(name=self.name,
+                                   board=board,
+                                   robber=desert_terrain)
+        turns_colors = {1: 'Blue', 2: 'Red', 3: 'Yellow', 4: 'Green'}
+        keys = list(turns_colors.keys())
+        shuffle(keys)
+        for key in keys:
+            new_player = Player.objects.create(turn=key,
+                                               username=players[key-1],
+                                               game=game,
+                                               colour=turns_colors[key])
+            if key == 1:
+                print(key)
+                Current_Turn.objects.create(
+                    game=game,
+                    user=new_player.username,
+                    game_stage='FIRST_CONSTRUCTION',
+                    last_action='NON_BLOCKING_ACTION')
+        self.game_has_started = True
+        print(game.id)
+        self.game_id = game.id
+        self.save()
+
+    def can_delete(self, owner):
+        return (not self.game_has_started) and (self.owner == owner)
 
 
 class Board(models.Model):
@@ -195,20 +230,19 @@ class Resource(models.Model):
     def clean(self):
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
-    
+
     def set_not_last_gained(self):
         """
         A method to remove resources as obtained in the last turn.
         """
         # Get the last gained of the owner
         resources_last_gained = Resource.objects.filter(last_gained=True,
-                                                    owner=self.owner)
+                                                        owner=self.owner)
         # Set the resources to False in last_gained field
         if len(resources_last_gained) != 0:
             for resource in resources_last_gained:
                 resource.last_gained = False
                 resource.save()
-
 
 
 class Building(models.Model):
@@ -232,7 +266,6 @@ class Building(models.Model):
 
     class Meta:
         unique_together = ['level', 'index', 'game']
-
 
     def clean(self):
         if (self.level == 0) and not (0 <= self.index <= 5):
@@ -294,7 +327,7 @@ class Road(models.Model):
 
 class Current_Turn(models.Model):
     """
-    Stores information about the state of a started game, 
+    Stores information about the state of a started game,
     the player who is playing at the moment, the dices values
     and if the robber has been moved. Related to :model `Game`
     and :model `auth.User`

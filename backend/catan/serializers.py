@@ -9,7 +9,6 @@ from catan.models import *
 from six import text_type
 
 
-
 class SignupSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -89,7 +88,6 @@ class HexeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hexe
         fields = ['level', 'index', 'terrain', 'token']
-
 
 
 class RoadSerializer(serializers.ModelSerializer):
