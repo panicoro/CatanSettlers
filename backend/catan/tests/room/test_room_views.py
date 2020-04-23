@@ -13,15 +13,37 @@ import json
 
 
 @pytest.mark.django_db
-class TestView(TestCase):
+class TestViewRoom(TestCase):
 
     def setUp(self):
         self.username = 'test_user'
         self.email = 'test_user@example.com'
-        self.user = User.objects.create_user(self.username, self.email)
+        self.user = mixer.blend(User, username=self.username, email=self.email)
         self.token = AccessToken()
+        self.owner = mixer.blend(User, username="owner_test",
+                                 password="hola1234")
+        self.player_1 = mixer.blend(User, username="player_test1",
+                                    password="hola1234")
+        self.player_2 = mixer.blend(User, username="player_test2",
+                                    password="hola1234")
+        self.player_3 = mixer.blend(User, username="player_test3",
+                                    password="hola1234")
+        self.board = mixer.blend('catan.Board', name='board_name')
+        self.room_1 = mixer.blend('catan.Room', owner=self.owner,
+                                  board_id=self.board.id,
+                                  name='room_1')
+        self.room_2 = mixer.blend('catan.Room', owner=self.owner,
+                                  board_id=self.board.id,
+                                  name='room_2')
+        self.room_1.players.add(self.owner)
+        self.room_2.players.add(self.owner)
+        self.room_1.players.add(self.player_1)
+        self.room_1.players.add(self.player_2)
+        self.room_2.players.add(self.player_2)
 
-    def test_listEmptyRoomAuthenticated(self):
+    def test_list_empty_room_authenticated(self):
+        self.room_1.delete()
+        self.room_2.delete()
         path = reverse('list_rooms')
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
@@ -29,63 +51,72 @@ class TestView(TestCase):
         response = view(request)
         response.render()
         assert response.status_code == 200
-#        assert len(json.loads(response.content)) == 0
+        assert len(json.loads(response.content)) == 0
 
-    def test_listRoomAuthenticated(self):
+    def test_list_room_authenticated(self):
         path = reverse('list_rooms')
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
-        room_1 = mixer.blend('catan.Room')
-        room_2 = mixer.blend('catan.Room')
         view = RoomList.as_view()
         response = view(request)
-        response.render()
         assert response.status_code == 200
-#        assert len(json.loads(response.content)) == 2
+        json_1 = {'board_id': 1, 'game_has_started': False,
+                  'game_id': None, 'id': 1, 'max_players': 4,
+                  'name': 'room_1', 'owner': 'owner_test',
+                  'players': ['owner_test', 'player_test1',
+                              'player_test2']}
+        json_2 = {'board_id': 1, 'game_has_started': False,
+                  'game_id': None, 'id': 2, 'max_players': 4,
+                  'name': 'room_2', 'owner': 'owner_test',
+                  'players': ['owner_test', 'player_test2']}
+        assert json_1 in response.data
+        assert json_2 in response.data
 
-    def test_listRoomNotAuthenticated(self):
+    def test_list_room_not_authenticated(self):
         path = reverse('list_rooms')
         request = RequestFactory().get(path)
         room_1 = mixer.blend('catan.Room')
         view = RoomList.as_view()
         response = view(request)
-        response.render()
         assert response.status_code == 401
 
-    def test_viewRoom(self):
-        room_1 = mixer.blend('catan.Room')
+    def test_view_room(self):
         path = reverse('join_room', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
         view = RoomDetail.as_view()
         response = view(request, pk=1)
-        response.render()
+        json_1 = {'game_has_started': False,
+                  'game_id': None, 'id': 1, 'max_players': 4,
+                  'name': 'room_1', 'owner': 'owner_test',
+                  'players': ['owner_test', 'player_test1',
+                              'player_test2']}
+        assert json_1 == response.data
         assert response.status_code == 200
 
-    def test_addtoManyPlayers(self):
-        owner = mixer.blend(User, username="owner_test",
-                            password="hola1234")
-        player1 = mixer.blend(User, username="player_test1",
-                              password="hola1234")
-        player2 = mixer.blend(User, username="player_test2",
-                              password="hola1234")
-        player3 = mixer.blend(User, username="player_test3",
-                              password="hola1234")
-        room = mixer.blend('catan.Room', name="Test Room", max_players=4,
-                           owner=owner)
-        room.players.add(player1)
-        room.players.add(player2)
-        room.players.add(player3)
+    def test_add_to_many_players(self):
+        self.room_1.players.add(self.player_3)
         path = reverse('join_room', kwargs={'pk': 1})
         request = RequestFactory().put(path)
         force_authenticate(request, user=self.user, token=self.token)
         view = RoomDetail.as_view()
         response = view(request, pk=1)
-        response.render()
-        assert len(room.players.all()) == 3
+        assert len(self.room_1.players.all()) == 4
         assert response.status_code == 400
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = RoomDetail.as_view()
+        response = view(request, pk=1)
+        json_1 = {'game_has_started': False,
+                  'game_id': None, 'id': 1, 'max_players': 4,
+                  'name': 'room_1', 'owner': 'owner_test',
+                  'players': ['owner_test', 'player_test1',
+                              'player_test2', 'player_test3']}
+        assert json_1 == response.data
+        assert response.status_code == 200
 
-    def test_addPlayersInexistentRoom(self):
+    def test_add_players_inexistent_room(self):
+        self.room_1.delete()
         path = reverse('join_room', kwargs={'pk': 1})
         request = RequestFactory().put(path)
         force_authenticate(request, user=self.user, token=self.token)
@@ -94,37 +125,48 @@ class TestView(TestCase):
         response.render()
         assert response.status_code == 404
 
-    def test_addPlayers(self):
-        owner = mixer.blend(User, username="owner_test", password="hola1234")
-        board = mixer.blend(Board, name="test_board")
-        room = mixer.blend('catan.Room', name="Test Room", max_players=4,
-                           owner=owner, board_id=board.id)
-        path = reverse('join_room', kwargs={'pk': 1})
+    def test_add_players(self):
+        path = reverse('join_room', kwargs={'pk': 2})
         request = RequestFactory().put(path)
         force_authenticate(request, user=self.user, token=self.token)
         view = RoomDetail.as_view()
-        response = view(request, pk=1)
-        response.render()
-        assert room.players.filter(
-            username=self.user.username).exists() is True
+        response = view(request, pk=2)
         assert response.status_code == 204
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = RoomDetail.as_view()
+        response = view(request, pk=2)
+        json_1 = {'game_has_started': False,
+                  'game_id': None, 'id': 2, 'max_players': 4,
+                  'name': 'room_2', 'owner': 'owner_test',
+                  'players': ['test_user', 'owner_test',
+                              'player_test2']}
+        assert json_1 == response.data
+        assert response.status_code == 200
 
-    def test_createRoomSuccess(self):
-        user = User.objects.create_user(username='Nico', password='hola1234')
-        board = Board.objects.create(name='Board 1')
+    def test_create_room_success(self):
         path = reverse('list_rooms')
-        data = {'name': 'room1', 'owner': user.username,
-                'players': [], 'board_id': board.id}
+        data = {'name': 'room_3', 'owner': self.user.username,
+                'players': [], 'board_id': self.board.id}
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
         view = RoomList.as_view()
         response = view(request)
         assert response.status_code == 201
+        path = reverse('join_room', kwargs={'pk': 3})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = RoomDetail.as_view()
+        response = view(request, pk=3)
+        json_1 = {'game_has_started': False,
+                  'game_id': None, 'id': 3, 'max_players': 4,
+                  'name': 'room_3', 'owner': 'test_user',
+                  'players': ['test_user']}
+        assert json_1 == response.data
+        assert response.status_code == 200
 
-    def test_createRoomWhitoutData(self):
-        user = User.objects.create_user(username='Nico', password='hola1234')
-        board = Board.objects.create(name='Board 1')
+    def test_create_room_whitout_data(self):
         path = reverse('list_rooms')
         data = {}
         request = RequestFactory().post(path, data,
@@ -132,105 +174,78 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = RoomList.as_view()
         response = view(request)
-        assert response.status_code == 500
+        assert response.status_code == 405
 
-    def test_startGame(self):
-        user1 = User.objects.create_user(username='user1', password='hola1234')
-        user2 = User.objects.create_user(username='user2', password='hola1234')
-        user3 = User.objects.create_user(username='user3', password='hola1234')
-        user4 = User.objects.create_user(username='user4', password='hola1234')
-        generateHexesPositions()
-        generateVertexPositions()
-        generateBoard("Board 1")
-        room = Room.objects.create(
-            name='Room1', owner=user1, board_id=1)
-        room.players.add(user1)
-        room.players.add(user2)
-        room.players.add(user3)
-        room.players.add(user4)
+    def test_start_game(self):
+        desert = mixer.blend('catan.Hexe', board=self.board,
+                             terrain='desert')
+        self.room_1.players.add(self.player_3)
         path = reverse('join_room', kwargs={'pk': 1})
         request = RequestFactory().patch(path,
                                          content_type='application/json')
-        force_authenticate(request, user=user1, token=self.token)
+        force_authenticate(request, user=self.user, token=self.token)
         view = RoomDetail.as_view()
         response = view(request, pk=1)
         assert response.status_code == 204
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = RoomDetail.as_view()
+        response = view(request, pk=1)
+        json_1 = {'game_has_started': True,
+                  'game_id': 1, 'id': 1, 'max_players': 4,
+                  'name': 'room_1', 'owner': 'owner_test',
+                  'players': ['owner_test', 'player_test1',
+                              'player_test2',
+                              'player_test3']}
+        assert json_1 == response.data
+        assert response.status_code == 200
 
-    def test_startGameWithoutAllPlayers(self):
-        user1 = User.objects.create_user(username='user1', password='hola1234')
-        user2 = User.objects.create_user(username='user2', password='hola1234')
-        user3 = User.objects.create_user(username='user3', password='hola1234')
-        board = Board.objects.create(name='Board 1')
-        hexe_position = HexePosition.objects.create(level=1, index=2)
-        hexe = Hexe.objects.create(board=board, terrain='desert',
-                                   position=hexe_position)
-
-        room = Room.objects.create(
-            name='Room1', owner=user1, board_id=board.id)
-
-        room.players.add(user2)
-        room.players.add(user3)
-
+    def test_start_game_without_all_players(self):
         path = reverse('join_room', kwargs={'pk': 1})
-
-        data = {}
-
-        request = RequestFactory().patch(path, data,
+        request = RequestFactory().patch(path,
                                          content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
         view = RoomDetail.as_view()
         response = view(request, pk=1)
         assert response.status_code == 400
 
-    def test_deleteRoom(self):
-        user = User.objects.create_user(username='user1', password='hola1234')
-        board = Board.objects.create(name='Board 1')
-        room = Room.objects.create(name="Room 1", owner=user,
-                                   board_id=board.id)
+    def test_delete_room(self):
         path = reverse('join_room', kwargs={'pk': 1})
-
         request = RequestFactory().delete(path)
-
-        force_authenticate(request, user=user, token=self.token)
-
+        force_authenticate(request, user=self.owner, token=self.token)
         view = RoomDetail.as_view()
         response = view(request, pk=1)
         assert response.status_code == 204
         assert Room.objects.filter(id=1).exists() is False
 
-    def test_deleteRoomNotOwner(self):
-        user = User.objects.create_user(username='user1', password='hola1234')
-        board = Board.objects.create(name='Board 1')
-        room = Room.objects.create(name="Room 1", owner=user,
-                                   board_id=board.id)
+    def test_delete_room_not_owner(self):
         path = reverse('join_room', kwargs={'pk': 1})
-
         request = RequestFactory().delete(path)
-
         force_authenticate(request, user=self.user, token=self.token)
-
         view = RoomDetail.as_view()
         response = view(request, pk=1)
         assert response.status_code == 403
         assert response.data == {
-            "detail": "only the room's owner can delete it"}
+            "detail": "Can't delete the room"}
         assert Room.objects.filter(id=1).exists() is True
 
-    def test_deleteRoomHasStarted(self):
-        user = User.objects.create_user(username='user1', password='hola1234')
-        board = Board.objects.create(name='Board 1')
-        room = Room.objects.create(name="Room 1", owner=user,
-                                   board_id=board.id,
-                                   game_has_started=True)
+    def test_delete_room_has_tarted(self):
+        desert = mixer.blend('catan.Hexe', board=self.board,
+                             terrain='desert')
+        self.room_1.players.add(self.player_3)
         path = reverse('join_room', kwargs={'pk': 1})
-
+        request = RequestFactory().patch(path,
+                                         content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = RoomDetail.as_view()
+        response = view(request, pk=1)
+        assert response.status_code == 204
+        path = reverse('join_room', kwargs={'pk': 1})
         request = RequestFactory().delete(path)
-
-        force_authenticate(request, user=user, token=self.token)
-
+        force_authenticate(request, user=self.user, token=self.token)
         view = RoomDetail.as_view()
         response = view(request, pk=1)
         assert response.status_code == 403
         assert response.data == {
-            "detail": "Can't delete the room once the game has started"}
+            "detail": "Can't delete the room"}
         assert Room.objects.filter(id=1).exists() is True
