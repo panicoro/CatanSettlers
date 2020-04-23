@@ -1,64 +1,54 @@
 import pytest
+from mixer.backend.django import mixer
 from django.contrib.auth.models import User
-from catan.models import Board, Hexe, HexePosition, VertexPosition
+from catan.models import Board, Hexe
 from django.core.exceptions import ValidationError
 
 
 @pytest.mark.django_db
 class TestModels:
 
-    def test_hexe_position(self):
-        hexe_position = HexePosition.objects.create(level=1, index=1)
-        assert hexe_position.level == 1
-        assert hexe_position.index == 1
-
     def test_board(self):
-        board = Board.objects.create(name='Colonos')
+        board = mixer.blend('catan.Board', name='Colonos')
         assert board.name == 'Colonos'
 
     def test_hexe(self):
-        board = Board.objects.create(name='Colonos')
-        hexe_position = HexePosition.objects.create(level=1, index=1)
-        hexe = Hexe.objects.create(terrain='ORE', token=2, board=board,
-                                   position=hexe_position)
+        board = mixer.blend('catan.Board', name='Colonos')
+        hexe = mixer.blend('catan.Hexe', terrain='ore', token=8,
+                           level=1, index=4, board=board)
         assert hexe.board == board
-        assert hexe.position == hexe_position
+        assert hexe.terrain == 'ore'
+        assert hexe.token == 8
+        assert hexe.level == 1
+        assert hexe.index == 4
 
-    def test_of_all(self):
-        board = Board.objects.create(name='Colonos')
-        hexe_position = HexePosition.objects.create(level=1, index=1)
-        hexe = Hexe.objects.create(terrain='ORE', token=2, board=board,
-                                   position=hexe_position)
-        assert board.name == 'Colonos'
-        assert hexe_position.level == hexe.position.level
-        assert hexe_position.index == hexe.position.index
-        assert hexe.position == hexe_position
-        assert hexe.terrain == 'ORE'
-        assert hexe.token == 2
-        assert hexe.board == board
-
-    def test_HexePositionNoValid(self):
-        hexe_position = HexePosition.objects.create(level=0, index=1)
+    def test_hexe_position_no_valid(self):
+        board = mixer.blend('catan.Board', name='Colonos')
+        hexe = mixer.blend('catan.Hexe', terrain='ore', token=8,
+                           level=0, index=1, board=board)
         try:
-            hexe_position.full_clean()
+            hexe.full_clean()
         except ValidationError as e:
             error = 'The index with level 0 must be between 0 and 0.'
             assert error in e.message_dict['__all__']
-
-        hexe_position = HexePosition.objects.create(level=1, index=6)
+        hexe = mixer.blend('catan.Hexe', terrain='ore', token=8,
+                           level=1, index=6, board=board)
         try:
-            hexe_position.full_clean()
+            hexe.full_clean()
         except ValidationError as e:
             error = 'The index with level 1 must be between 0 and 5.'
             assert error in e.message_dict['__all__']
 
-        hexe_position = HexePosition.objects.create(level=2, index=12)
+        hexe = mixer.blend('catan.Hexe', terrain='ore', token=8,
+                           level=2, index=12, board=board)
         try:
-            hexe_position.full_clean()
+            hexe.full_clean()
         except ValidationError as e:
             error = 'The index with level 2 must be between 0 and 11.'
             assert error in e.message_dict['__all__']
 
+
+"""
     def test_VertexPositionNoValid(self):
         vertex_position = VertexPosition.objects.create(level=0, index=6)
         try:
@@ -79,3 +69,4 @@ class TestModels:
         except ValidationError as e:
             error = 'The index with level 2 must be between 0 and 29.'
             assert error in e.message_dict['__all__']
+"""
