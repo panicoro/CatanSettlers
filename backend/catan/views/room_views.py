@@ -17,7 +17,6 @@ from catan.models import *
 from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
-from random import shuffle
 from django.db.models import Q
 
 
@@ -30,7 +29,7 @@ class RoomList(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
         data['owner'] = request.user
-        data['players'] = []
+        data['players'] = [request.user.username]
         data['game_has_started'] = False
         serializer = RoomSerializer(data=data)
         if serializer.is_valid():
@@ -39,16 +38,10 @@ class RoomList(APIView):
             data.pop('board_id')
             return Response(data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class RoomDetail(APIView):
-    def get_object(self, pk):
-        try:
-            return Room.objects.get(pk=pk)
-        except Room.DoesNotExist:
-            raise Http404
-
     def get(self, request, pk, format=None):
         room = get_object_or_404(Room, pk=pk)
         room_serializer = RoomSerializer(room)
@@ -57,10 +50,10 @@ class RoomDetail(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, format=None):
-        room = self.get_object(pk)
+        room = get_object_or_404(Room, pk=pk)
         room_serializer = RoomSerializer(room)
         room_data = room_serializer.data
-        room_data['players'].append(self.request.user)
+        room_data['players'].append(request.user.username)
         serializer = RoomSerializer(room, data=room_data)
         if serializer.is_valid():
             serializer.save()
@@ -69,32 +62,8 @@ class RoomDetail(APIView):
 
     def patch(self, request, pk):
         room = get_object_or_404(Room, pk=pk)
-        board = get_object_or_404(Board, id=room.board_id)
-        hexes = Hexe.objects.filter(board=board)
-        desert_terrain = hexes.filter(terrain="desert")[0]
-        players = room.players.all()
-        if (len(players) == 4):
-            game = Game.objects.create(name=room.name, board=board,
-                                       robber=desert_terrain)
-            turns = [1, 2, 3, 4]
-            shuffle(turns)
-            player1 = Player.objects.create(turn=turns[0], username=players[0],
-                                            game=game, colour="Blue")
-            player2 = Player.objects.create(turn=turns[1], username=players[1],
-                                            game=game, colour="Red")
-            player3 = Player.objects.create(turn=turns[2], username=players[2],
-                                            game=game, colour="Yellow")
-            player4 = Player.objects.create(turn=turns[3], username=players[3],
-                                            game=game, colour="Green")
-            first_player = Player.objects.filter(game=game, turn=1)[0]
-            current_turn = Current_Turn.objects.create(
-                game=game,
-                user=first_player.username,
-                game_stage='FIRST_CONSTRUCTION',
-                last_action='NON_BLOCKING_ACTION')
-            room.game_has_started = True
-            room.game_id = game.id
-            room.save()
+        if room.is_full():
+            room.start_game()
             return Response(status=status.HTTP_204_NO_CONTENT)
         data = {"detail": "Can't start the game without all players"}
         return Response(data, status=status.HTTP_400_BAD_REQUEST)
@@ -102,16 +71,9 @@ class RoomDetail(APIView):
     def delete(self, request, pk):
         user = request.user
         room = get_object_or_404(Room, pk=pk)
-        if room.game_has_started is False:
-            if room.owner == user:
-                room.delete()
-                return Response(
-                    status=status.HTTP_204_NO_CONTENT)
-            data = {"detail": "only the room's owner can delete it"}
+        if room.can_delete(user):
+            room.delete()
             return Response(
-                data,
-                status=status.HTTP_403_FORBIDDEN)
-        data = {"detail": "Can't delete the room once the game has started"}
-        return Response(
-            data,
-            status=status.HTTP_403_FORBIDDEN)
+                status=status.HTTP_204_NO_CONTENT)
+        data = {"detail": "Can't delete the room"}
+        return Response(data, status=status.HTTP_403_FORBIDDEN)
