@@ -1,35 +1,11 @@
 """
 Random Board Generator
 """
-from catan.models import Hexe, Board
+from catan.models import Hexe, Board, generateHexesPositions
 from random import randint, choice
 
 TYPE_RESOURCE = ['brick', 'wool', 'grain', 'ore', 'lumber']
 
-
-def generateHexesPositions():
-    """
-    A method to generate all the positions of the hexagons in the board:
-    """
-    positions = []
-    top_ranges = [1, 6, 12]
-    for i in range(0, 3):
-        for j in range(0, top_ranges[i]):
-            positions.append([i, j])            
-    return positions
-
-
-def generateVertexPositions():
-    """
-    A method to generate all the positions of the vertex in the board:
-    Generate only one time.
-    """
-    positions = []
-    top_ranges = [6, 18, 30]
-    for i in range(0, 3):
-        for j in range(0, top_ranges[i]):
-            positions.append([i, j])
-    return positions
 
 def generateBoard(name):
     """

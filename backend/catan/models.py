@@ -3,6 +3,33 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 from random import random, shuffle
+from django.db.models import Q
+from catan.cargaJson import VertexInfo
+
+def generateHexesPositions():
+    """
+    A method to generate all the positions of the hexagons in the board:
+    """
+    positions = []
+    top_ranges = [1, 6, 12]
+    for i in range(0, 3):
+        for j in range(0, top_ranges[i]):
+            positions.append([i, j])            
+    return positions
+
+def generateVertexPositions():
+    """
+    A method to generate all the positions of the vertex in the board:
+    Generate only one time.
+    """
+    positions = []
+    top_ranges = [6, 18, 30]
+    for i in range(0, 3):
+        for j in range(0, top_ranges[i]):
+            positions.append([i, j])
+    return positions
+
+VERTEX_POSITIONS = generateVertexPositions()
 
 
 class Room(models.Model):
@@ -42,7 +69,6 @@ class Room(models.Model):
                                                game=game,
                                                colour=turns_colors[key])
             if key == 1:
-                print(key)
                 Current_Turn.objects.create(
                     game=game,
                     user=new_player.username,
@@ -134,6 +160,50 @@ class Game(models.Model):
         unique_together = ['id', 'name']
         ordering = ['id']
 
+    def exists_building(self, level, index):
+        """
+        Return true is there's a bulding in the 
+        vertex position with gaven level and index
+        """
+        return Building.objects.filter(game=self, level=level,
+                                   index=index).exists()
+
+    def check_not_building(self, level, index):
+        """
+        Returns True if there is no construction in the neighbors of the
+        VertexPosition entered by the player.
+        """
+        list_build = Building.objects.filter(game=self)
+        list_vertex = VertexInfo(level, index)
+        for build in list_build:
+            for vertex in list_vertex:
+                if build.level == vertex[0] and \
+                   build.index == vertex[1]:
+                    return False              
+        return True
+
+    def posibles_initial_settlements(self):
+        """
+        A function that obtains positions that the players might have
+        available to build settlements on the board during the
+        construction stage of a started game
+        """
+        vertex_available = VERTEX_POSITIONS
+        # Get all the buildings
+        buildings = Building.objects.filter(game=self)
+        if len(buildings) == 0:
+            return vertex_available
+        else:
+            for building in buildings:
+                building_vertex = [building.level, building.index]
+                if building_vertex in vertex_available:
+                    vertex_available.remove(building_vertex)
+                neighbors = VertexInfo(building.level, building.index)
+                for neighbor in neighbors:
+                    if neighbor in vertex_available:
+                        vertex_available.remove(neighbor)
+            return vertex_available
+
 
 class Player(models.Model):
     """
@@ -146,6 +216,11 @@ class Player(models.Model):
         ('Green', 'Green'),
         ('Red', 'Red'),
     ]
+
+    NECESSARY_RESOURCES = {'Settlement': ['brick', 'lumber', 'wool', 'grain'],
+                           'Road': ['brick', 'lumber']
+                          }
+
     turn = models.IntegerField(validators=[MinValueValidator(1),
                                            MaxValueValidator(4)])
     username = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -166,9 +241,9 @@ class Player(models.Model):
         """
         A method to remove resources as obtained in the last turn.
         """
-        # Get the last gained of the owner
+        # Get the last gained of the player
         resources_last_gained = Resource.objects.filter(last_gained=True,
-                                                        owner=self.username)
+                                                        owner=self)
         # Set the resources to False in last_gained field
         if len(resources_last_gained) != 0:
             for resource in resources_last_gained:
@@ -184,10 +259,109 @@ class Player(models.Model):
         resource_name: the type of resources to obtain.
         amount: the amount of resources to obtain.
         """
+        print(self)
         for i in range(amount):
-            Resource.objects.create(owner=self.owner, game=self.game,
-                                    resource_name=resource_name,
+            Resource.objects.create(owner=self, game=self.game,
+                                    name=resource_name,
                                     last_gained=True)
+
+    def has_necessary_resources(self, action):
+        NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
+                                                    'wool', 'grain'],
+                               'build_road': ['brick', 'lumber']
+                               }
+        needed_resources = NECESSARY_RESOURCES[action]
+        for resource in needed_resources:
+            resource_exists  = Resource.objects.filter(owner=self,
+                                                       name=resource).exists()
+            if (not resource_exists):
+                return False
+        return True
+
+    def delete_resources(self, action):
+        """
+        Remove resources from the list.
+        """
+        NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
+                                                    'wool', 'grain'],
+                               'build_road': ['brick', 'lumber']
+                               }
+        used_resources = NECESSARY_RESOURCES[action]
+        for resource in used_resources:
+            Resource.objects.get(owner=self, name=resource).delete()
+    
+    def check_my_road(self, level, index):
+        """
+        Returns True if there is one of the vertices of the player's paths
+        matches the VertexPosition entered by it.
+        """
+        return Road.objects.filter(Q(owner=self, game=self.game,
+                                   level_1=level, index_1=index) |
+                                   Q(owner=self, game=self.game,
+                                   level_2=level, index_2=index)).exists()
+
+    def get_my_roads_and_buildings(self):
+        """
+        A function that obtains two set of vertex positions of
+        the roads and buildings of a given player.
+        Args:
+        """
+        roads = Road.objects.filter(owner=self)
+        vertex_roads = set()
+        for road in roads:
+            vertex = (road.level_1, road.index_1) 
+            vertex_roads.add(vertex)
+            vertex = (road.level_2, road.index_2)
+            vertex_roads.add(vertex)
+        buildings = Building.objects.filter(owner=self)
+        vertex_buildings = set()
+        for build in buildings:
+            vertex = (build.level, build.index)
+            vertex_buildings.add(vertex)
+        return (vertex_roads, vertex_buildings)
+
+    def posibles_settlements(self):
+        """
+        A function that obtains positions that a player might have
+        available to build settlements on the board.
+        Args:
+        """
+        (vertex_roads, vertex_buildings) = self.get_my_roads_and_buildings()
+        # I get the vertices of my own roads that are not occupied by my buildings
+        available_vertex = vertex_roads - vertex_buildings
+        potencial_buildings = list(available_vertex)
+        potencial_buildings = [[pos[0], pos[1]] for pos in potencial_buildings]
+        available_vertex = [[pos[0], pos[1]] for pos in available_vertex]
+        # For each vertices check that their neighbors are not occupied,
+        # if they are it can not be built (distance rule)
+        for vertex in available_vertex:
+        # Get the neighbors of a vertex position
+            neighbors = VertexInfo(vertex[0], vertex[1])
+            for neighbor in neighbors:
+                # If there a building in one of the neighbors then
+                # the vertex couldn't have a new building...
+                if Building.objects.filter(level=neighbor[0], 
+                                           index=neighbor[1]).exists():
+                    potencial_buildings.remove(vertex)
+                    break
+        return potencial_buildings
+
+    def is_winner(self):
+        points = self.victory_points
+        card_vic_points = Card.objects.filter(game=self.game, owner=self,
+                                              card_name='victory_point').count()
+        total = points + card_vic_points
+        if total != 10:
+            return False
+        user = User.objects.get(username=self.username)
+        self.game.winner = user
+        self.game.save()
+        return True
+        
+    def gain_points(self, amount):
+        self.victory_points += amount
+        self.save()
+    
 
 
 class Card(models.Model):
@@ -223,9 +397,6 @@ class Resource(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     name = models.CharField(max_length=6, choices=RESOURCE_TYPE)
     last_gained = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.resource_name
 
     def clean(self):
         if self.owner.game.id != self.game.id:
