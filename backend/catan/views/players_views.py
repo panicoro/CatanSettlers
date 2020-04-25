@@ -6,24 +6,20 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.models import *
-from catan.cargaJson import *
 from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from catan.views.actions.road import (
-            build_road, can_build_road,
-            posibles_roads, posibles_initial_roads,
+            build_road,
             posibles_roads_card_road_building,
             play_road_building_card)
-from catan.views.actions.buy_card import buy_card, canBuyCard
-from catan.views.actions.build import (
-            build_settlement, can_build_settlement,
-            posiblesSettlements, posibles_initial_settlements)
-from catan.views.actions.bank import bank_trade, canTradeWithBank
+from catan.views.actions.buy_card import buy_card, can_buy_card
+from catan.views.actions.bank import bank_trade, can_trade_with_bank
 from catan.views.actions.robber import (
                 move_robber, get_sum_dices,
                 posiblesRobberPositions
             )
+from catan.views.actions.build import build_settlement
 from catan.views.actions.play_cards import move_robberCard
 from catan.views.actions.change_turn import change_turn
 
@@ -40,7 +36,7 @@ class PlayerInfo(APIView):
         serializer_card = CardSerializer(queryset_card, many=True)
         serializer_resource = ResourceSerializer(queryset_resource, many=True)
         for resource in serializer_resource.data:
-            resource_list.append(resource['resource_name'])
+            resource_list.append(resource['name'])
         for card in serializer_card.data:
             card_list.append(card['card_name'])
         data = {'resources': resource_list,
@@ -49,6 +45,13 @@ class PlayerInfo(APIView):
 
 
 class PlayerActions(APIView):
+
+    def to_json_positions(self, list_positions):
+        data = []
+        for position in list_positions:
+            data.append({'level': position[0],
+                         'index': position[1]})
+        return data
 
     def check_player_in_turn(self, game, player):
         """
@@ -70,8 +73,8 @@ class PlayerActions(APIView):
         """
         for road in posibles_roads:
             new_road = []
-            #new_road.append(VertexPositionSerializer(road[0]).data)
-            #new_road.append(VertexPositionSerializer(road[1]).data)
+            # new_road.append(VertexPositionSerializer(road[0]).data)
+            # new_road.append(VertexPositionSerializer(road[1]).data)
             item['payload'].append(new_road)
         return item
 
@@ -92,7 +95,7 @@ class PlayerActions(APIView):
         if game_stage != 'FULL_PLAY':
             if last_action == 'NON_BLOCKING_ACTION':
                 item = {"type": 'build_settlement'}
-                item['payload'] = posibles_initial_settlements(game)
+                item['payload'] = game.posibles_initial_settlements()
                 data.append(item)
             if last_action == 'BUILD_SETTLEMENT':
                 item = {"type": 'build_road'}
@@ -112,32 +115,25 @@ class PlayerActions(APIView):
             else:
                 item = {"type": 'end_turn'}
                 data.append(item)
-                if can_build_road(player):
+                if player.has_necessary_resources('build_road'):
                     item = {"type": 'build_road'}
-                    posibles_roads = posibles_roads(player)
+                    posibles_roads = player.posible_roads()
                     item['payload'] = []
                     for road in posibles_roads:
-                        new_road = []
-                        #new_road.append(VertexPositionSerializer(road[0]).data)
-                        #new_road.append(VertexPositionSerializer(road[1]).data)
-                        item['payload'].append(new_road)
+                        item['payload'].append(self.to_json_positions(road))
                     if len(item['payload']) != 0:
                         data.append(item)
-                if canTradeWithBank(game, player):
+                if can_trade_with_bank(game, player):
                     item = {"type": 'bank_trade'}
                     data.append(item)
-                if canBuyCard(game, player):
+                if can_buy_card(game, player):
                     item = {"type": 'buy_card'}
                     data.append(item)
-                if can_build_settlement(player):
+                if player.has_necessary_resources('build_settlement'):
                     item = {"type": 'build_settlement'}
-                    posibles_setlements = posiblesSettlements(player)
-                    """
-                    serialized_positions = VertexPositionSerializer(
-                                           posibles_setlements,
-                                           many=True)
-                    item['payload'] = serialized_positions.data
-                    """
+                    posibles_settlements = player.posibles_settlements()
+                    item['payload'] = self.to_json_positions(
+                                        posibles_settlements)
                     if len(item['payload']) != 0:
                         data.append(item)
                 if Card.objects.filter(owner=player,
