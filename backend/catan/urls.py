@@ -1,7 +1,9 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework_simplejwt.views import TokenRefreshView
-from catan.views import *
+from catan.views import (room_views, login_views,
+                         players_views, game_views,
+                         board_views)
 
 urlpatterns = [
     # Rooms views
