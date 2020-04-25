@@ -3,17 +3,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
 )
-from rest_framework import generics, permissions, status
+from rest_framework_simplejwt import authentication
+from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt import authentication
-from catan.serializers import *
-from django.http import Http404
-from random import random
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
 
 

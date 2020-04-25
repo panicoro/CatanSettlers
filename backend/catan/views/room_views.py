@@ -1,23 +1,11 @@
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView
-)
-from rest_framework_simplejwt import authentication
-from rest_framework import generics, permissions, status
+from rest_framework import status
 from rest_framework.views import APIView
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
 from catan.serializers import *
 from django.http import Http404
 from random import random
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from catan.models import *
-from catan.cargaJson import *
-from catan.dices import throw_dices
-from rest_framework.permissions import AllowAny
-from django.db.models import Q
 
 
 class RoomList(APIView):
