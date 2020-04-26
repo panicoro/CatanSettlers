@@ -231,10 +231,6 @@ class Player(models.Model):
         ('Red', 'Red'),
     ]
 
-    NECESSARY_RESOURCES = {'Settlement': ['brick', 'lumber', 'wool', 'grain'],
-                           'Road': ['brick', 'lumber']
-                           }
-
     turn = models.IntegerField(validators=[MinValueValidator(1),
                                            MaxValueValidator(4)])
     username = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -279,11 +275,22 @@ class Player(models.Model):
                                     name=resource_name,
                                     last_gained=True)
 
-    def has_necessary_resources(self, action):
+    def has_necessary_resources(self, action, gaven=''):
+        """
+        A method to check is the player has necessary resources for
+        do the desired action.
+        Args:
+        @action: the action of the player
+        @gave: optional, only used if the action is 'trade_bank'.
+               It's the type of resource that the player want to get.
+        """
         NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
                                                     'wool', 'grain'],
-                               'build_road': ['brick', 'lumber']
+                               'build_road': ['brick', 'lumber'],
                                }
+        if gaven:
+            return Resource.objects.filter(owner=self,
+                                           name=gaven).count() >= 4
         needed_resources = NECESSARY_RESOURCES[action]
         for resource in needed_resources:
             resource_exists = Resource.objects.filter(owner=self,
@@ -292,17 +299,29 @@ class Player(models.Model):
                 return False
         return True
 
-    def delete_resources(self, action):
+    def can_trade_bank(self):
+        for resource in RESOURCE_TYPE:
+            if self.has_necessary_resources('trade_bank', resource[0]):
+                return True
+        return False
+
+    def delete_resources(self, action, gaven=''):
         """
-        Remove resources from the list.
+        A method to delete the  necessary resources for
+        do the desired action.
+        Args:
+        @action: the action of the player
+        @gave: optional, only used if the action is 'trade_bank'.
+               It's the type of resource that the player want to get.
         """
         NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
                                                     'wool', 'grain'],
-                               'build_road': ['brick', 'lumber']
+                               'build_road': ['brick', 'lumber'],
+                               'trade_bank': [gaven for resource in range(4)]
                                }
         used_resources = NECESSARY_RESOURCES[action]
         for resource in used_resources:
-            Resource.objects.get(owner=self, name=resource).delete()
+            Resource.objects.filter(owner=self, name=resource)[0].delete()
 
     def check_my_road(self, level, index):
         """
