@@ -4,7 +4,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 from random import random, shuffle
 from django.db.models import Q
-from catan.cargaJson import VertexInfo
+from aux.json_load import VertexInfo
+
 
 def generateHexesPositions():
     """
@@ -14,8 +15,9 @@ def generateHexesPositions():
     top_ranges = [1, 6, 12]
     for i in range(0, 3):
         for j in range(0, top_ranges[i]):
-            positions.append([i, j])            
+            positions.append([i, j])
     return positions
+
 
 def generateVertexPositions():
     """
@@ -28,6 +30,7 @@ def generateVertexPositions():
         for j in range(0, top_ranges[i]):
             positions.append([i, j])
     return positions
+
 
 VERTEX_POSITIONS = generateVertexPositions()
 
@@ -162,11 +165,22 @@ class Game(models.Model):
 
     def exists_building(self, level, index):
         """
-        Return true is there's a bulding in the 
+        Return true is there's a bulding in the
         vertex position with gaven level and index
         """
         return Building.objects.filter(game=self, level=level,
-                                   index=index).exists()
+                                       index=index).exists()
+
+    def exists_road(self, level1, index1, level2, index2):
+        road_1 = Road.objects.filter(game=self,
+                                     level_1=level1, level_2=level2,
+                                     index_1=index1, index_2=index2
+                                     ).exists()
+        road_2 = Road.objects.filter(game=self,
+                                     level_2=level1, level_1=level2,
+                                     index_2=index1, index_1=index2
+                                     ).exists()
+        return road_1 or road_2
 
     def check_not_building(self, level, index):
         """
@@ -179,7 +193,7 @@ class Game(models.Model):
             for vertex in list_vertex:
                 if build.level == vertex[0] and \
                    build.index == vertex[1]:
-                    return False              
+                    return False
         return True
 
     def posibles_initial_settlements(self):
@@ -219,7 +233,7 @@ class Player(models.Model):
 
     NECESSARY_RESOURCES = {'Settlement': ['brick', 'lumber', 'wool', 'grain'],
                            'Road': ['brick', 'lumber']
-                          }
+                           }
 
     turn = models.IntegerField(validators=[MinValueValidator(1),
                                            MaxValueValidator(4)])
@@ -272,8 +286,8 @@ class Player(models.Model):
                                }
         needed_resources = NECESSARY_RESOURCES[action]
         for resource in needed_resources:
-            resource_exists  = Resource.objects.filter(owner=self,
-                                                       name=resource).exists()
+            resource_exists = Resource.objects.filter(owner=self,
+                                                      name=resource).exists()
             if (not resource_exists):
                 return False
         return True
@@ -289,7 +303,7 @@ class Player(models.Model):
         used_resources = NECESSARY_RESOURCES[action]
         for resource in used_resources:
             Resource.objects.get(owner=self, name=resource).delete()
-    
+
     def check_my_road(self, level, index):
         """
         Returns True if there is one of the vertices of the player's paths
@@ -300,6 +314,29 @@ class Player(models.Model):
                                    Q(owner=self, game=self.game,
                                    level_2=level, index_2=index)).exists()
 
+    def check_roads_continuation(self, level1, index1, level2, index2,
+                                 only_building=False):
+        if only_building:
+            road_1, road_2 = False, False
+        else:
+            road_1 = Road.objects.filter(Q(owner=self, game=self.game,
+                                         level_1=level1, index_1=index1) |
+                                         Q(owner=self, game=self.game,
+                                         level_2=level1, index_2=index1)
+                                         ).exists()
+            road_2 = Road.objects.filter(Q(owner=self, game=self.game,
+                                         level_1=level2, index_1=index2) |
+                                         Q(owner=self, game=self.game,
+                                         level_2=level2, index_2=index2)
+                                         ).exists()
+        building_1 = Building.objects.filter(owner=self, game=self.game,
+                                             level=level1, index=index1
+                                             ).exists()
+        building_2 = Building.objects.filter(owner=self, game=self.game,
+                                             level=level2, index=index2
+                                             ).exists()
+        return road_1 or road_2 or building_1 or building_2
+
     def get_my_roads_and_buildings(self):
         """
         A function that obtains two set of vertex positions of
@@ -309,7 +346,7 @@ class Player(models.Model):
         roads = Road.objects.filter(owner=self)
         vertex_roads = set()
         for road in roads:
-            vertex = (road.level_1, road.index_1) 
+            vertex = (road.level_1, road.index_1)
             vertex_roads.add(vertex)
             vertex = (road.level_2, road.index_2)
             vertex_roads.add(vertex)
@@ -327,7 +364,8 @@ class Player(models.Model):
         Args:
         """
         (vertex_roads, vertex_buildings) = self.get_my_roads_and_buildings()
-        # I get the vertices of my own roads that are not occupied by my buildings
+        # I get the vertices of my own roads that are not occupied by
+        # my buildings
         available_vertex = vertex_roads - vertex_buildings
         potencial_buildings = list(available_vertex)
         potencial_buildings = [[pos[0], pos[1]] for pos in potencial_buildings]
@@ -335,21 +373,59 @@ class Player(models.Model):
         # For each vertices check that their neighbors are not occupied,
         # if they are it can not be built (distance rule)
         for vertex in available_vertex:
-        # Get the neighbors of a vertex position
+            # Get the neighbors of a vertex position
             neighbors = VertexInfo(vertex[0], vertex[1])
             for neighbor in neighbors:
                 # If there a building in one of the neighbors then
                 # the vertex couldn't have a new building...
-                if Building.objects.filter(level=neighbor[0], 
+                if Building.objects.filter(level=neighbor[0],
                                            index=neighbor[1]).exists():
                     potencial_buildings.remove(vertex)
                     break
         return potencial_buildings
 
+    def get_potencial_roads(self, available_vertex):
+        """
+        A function that receives a list of available vertices and
+        returns a list of positions (ROAD_POSITIONS) in which roads
+        can be constructed from the vertices given in the list
+        Args:
+        @avalaible_vertex: a list of vertex positions (objects)
+        """
+        potencial_roads = []
+        for vertex in available_vertex:
+            vertex = list(vertex)
+            # Get the neighbors of a vertex
+            neighbors = VertexInfo(vertex[0], vertex[1])
+            for neighbor in neighbors:
+                if not Road.objects.filter(Q(level_1=vertex[0],
+                                             index_1=vertex[1],
+                                             level_2=neighbor[0],
+                                             index_2=neighbor[1]) |
+                                           Q(level_2=vertex[0],
+                                             index_2=vertex[1],
+                                             level_1=neighbor[0],
+                                             index_1=neighbor[1])).exists():
+                    new_road = [vertex, neighbor]
+                    potencial_roads.append(new_road)
+        return potencial_roads
+
+    def posible_roads(self):
+        """
+        A function that obtains positions that a player might have
+        available to build roads on the board.
+        Args:
+        """
+        (vertex_roads, vertex_buildings) = self.get_my_roads_and_buildings()
+        available_vertex = vertex_buildings.union(vertex_roads)
+        potencial_roads = self.get_potencial_roads(available_vertex)
+        return potencial_roads
+
     def is_winner(self):
         points = self.victory_points
         card_vic_points = Card.objects.filter(game=self.game, owner=self,
-                                              card_name='victory_point').count()
+                                              card_name='victory_point'
+                                              ).count()
         total = points + card_vic_points
         if total != 10:
             return False
@@ -357,11 +433,10 @@ class Player(models.Model):
         self.game.winner = user
         self.game.save()
         return True
-        
+
     def gain_points(self, amount):
         self.victory_points += amount
         self.save()
-    
 
 
 class Card(models.Model):
@@ -481,15 +556,18 @@ class Road(models.Model):
             ]
 
     def clean(self):
-        if (self.level == 0) and not (0 <= self.index <= 5):
-            raise ValidationError(
-                'The index with level 0 must be between 0 and 5.')
-        if (self.level == 1) and not (0 <= self.index <= 17):
-            raise ValidationError(
-                'The index with level 1 must be between 0 and 17.')
-        if (self.level == 2) and not (0 <= self.index <= 29):
-            raise ValidationError(
-                'The index with level 2 must be between 0 and 29.')
+        levels_indexs = [(self.level_1, self.index_1),
+                         (self.level_2, self.index_2)]
+        for level_index in levels_indexs:
+            if (level_index[0] == 0) and not (0 <= level_index[1] <= 5):
+                raise ValidationError(
+                    'The index with level 0 must be between 0 and 5.')
+            if (level_index[0] == 1) and not (0 <= level_index[1] <= 17):
+                raise ValidationError(
+                    'The index with level 1 must be between 0 and 17.')
+            if (level_index[0] == 2) and not (0 <= level_index[1] <= 29):
+                raise ValidationError(
+                    'The index with level 2 must be between 0 and 29.')
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
         if self.owner.game.id != self.game.id:
