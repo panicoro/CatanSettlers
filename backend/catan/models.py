@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
-from random import random, shuffle
+from random import random, shuffle, randint
 from django.db.models import Q
 from aux.json_load import VertexInfo
 
@@ -104,6 +104,17 @@ RESOURCE_TYPE = [
     ('wool', 'WOOL'),
     ('grain', 'GRAIN'),
     ('ore', 'ORE')
+]
+
+"""
+An array of tuples that contains the diferent types of cards.
+"""
+CARD_TYPE = [
+        ('road_building', 'ROAD_BUILDING'),
+        ('year_of_plenty', 'YEAR_OF_PLENTY'),
+        ('monopoly', 'MONOPOLY'),
+        ('victory_point', 'VICTORY_POINT'),
+        ('knight', 'KNIGHT')
 ]
 
 
@@ -287,6 +298,7 @@ class Player(models.Model):
         NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
                                                     'wool', 'grain'],
                                'build_road': ['brick', 'lumber'],
+                               'buy_card': ['ore', 'grain', 'wool']
                                }
         if gaven:
             return Resource.objects.filter(owner=self,
@@ -317,7 +329,8 @@ class Player(models.Model):
         NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
                                                     'wool', 'grain'],
                                'build_road': ['brick', 'lumber'],
-                               'trade_bank': [gaven for resource in range(4)]
+                               'trade_bank': [gaven for resource in range(4)],
+                               'buy_card': ['ore', 'grain', 'wool']
                                }
         used_resources = NECESSARY_RESOURCES[action]
         for resource in used_resources:
@@ -457,19 +470,17 @@ class Player(models.Model):
         self.victory_points += amount
         self.save()
 
+    def select_card(self):
+        card_name = CARD_TYPE[randint(0, 4)]
+        new_card = Card(owner=self, game=self.game, card_name=card_name[0])
+        new_card.save()
+
 
 class Card(models.Model):
     '''
     Stores information about a card of a player in a started game,
     related to :model `Game` and :model `Player`
     '''
-    CARD_TYPE = [
-        ('road_building', 'ROAD_BUILDING'),
-        ('year_of_plenty', 'YEAR_OF_PLENTY'),
-        ('monopoly', 'MONOPOLY'),
-        ('victory_point', 'VICTORY_POINT'),
-        ('knight', 'KNIGHT')
-    ]
     owner = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     card_name = models.CharField(max_length=50, choices=CARD_TYPE)

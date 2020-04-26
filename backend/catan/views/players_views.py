@@ -13,7 +13,7 @@ from catan.views.actions.road import (
             build_road,
             posibles_roads_card_road_building,
             play_road_building_card)
-from catan.views.actions.buy_card import buy_card, can_buy_card
+from catan.views.actions.buy_card import buy_card
 from catan.views.actions.bank import bank_trade
 from catan.views.actions.robber import (
                 move_robber, get_sum_dices,
@@ -126,7 +126,7 @@ class PlayerActions(APIView):
                 if player.can_trade_bank():
                     item = {"type": 'bank_trade'}
                     data.append(item)
-                if can_buy_card(game, player):
+                if player.has_necessary_resources('buy_card'):
                     item = {"type": 'buy_card'}
                     data.append(item)
                 if player.has_necessary_resources('build_settlement'):
