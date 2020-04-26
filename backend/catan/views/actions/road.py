@@ -82,7 +82,6 @@ def build_road(payload, game, player, road_building_card=False):
         response = {"detail": "not neighbors"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     # I check if the position is free
-    # nueva se llama existe road es del juego
     if game.exists_road(level_1, index_1, level_2, index_2):
         response = {"detail": "Busy position, reserved"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)

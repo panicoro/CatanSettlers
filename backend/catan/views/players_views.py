@@ -14,7 +14,7 @@ from catan.views.actions.road import (
             posibles_roads_card_road_building,
             play_road_building_card)
 from catan.views.actions.buy_card import buy_card, can_buy_card
-from catan.views.actions.bank import bank_trade, can_trade_with_bank
+from catan.views.actions.bank import bank_trade
 from catan.views.actions.robber import (
                 move_robber, get_sum_dices,
                 posiblesRobberPositions
@@ -123,7 +123,7 @@ class PlayerActions(APIView):
                         item['payload'].append(self.to_json_positions(road))
                     if len(item['payload']) != 0:
                         data.append(item)
-                if can_trade_with_bank(game, player):
+                if player.can_trade_bank():
                     item = {"type": 'bank_trade'}
                     data.append(item)
                 if can_buy_card(game, player):
