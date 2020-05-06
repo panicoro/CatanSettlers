@@ -52,17 +52,17 @@ def generateBoardTest():
     11 => 'ore'
     12 => 'lumber'
     """
-    """
     new_board = Board(name="test_board")
     new_board.save()
-    hexes_positions = HexePosition.objects.all()[:10]
+    hexes_positions = [[0, 0], [1, 0], [1, 1], [1, 2], [1, 3], [1, 4],
+                       [1, 5], [2, 0], [2, 1], [2, 2]]
     tokens = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12]
     terrain_types = TYPE_RESOURCE + TYPE_RESOURCE
     for i in range(0, len(hexes_positions)):
         new_terrain = terrain_types[i]
         new_token = tokens[i]
         new_hexe = Hexe(board=new_board, token=new_token,
-                        terrain=new_terrain, position=hexes_positions[i])
+                        terrain=new_terrain, level=hexes_positions[i][0],
+                        index=hexes_positions[i][1])
         new_hexe.save()
     return new_board
-"""
