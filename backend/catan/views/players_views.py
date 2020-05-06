@@ -15,12 +15,8 @@ from catan.views.actions.road import (
             play_road_building_card)
 from catan.views.actions.buy_card import buy_card
 from catan.views.actions.bank import bank_trade
-from catan.views.actions.robber import (
-                move_robber, get_sum_dices,
-                posiblesRobberPositions
-            )
 from catan.views.actions.build import build_settlement
-from catan.views.actions.play_cards import move_robberCard
+from catan.views.actions.move_robber import move_robber
 from catan.views.actions.change_turn import change_turn
 
 
@@ -99,16 +95,16 @@ class PlayerActions(APIView):
                 data.append(item)
             if last_action == 'BUILD_SETTLEMENT':
                 item = {"type": 'build_road'}
-                item['payload'] = posibles_initial_roads(player)
+                item['payload'] = player.posibles_initial_roads()
                 data.append(item)
             if last_action == 'BUILD_ROAD':
                 item = {"type": 'end_turn'}
                 data.append(item)
             return Response(data, status=status.HTTP_200_OK)
         else:
-            if sum(get_sum_dices(game)) == 7 and not turn.robber_moved:
+            if game.get_sum_dices() == 7 and not game.robber_has_been_moved():
                 item = {"type": 'move_robber'}
-                posibles_robber = posiblesRobberPositions(game)
+                posibles_robber = game.posible_robber_positions()
                 item["payload"] = posibles_robber
                 data.append(item)
                 return Response(data, status=status.HTTP_200_OK)
@@ -136,10 +132,9 @@ class PlayerActions(APIView):
                                         posibles_settlements)
                     if len(item['payload']) != 0:
                         data.append(item)
-                if Card.objects.filter(owner=player,
-                                       card_name='knight').exists():
+                if player.has_card('knight'):
                     item = {"type": 'play_knight_card'}
-                    posibles_robber = posiblesRobberPositions(game)
+                    posibles_robber = game.posible_robber_positions()
                     item["payload"] = posibles_robber
                     data.append(item)
                 if Card.objects.filter(owner=player,
@@ -163,14 +158,13 @@ class PlayerActions(APIView):
             response = {"detail": "Not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'end_turn':
-            turn = Current_Turn.objects.get(game=game)
-            if sum(get_sum_dices(game)) == 7 and not turn.robber_moved:
-                response = {"detail": "you have to move the thief"}
+            if not game.robber_has_been_moved():
+                response = {"detail": "You have to move the thief"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
             response = change_turn(game)
-            # Solo tirar los dados si estoy en el juego...
+            # Only throw the dices if I am in full play...
             if game_stage == 'FULL_PLAY':
-                throw_dices(game)
+                game.throw_dices()
             return response
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
@@ -185,11 +179,12 @@ class PlayerActions(APIView):
             response = bank_trade(data['payload'], game, player)
             return response
         if data['type'] == 'move_robber':
-            response = move_robber(data['payload'], game, user, player)
+            response = move_robber(data['payload'], game,
+                                   user, player)
             return response
         if data['type'] == 'play_knight_card':
-            response = move_robberCard(data['payload'], game, user,
-                                       player)
+            response = move_robber(data['payload'], game,
+                                   user, player, knight=True)
             return response
         if data['type'] == 'play_road_building_card':
             response = play_road_building_card(data['payload'], game, player)

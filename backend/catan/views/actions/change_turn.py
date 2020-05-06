@@ -20,7 +20,6 @@ def get_next_player(current_turn, players):
     # is the natural, and in the stage 'SECOND_CONSTRUCTION' the order
     # is the inverse
     game_stage = current_turn.game_stage
-    print(game_stage)
     if game_stage == 'FIRST_CONSTRUCTION':
         if actual_turn != 4:
             next_turn = actual_turn + 1
@@ -56,7 +55,7 @@ def set_new_turn(current_turn, player):
     """
     current_turn.user = player.username
     current_turn.last_action = 'NON_BLOCKING_ACTION'
-    current_turn.robber_moved = False
+    current_turn.robber_moved = True
     current_turn.save()
 
 
