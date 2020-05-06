@@ -4,7 +4,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 from random import random, shuffle, randint
 from django.db.models import Q
-from aux.json_load import VertexInfo
+import math
+from aux.json_load import VertexInfo, HexagonInfo
 
 
 def generateHexesPositions():
@@ -33,6 +34,7 @@ def generateVertexPositions():
 
 
 VERTEX_POSITIONS = generateVertexPositions()
+HEXE_POSITIONS = generateHexesPositions()
 
 
 class Room(models.Model):
@@ -78,7 +80,6 @@ class Room(models.Model):
                     game_stage='FIRST_CONSTRUCTION',
                     last_action='NON_BLOCKING_ACTION')
         self.game_has_started = True
-        print(game.id)
         self.game_id = game.id
         self.save()
 
@@ -228,6 +229,136 @@ class Game(models.Model):
                     if neighbor in vertex_available:
                         vertex_available.remove(neighbor)
             return vertex_available
+
+    def not_moved_robber(self):
+        print("HERE")
+        self.current_turn.robber_moved = False
+        self.save()
+
+    def move_robber(self, level, index):
+        hexe_robber = Hexe.objects.filter(board=self.board,
+                                          level=level,
+                                          index=index).get()
+        self.robber = hexe_robber
+        self.save()
+        self.current_turn.robber_moved = True
+        self.current_turn.save()
+
+    def robber_has_been_moved(self):
+        return self.current_turn.robber_moved
+
+    def is_new_robber_position(self, level, index):
+        return (self.robber.level != level) or (self.robber.index != index)
+
+    def get_sum_dices(self):
+        return sum(self.current_turn.get_dices())
+
+    def posible_robber_positions(self):
+        """
+        A function that obtains the possible positions
+        where the thief can move and for each of them, the players to steal.
+        """
+        hexes_positions_robber = generateHexesPositions()
+        actual_robber = [self.robber.level, self.robber.index]
+        hexes_positions_robber.remove(actual_robber)
+        data = []
+        for hexe in hexes_positions_robber:
+            item = {'position': {
+                                    'level': hexe[0],
+                                    'index': hexe[1]
+                                }
+                    }
+            neighbors = HexagonInfo(hexe[0], hexe[1])
+            item['players'] = []
+            for neighbor in neighbors:
+                try:
+                    building = Building.objects.get(level=neighbor[0],
+                                                    index=neighbor[1],
+                                                    game=self)
+                    new_user = building.owner.username.username
+                    if new_user not in item['players'] and \
+                            new_user != self.current_turn.user.username:
+                        item['players'].append(new_user)
+                except Building.DoesNotExist:
+                    pass
+            data.append(item)
+        return data
+
+    def set_players_resources_not_last_gained(self):
+        """
+        A method to set the resources of a list of players
+        as not last gained.
+        """
+        players = Player.objects.filter(game=self)
+        for player in players:
+            player.set_not_last_gained()
+
+    def random_discard(self):
+        players = Player.objects.filter(game=self)
+        for player in players:
+            if len(Resource.objects.filter(owner=player)) > 7:
+                resources = Resource.objects.filter(owner=player)
+                res_pos = [i for i in range(0, len(resources))]
+                shuffle(res_pos)
+                res_pos = res_pos[0:math.floor(len(res_pos)/2)]
+                for elem in res_pos:
+                    resources[elem].delete()
+
+    def distribute_resources(self, hexes):
+        """
+        A method that takes a list of hexagons and a list of players.
+        For each hex on the list, check if each player on the list has
+        buildings at the vertices of that hex; if the player has them
+        increases his amount of resources.
+        Params:
+        @hexes: a list of selected objects Hexes of the board.
+        @players: a list of players of a started game.
+        @game: a started game.
+        """
+        players = Player.objects.filter(game=self)
+        if len(hexes) != 0:
+            for hexe in hexes:
+                hexe_level = hexe.level
+                hexe_index = hexe.index
+                hexe_neighbors = HexagonInfo(hexe_level, hexe_index)
+                for player in players:
+                    # get the buildings of the player
+                    buildings = Building.objects.filter(owner=player)
+                    if len(buildings) != 0:
+                        for building in buildings:
+                            building_vertex = [building.level,
+                                               building.index]
+                            if building_vertex in hexe_neighbors:
+                                if building.name == 'settlement':
+                                    player.gain_resources(hexe.terrain, 1)
+                                else:
+                                    player.gain_resources(hexe.terrain, 2)
+
+    def throw_dices(self, dice1=0, dice2=0):
+        """
+        A method that rolls the two dice at the begin of the turn and
+        distributes the resources according to the hexagons with the
+        token of the sum of the dice.
+        Params:
+        @dice1: the value of the dice1 (used only for testing).
+        @dice2: the value of the dice2 (used only for testing).
+        """
+        # Get the trow of dices and then sum them.
+        two_dices = self.current_turn.throw_two_dices(dice1, dice2)
+        sum_dices = sum(two_dices)
+        # Get the players of the games
+        if sum_dices == 7:
+            self.random_discard()
+        else:
+            self.set_players_resources_not_last_gained()
+            # Get the hexes with this token from the board
+            hexes = Hexe.objects.filter(board=self.board, token=sum_dices)
+            # If the robber is in one hexes with the token of the sum
+            # then we must exclude it...
+            if hexes.filter(id=self.robber.id).exists():
+                hexes = hexes.exclude(id=self.robber.id)
+            # Then distribute_resources...
+            self.distribute_resources(hexes)
 
 
 class Player(models.Model):
@@ -475,6 +606,55 @@ class Player(models.Model):
         new_card = Card(owner=self, game=self.game, card_name=card_name[0])
         new_card.save()
 
+    def has_card(self, type_card):
+        return Card.objects.filter(owner=self, card_name=type_card).exists()
+
+    def get_players_to_steal(self, level, index):
+        owners = set()
+        neighbors = HexagonInfo(level, index)
+        for neighbor in neighbors:
+            if Building.objects.filter(level=neighbor[0],
+                                       index=neighbor[1],
+                                       game=self.game).exists():
+                owner = Building.objects.get(level=neighbor[0],
+                                             index=neighbor[1],
+                                             game=self.game).owner
+                if owner.username != self.username:
+                    owners.add(Building.objects.get(level=neighbor[0],
+                                                    index=neighbor[1]
+                                                    ).owner.username.username)
+        return list(owners)
+
+    def use_card(self, card_type):
+        Card.objects.filter(owner=self, card_name=card_type)[0].delete()
+
+    def steal_to(self, choosen_player):
+        user_to_steal = User.objects.get(username=choosen_player)
+        player_to_steal = Player.objects.get(username=user_to_steal,
+                                             game=self.game)
+        resources_list = Resource.objects.filter(owner=player_to_steal)
+        if len(resources_list) != 0:
+            resource_to_steal = resources_list[randint(0,
+                                               len(resources_list)-1)]
+            resource_to_steal.owner = self
+            resource_to_steal.last_gained = True
+            resource_to_steal.save()
+
+    def set_not_last_gained(self):
+        """
+        A method to remove resources as obtained in the last turn.
+        Args:
+        owner: the player who owns the resources.
+        """
+        # Get the last gained of the owner
+        resources_last_gained = Resource.objects.filter(last_gained=True,
+                                                        owner=self)
+        # Set the resources to False in last_gained field
+        if len(resources_last_gained) != 0:
+            for resource in resources_last_gained:
+                resource.last_gained = False
+                resource.save()
+
 
 class Card(models.Model):
     '''
@@ -646,7 +826,7 @@ class Current_Turn(models.Model):
         """
         return 1 * int(6 * random()) + 1
 
-    def throw_twoDices(self, dice1=0, dice2=0):
+    def throw_two_dices(self, dice1=0, dice2=0):
         """
         A function to get the throw of two dices
         Params:
@@ -654,7 +834,12 @@ class Current_Turn(models.Model):
         @dice2: the value of the dice2 (used only for testing).
         """
         if (dice1 == 0) and (dice2 == 0):
-            self.dices1 = throw_dice()
-            self.dices2 = throw_dice()
+            self.dices1 = self.throw_dice()
+            self.dices2 = self.throw_dice()
+            self.save()
+            return self.get_dices()
         else:
             return (dice1, dice2)
+
+    def get_dices(self):
+        return (self.dices1, self.dices2)
