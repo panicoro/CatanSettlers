@@ -231,7 +231,7 @@ class TestViews(TestCase):
         mixer.blend('catan.Road', owner=self.player, game=self.game,
                     level_1=1, index_1=17, level_2=2, index_2=29)
         mixer.blend('catan.Road', owner=self.player, game=self.game,
-                    level_1=1, index_1=16, level_2=2, index_2=29)
+                    level_1=1, index_1=16, level_2=1, index_2=17)
         mixer.blend('catan.Road', owner=self.player, game=self.game,
                     level_1=2, index_1=26, level_2=1, index_2=16)
         mixer.blend('catan.Building', owner=self.player, game=self.game,
@@ -248,15 +248,14 @@ class TestViews(TestCase):
         expected_data_roads = {
             "type": "build_road",
             "payload": [
+                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}],
+                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
                  [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
-                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
-                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
-                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}]]}
-        print(response.data)
-        assert expected_data_buildings in response.data
-        # assert expected_data_roads in response.data
+                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}]]}
+        assert response.data[1] == expected_data_roads
+        assert expected_data_roads in response.data
         assert response.status_code == 200
 
     def test_get_with_resources_2(self):
@@ -280,14 +279,14 @@ class TestViews(TestCase):
         expected_data = {
             "type": "build_road",
             "payload": [
+                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}],
+                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
                  [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
                  [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
-                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
-                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
-                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}]]
+                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}]]
         }
-        # assert expected_data in response.data
+        assert expected_data == response.data[1]
         assert response.status_code == 200
 
     def test_BuildWinner(self):
