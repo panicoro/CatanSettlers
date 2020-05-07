@@ -6,13 +6,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.models import *
-from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
-from catan.views.actions.road import (
-            build_road,
-            posibles_roads_card_road_building,
-            play_road_building_card)
+from catan.views.actions.road import build_road, play_road_building_card
 from catan.views.actions.buy_card import buy_card
 from catan.views.actions.bank import bank_trade
 from catan.views.actions.build import build_settlement
@@ -27,14 +23,24 @@ class PlayerInfo(APIView):
         game = get_object_or_404(Game, pk=pk)
         user = self.request.user
         player_id = Player.objects.filter(username=user, game=pk).get().id
-        queryset_card = Card.objects.filter(owner=player_id)
-        queryset_resource = Resource.objects.filter(owner=player_id)
+        queryset_card = Card.objects.filter(Q(owner=player_id) &
+                                            (Q(name='knight') |
+                                            Q(name='monopoly') |
+                                            Q(name='year_of_plenty') |
+                                            Q(name='road_building') |
+                                            Q(name='victry_points')))
+        queryset_resource = Resource.objects.filter(Q(owner=player_id) &
+                                                    (Q(name='ore') |
+                                                     Q(name='brick') |
+                                                     Q(name='lumber') |
+                                                     Q(name='grain') |
+                                                     Q(name='wool')))
         serializer_card = CardSerializer(queryset_card, many=True)
         serializer_resource = ResourceSerializer(queryset_resource, many=True)
         for resource in serializer_resource.data:
             resource_list.append(resource['name'])
         for card in serializer_card.data:
-            card_list.append(card['card_name'])
+            card_list.append(card['name'])
         data = {'resources': resource_list,
                 'cards': card_list}
         return Response(data)
@@ -68,11 +74,39 @@ class PlayerActions(APIView):
         @item = a given item to push in the data
         """
         for road in posibles_roads:
-            new_road = []
-            # new_road.append(VertexPositionSerializer(road[0]).data)
-            # new_road.append(VertexPositionSerializer(road[1]).data)
-            item['payload'].append(new_road)
+            item['payload'].append(self.to_json_positions(road))
         return item
+
+    def posible_robber_positions(self, game):
+        """
+        A function that obtains the possible positions
+        where the thief can move and for each of them, the players to steal.
+        """
+        hexes_positions_robber = generateHexesPositions()
+        actual_robber = [game.robber.level, game.robber.index]
+        hexes_positions_robber.remove(actual_robber)
+        data = []
+        for hexe in hexes_positions_robber:
+            item = {'position': {
+                                    'level': hexe[0],
+                                    'index': hexe[1]
+                                }
+                    }
+            neighbors = HexagonInfo(hexe[0], hexe[1])
+            item['players'] = []
+            for neighbor in neighbors:
+                try:
+                    building = Building.objects.get(level=neighbor[0],
+                                                    index=neighbor[1],
+                                                    game=game)
+                    new_user = building.owner.username.username
+                    if new_user not in item['players'] and \
+                            new_user != game.current_turn.user.username:
+                        item['players'].append(new_user)
+                except Building.DoesNotExist:
+                    pass
+            data.append(item)
+        return data
 
     def get(self, request, pk):
         game = get_object_or_404(Game, pk=pk)
@@ -91,11 +125,15 @@ class PlayerActions(APIView):
         if game_stage != 'FULL_PLAY':
             if last_action == 'NON_BLOCKING_ACTION':
                 item = {"type": 'build_settlement'}
-                item['payload'] = game.posibles_initial_settlements()
+                posibles_settlements = game.posibles_initial_settlements()
+                item['payload'] = self.to_json_positions(posibles_settlements)
                 data.append(item)
             if last_action == 'BUILD_SETTLEMENT':
                 item = {"type": 'build_road'}
-                item['payload'] = player.posibles_initial_roads()
+                posibles_roads = player.posibles_initial_roads()
+                item['payload'] = []
+                for road in posibles_roads:
+                    item['payload'].append(self.to_json_positions(road))
                 data.append(item)
             if last_action == 'BUILD_ROAD':
                 item = {"type": 'end_turn'}
@@ -104,7 +142,7 @@ class PlayerActions(APIView):
         else:
             if game.get_sum_dices() == 7 and not game.robber_has_been_moved():
                 item = {"type": 'move_robber'}
-                posibles_robber = game.posible_robber_positions()
+                posibles_robber = self.posible_robber_positions(game)
                 item["payload"] = posibles_robber
                 data.append(item)
                 return Response(data, status=status.HTTP_200_OK)
@@ -134,13 +172,12 @@ class PlayerActions(APIView):
                         data.append(item)
                 if player.has_card('knight'):
                     item = {"type": 'play_knight_card'}
-                    posibles_robber = game.posible_robber_positions()
+                    posibles_robber = self.posible_robber_positions(game)
                     item["payload"] = posibles_robber
                     data.append(item)
-                if Card.objects.filter(owner=player,
-                                       card_name='road_building').exists():
+                if player.has_card('road_building'):
                     item = {"type": 'play_road_building_card'}
-                    posibles_roads = posibles_roads_card_road_building(player)
+                    posibles_roads = player.posibles_roads_card_road_building()
                     item['payload'] = []
                     item = self.get_roads(posibles_roads, item)
                     if len(item['payload']) != 0:
@@ -158,7 +195,7 @@ class PlayerActions(APIView):
             response = {"detail": "Not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'end_turn':
-            if not game.robber_has_been_moved():
+            if game.get_sum_dices() == 7 and not game.robber_has_been_moved():
                 response = {"detail": "You have to move the thief"}
                 return Response(response, status=status.HTTP_403_FORBIDDEN)
             response = change_turn(game)

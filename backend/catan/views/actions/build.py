@@ -18,7 +18,6 @@ def build_settlement(payload, game, player):
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     # Check that the position is available
     if game.exists_building(level, index):
-        print("fsdf")
         response = {"detail": "Busy position"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     game_stage = game.current_turn.game_stage
@@ -41,9 +40,9 @@ def build_settlement(payload, game, player):
     new_build.save()
     game.current_turn.last_action = 'BUILD_SETTLEMENT'
     game.current_turn.save()
-    # if game_stage == 'SECOND_CONSTRUCTION':
-    #    gain_resources_free(game, player, position)
-    # Add a new method in player
+    if game_stage == 'SECOND_CONSTRUCTION':
+        position = [level, index]
+        player.gain_resources_free(position)
     player.gain_points(1)
     # Check if the player won
     if player.is_winner():

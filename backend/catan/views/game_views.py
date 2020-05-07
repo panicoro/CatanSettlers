@@ -9,14 +9,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt import authentication
 from catan.serializers import *
-from catan.dices import throw_dices
 from django.http import Http404
 from random import random
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from catan.models import *
-from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from django.db.models import Q
@@ -58,9 +56,9 @@ class GameInfo(APIView):
         serialized_roads = RoadSerializer(player_roads, many=True)
         for serialized_road in serialized_roads.data:
             new_road = []
-            vertex_1 = {'level': serialized_road['level_1'], 
+            vertex_1 = {'level': serialized_road['level_1'],
                         'index': serialized_road['index_1']}
-            vertex_2 = {'level': serialized_road['level_2'], 
+            vertex_2 = {'level': serialized_road['level_2'],
                         'index': serialized_road['index_2']}
             new_road.append(vertex_1)
             new_road.append(vertex_2)
@@ -102,15 +100,24 @@ class GameInfo(APIView):
     def get_resource_card(self, player, game):
         """
         """
-        resource_card = len(Resource.objects.filter(owner=player.id,
-                                                    game=game))
+        resource_card = Resource.objects.filter(Q(owner=player) &
+                                                (Q(name='ore') |
+                                                 Q(name='brick') |
+                                                 Q(name='lumber') |
+                                                 Q(name='grain') |
+                                                 Q(name='wool'))).count()
         return resource_card
 
     def get_development_card(self, player, game):
         """
         """
-        development_card = len(Card.objects.filter(owner=player.id,
-                                                   game=game))
+        development_card = Card.objects.filter(Q(owner=player) &
+                                               (Q(name='knight') |
+                                                Q(name='monopoly') |
+                                                Q(name='year_of_plenty') |
+                                                Q(name='road_building') |
+                                                Q(name='victry_points'))
+                                               ).count()
         return development_card
 
     def get_players(self, pk):

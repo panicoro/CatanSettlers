@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from aux.json_load import *
-from catan.dices import throw_dices
 from rest_framework.permissions import AllowAny
 from random import shuffle
 from django.db.models import Q
@@ -32,30 +31,6 @@ def check_range_vertex_positions(level1, index1, level2, index2):
     vertex_1 = [level1, index1] in VERTEX_POSITIONS
     vertex_2 = [level2, index2] in VERTEX_POSITIONS
     return vertex_1 and vertex_2
-
-
-def posibles_roads_card_road_building(player):
-    """
-    A function that obtains posistions that a player might have
-    available to build the two roads using the Card road_building
-    Args:
-    @player: a player of a started game.
-    """
-    """
-    potencial_roads = posibles_roads(player)
-    new_positions = []
-    for road in potencial_roads:
-        new_positions.append(road[1])
-    new_potencial_roads = get_potencial_roads(new_positions)
-    total_roads = potencial_roads + new_potencial_roads
-    # Remove the repeat road
-    final_roads = total_roads
-    for road in total_roads:
-        invert_road = [road[1], road[0]]
-        if invert_road in final_roads:
-            final_roads.remove(invert_road)
-    return final_roads
-"""
 
 
 def deleteCard(game_id, player_id):
@@ -96,7 +71,7 @@ def build_road(payload, game, player, road_building_card=False):
         last_level_1 = last_building.level
         last_index_1 = last_building.index
         # I verify that I have my last building
-        if not player.check_road_continuaction(last_level_1, last_index_1,
+        if not player.check_roads_continuation(last_level_1, last_index_1,
                                                level_2, index_2,
                                                only_building=True):
             response = {"detail": "must built since your last building"}
@@ -120,8 +95,8 @@ def build_road(payload, game, player, road_building_card=False):
 def play_road_building_card(payload, game, player):
     cards = Card.objects.filter(game=game,
                                 owner=player,
-                                card_name="road_building")
-    if len(cards) == 0:
+                                name="road_building")
+    if not player.has_card('road_building'):
         response = {"detail": "Missing Road Building card"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     position_1 = payload[0]
@@ -148,5 +123,5 @@ def play_road_building_card(payload, game, player):
                             index_1=index_1, index_2=index_2,
                             game=game)[0].delete()
         return br
-    deleteCard(game, player)
+    player.use_card('road_building')
     return Response(status=status.HTTP_200_OK)

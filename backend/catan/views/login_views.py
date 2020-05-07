@@ -40,7 +40,6 @@ class Register(APIView):
 
     def post(self, request, *args, **kwargs):
         data = request.data
-
         try:
             data['username'] = data['user']
             data['password'] = data['pass']
