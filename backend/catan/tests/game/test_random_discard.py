@@ -4,7 +4,6 @@ from mixer.backend.django import mixer
 from django.contrib.auth.models import User
 from catan.models import *
 from catan.views.players_views import PlayerInfo
-from catan.dices import *
 from aux.generateBoard import *
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
@@ -17,7 +16,7 @@ class TestView(TestCase):
 
     def test_random_discard(self):
         board = mixer.blend('catan.Board', name="board1")
-        robber = mixer.blend('catan.HexePosition', level=0, index=0)
+        robber = mixer.blend('catan.Hexe', level=0, index=0)
         game = mixer.blend('catan.Game', name="game1", board=board,
                            robber=robber)
         username1 = mixer.blend(User, username="player_test1",
@@ -38,24 +37,24 @@ class TestView(TestCase):
                               game=game, colour="red", resources_cards=2)
         for i in range(3):
             mixer.blend("catan.Resource", game=game,
-                        resource_name="grain", owner=player1)
+                        name="grain", owner=player1)
             mixer.blend("catan.Resource", game=game,
-                        resource_name="brick", owner=player1)
+                        name="brick", owner=player1)
             mixer.blend("catan.Resource", game=game,
-                        resource_name="wool", owner=player2)
+                        name="wool", owner=player2)
             mixer.blend("catan.Resource", game=game,
-                        resource_name="ore", owner=player2)
+                        name="ore", owner=player2)
             mixer.blend("catan.Resource", game=game,
-                        resource_name="lumber", owner=player2)
+                        name="lumber", owner=player2)
             mixer.blend("catan.Resource", game=game,
-                        resource_name="lumber", owner=player3)
+                        name="lumber", owner=player3)
         for i in range(2):
             mixer.blend("catan.Resource", game=game,
-                        resource_name="ore", owner=player3)
+                        name="ore", owner=player3)
             mixer.blend("catan.Resource", game=game,
-                        resource_name="wool", owner=player3)
+                        name="wool", owner=player3)
             mixer.blend("catan.Resource", game=game,
-                        resource_name="lumber", owner=player4)
+                        name="lumber", owner=player4)
         path = reverse('PlayerInfo', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         token = AccessToken()
@@ -116,7 +115,7 @@ class TestView(TestCase):
                                      'lumber']
                                 }
         players = Player.objects.filter(game=game)
-        random_discard(players)
+        game.random_discard()
         assert len(Resource.objects.filter(owner=player1)) == 6
         assert len(Resource.objects.filter(owner=player2)) == 5
         assert len(Resource.objects.filter(owner=player3)) == 7

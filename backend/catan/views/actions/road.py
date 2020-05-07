@@ -7,220 +7,30 @@ from random import random
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from catan.cargaJson import *
-from catan.dices import throw_dices
+from aux.json_load import *
 from rest_framework.permissions import AllowAny
 from random import shuffle
-from catan.views.actions.build import deleteResource
 from django.db.models import Q
 
 
-# get the necessary resources
-def ResourcesRoad(owner_id, game_id):
-    list_resource = Resource.objects.filter(owner=owner_id, game=game_id)
-    brick = True
-    lumber = True
-    rta = []
-    for resource in list_resource:
-        if resource.resource_name == "brick" and brick:
-            rta.append(resource)
-            brick = False
-        if resource.resource_name == "lumber" and lumber:
-            rta.append(resource)
-            lumber = False
-    return rta
+VERTEX_POSITIONS = generateVertexPositions()
 
 
-def canBuild_Road(player):
-    resources = ResourcesRoad(player, player.game)
-    return len(resources) == 2
-
-
-# check the existence of a built road
-def CheckRoads_Road(owner_id, game_id, level1, index1, level2, index2):
-    list_road = Road.objects.filter(owner=owner_id, game=game_id)
-    rta = False
-    for road in list_road:
-        if road.vertex_1.level == level1:
-            if road.vertex_1.index == index1:
-                rta = True
-                return rta
-        if road.vertex_2.level == level1:
-            if road.vertex_2.index == index1:
-                rta = True
-                return rta
-        if road.vertex_1.level == level2:
-            if road.vertex_1.index == index2:
-                rta = True
-                return rta
-        if road.vertex_2.level == level2:
-            if road.vertex_2.index == index2:
-                rta = True
-                return rta
-    return rta
-
-
-# check the existence of a built building
-def CheckBuild_Road(owner_id, game_id, level1, index1, level2, index2):
-    list_build = Building.objects.filter(owner=owner_id, game=game_id)
-    rta = False
-    for build in list_build:
-        if build.position.level == level1:
-            if build.position.index == index1:
-                rta = True
-                return rta
-        if build.position.level == level2:
-            if build.position.index == index2:
-                rta = True
-                return rta
-    return rta
-
-
-# check if the position given for the new road is repeated
-def CheckPositionRoad(game_id, level1, index1, level2, index2):
-    list_all_road = Road.objects.filter(game=game_id)
-    rta = False
-    for road in list_all_road:
-        if road.vertex_1.level == level1:
-            if road.vertex_1.index == index1:
-                if road.vertex_2.level == level2:
-                    if road.vertex_2.index == index2:
-                        rta = True
-                        return rta
-        if road.vertex_1.level == level2:
-            if road.vertex_1.index == index2:
-                if road.vertex_2.level == level1:
-                    if road.vertex_2.index == index1:
-                        rta = True
-                        return rta
-    return rta
-
-
-# check if it's neighbor
-def is_neighbor(list_neighbor, level, index):
-    vec = False
-    for v in list_neighbor:
-        if v[0] == level and v[1] == index:
-            vec = True
-            return vec
-    return vec
-
-
-# check that the vertices exist within the allowed range
-def checkVertexsPositions(level1, index1, level2, index2):
-    exist_v = False
-    position_1 = VertexPosition.objects.filter(level=level1,
-                                               index=index1)
-    position_2 = VertexPosition.objects.filter(level=level2,
-                                               index=index2)
-    if position_1.exists() and position_2.exists():
-        exist_v = True
-        return exist_v
-    return exist_v
-
-
-def create_Road(game, player, level1, index1, level2, index2):
-    position_1 = VertexPosition.objects.filter(level=level1,
-                                               index=index1).get()
-    position_2 = VertexPosition.objects.filter(level=level2,
-                                               index=index2).get()
-    new_road = Road(game=game, vertex_1=position_1,
-                    vertex_2=position_2, owner=player)
-    new_road.save()
-
-
-def get_roadsAndBuildings(player):
+def are_neighbors(level_1, index_1, level_2, index_2):
     """
-    A function that obtains two set of vertex positions of
-    the roads and buildings of a given player.
-    Args:
-    @player: a player of a started game.
-
+    Check if the vertexs are neighbors.
     """
-    roads = Road.objects.filter(owner=player)
-    vertex_roads = set()
-    for road in roads:
-        vertex_roads.add(road.vertex_1)
-        vertex_roads.add(road.vertex_2)
-    buildings = Building.objects.filter(owner=player)
-    vertex_buildings = set()
-    for build in buildings:
-        vertex_buildings.add(build.position)
-    return (vertex_roads, vertex_buildings)
+    list_neighbor = VertexInfo(level_1, index_1)
+    return [level_2, index_2] in list_neighbor
 
 
-def posiblesInitialRoads(player):
-    building = Building.objects.filter(owner=player).last()
-    potencial_roads = []
-    vertex = building.position
-    neighbors = VertexInfo(vertex.level, vertex.index)
-    for neighbor in neighbors:
-        vertex_position = VertexPosition.objects.filter(
-                                level=neighbor[0],
-                                index=neighbor[1]).get()
-        new_road = [vertex, vertex_position]
-        potencial_roads.append(new_road)
-    return potencial_roads
-
-
-def get_potencialRoads(available_vertex):
+def check_range_vertex_positions(level1, index1, level2, index2):
     """
-    A function that receives a list of available vertices and
-    returns a list of positions (ROAD_POSITIONS) in which roads
-    can be constructed from the vertices given in the list
-    Args:
-    @avalaible_vertex: a list of vertex positions (objects)
+    Check that the vertices exist within the allowed range
     """
-    potencial_roads = []
-    for vertex in available_vertex:
-        # Get the neighbors of a vertex
-        neighbors = VertexInfo(vertex.level, vertex.index)
-        for neighbor in neighbors:
-            vertex_position = VertexPosition.objects.filter(
-                                level=neighbor[0],
-                                index=neighbor[1]).get()
-            if not Road.objects.filter(Q(vertex_1=vertex,
-                                       vertex_2=vertex_position) |
-                                       Q(vertex_1=vertex_position,
-                                       vertex_2=vertex)).exists():
-                new_road = [vertex, vertex_position]
-                potencial_roads.append(new_road)
-    return potencial_roads
-
-
-def posiblesRoads(player):
-    """
-    A function that obtains positions that a player might have
-    available to build roads on the board.
-    Args:
-    @player: a player of a started game.
-    """
-    (vertex_roads, vertex_buildings) = get_roadsAndBuildings(player)
-    available_vertex = vertex_buildings.union(vertex_roads)
-    potencial_roads = get_potencialRoads(available_vertex)
-    return potencial_roads
-
-
-def posiblesRoads_cardRoadBuilding(player):
-    """
-    A function that obtains posistions that a player might have
-    available to build the two roads using the Card road_building
-    Args:
-    @player: a player of a started game.
-    """
-    potencial_roads = posiblesRoads(player)
-    new_positions = []
-    for road in potencial_roads:
-        new_positions.append(road[1])
-    new_potencial_roads = get_potencialRoads(new_positions)
-    total_roads = potencial_roads + new_potencial_roads
-    # Remove the repeat road
-    final_roads = total_roads
-    for road in total_roads:
-        invert_road = [road[1], road[0]]
-        if invert_road in final_roads:
-            final_roads.remove(invert_road)
-    return final_roads
+    vertex_1 = [level1, index1] in VERTEX_POSITIONS
+    vertex_2 = [level2, index2] in VERTEX_POSITIONS
+    return vertex_1 and vertex_2
 
 
 def deleteCard(game_id, player_id):
@@ -231,54 +41,52 @@ def deleteCard(game_id, player_id):
     card.delete()
 
 
-def build_road(payload, game, owner, road_building_card=False):
-    level1 = payload[0]['level']
-    index1 = payload[0]['index']
-    level2 = payload[1]['level']
-    index2 = payload[1]['index']
+def build_road(payload, game, player, road_building_card=False):
+    level_1 = payload[0]['level']
+    index_1 = payload[0]['index']
+    level_2 = payload[1]['level']
+    index_2 = payload[1]['index']
     game_stage = game.current_turn.game_stage
-    # Check that the position exists
-    if not checkVertexsPositions(level1, index1, level2, index2):
-        response = {"detail": "Non-existent vetertexs positions"}
+    # Check that the position is valid
+    if not check_range_vertex_positions(level_1, index_1, level_2, index_2):
+        response = {"detail": "Non-existent vertexs positions"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    position_road = CheckPositionRoad(game.id, level1, index1,
-                                      level2, index2)
+    # check that the vertex are neighbors
+    list_neighbor = VertexInfo(level_1, index_1)
+    if not are_neighbors(level_1, index_1, level_2, index_2):
+        response = {"detail": "not neighbors"}
+        return Response(response, status=status.HTTP_403_FORBIDDEN)
     # I check if the position is free
-    if position_road:
-        response = {"detail": "invalid position, reserved"}
-        return Response(response, status=status.HTTP_403_FORBIDDEN)
-    list_neighbor = VertexInfo(level1, index1)
-    # check that the neighbor exists
-    if not is_neighbor(list_neighbor, level2, index2):
-        response = {"detail": "not neighbor"}
+    if game.exists_road(level_1, index_1, level_2, index_2):
+        response = {"detail": "Busy position, reserved"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     if game_stage == 'FULL_PLAY':
-        is_roads = CheckRoads_Road(owner.id, game.id, level1, index1,
-                                   level2, index2)
-        is_building = CheckBuild_Road(owner.id, game.id, level1, index1,
-                                      level2, index2)
         # I verify that I have my own road or building
-        if not is_roads and not is_building:
-            response = {"detail": "must have something built"}
+        if not player.check_roads_continuation(level_1, index_1,
+                                               level_2, index_2):
+            response = {"detail": "You must have something built"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
     else:
-        last_building = Building.objects.filter(owner=owner.id).last()
-        last_level1 = last_building.position.level
-        last_index1 = last_building.position.index
-        is_building = CheckBuild_Road(owner.id, game.id, last_level1,
-                                      last_index1, level2, index2)
+        last_building = Building.objects.filter(owner=player).last()
+        last_level_1 = last_building.level
+        last_index_1 = last_building.index
         # I verify that I have my last building
-        if not is_building:
+        if not player.check_roads_continuation(last_level_1, last_index_1,
+                                               level_2, index_2,
+                                               only_building=True):
             response = {"detail": "must built since your last building"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
     if (road_building_card is False) and (game_stage == 'FULL_PLAY'):
-        list_resources = ResourcesRoad(owner.id, game.id)
         # I verify necessary resources
-        if len(list_resources) != 2:
+        # cambiar por la funcon del player idem con delete
+        if not player.has_necessary_resources('build_road'):
             response = {"detail": "Doesn't have enough resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-        deleteResource(list_resources)
-    create_Road(game, owner, level1, index1, level2, index2)
+        player.delete_resources('build_road')
+    # sacar funcion de create es al pedo
+    Road.objects.create(game=game, owner=player,
+                        level_1=level_1, index_1=index_1,
+                        level_2=level_2, index_2=index_2)
     game.current_turn.last_action = 'BUILD_ROAD'
     game.current_turn.save()
     return Response(status=status.HTTP_200_OK)
@@ -287,36 +95,33 @@ def build_road(payload, game, owner, road_building_card=False):
 def play_road_building_card(payload, game, player):
     cards = Card.objects.filter(game=game,
                                 owner=player,
-                                card_name="road_building")
-    if len(cards) == 0:
+                                name="road_building")
+    if not player.has_card('road_building'):
         response = {"detail": "Missing Road Building card"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     position_1 = payload[0]
     position_2 = payload[1]
-    level1 = position_1[0]['level']
-    index1 = position_1[0]['index']
-    level2 = position_1[1]['level']
-    index2 = position_1[1]['index']
-    payload2 = [{"level": level1, "index": index1},
-                {"level": level2, "index": index2}]
-    br = build_road(payload2, game, player, road_building_card=True)
+    level_1 = position_1[0]['level']
+    index_1 = position_1[0]['index']
+    level_2 = position_1[1]['level']
+    index_2 = position_1[1]['index']
+    payload_2 = [{"level": level_1, "index": index_1},
+                 {"level": level_2, "index": index_2}]
+    br = build_road(payload_2, game, player, road_building_card=True)
     if "403" in str(br):
         return br
-    level3 = position_2[0]['level']
-    index3 = position_2[0]['index']
-    level4 = position_2[1]['level']
-    index4 = position_2[1]['index']
-    payload2 = [{"level": level3, "index": index3},
-                {"level": level4, "index": index4}]
+    level_3 = position_2[0]['level']
+    index_3 = position_2[0]['index']
+    level_4 = position_2[1]['level']
+    index_4 = position_2[1]['index']
+    payload2 = [{"level": level_3, "index": index_3},
+                {"level": level_4, "index": index_4}]
     br = build_road(payload2, game, player, road_building_card=True)
     if "403" in str(br):
-        vertex1 = VertexPosition.objects.filter(level=level1, index=index1)
-        vertex2 = VertexPosition.objects.filter(level=level2, index=index2)
         Road.objects.filter(owner=player.id,
-                            vertex_1=vertex1[0],
-                            vertex_2=vertex2[0],
-                            game=game.id)[0].delete()
+                            level_1=level_1, level_2=level_2,
+                            index_1=index_1, index_2=index_2,
+                            game=game)[0].delete()
         return br
-    deleteCard(game.id, player.id)
-    cards = Card.objects.filter(game=game, owner=player)
+    player.use_card('road_building')
     return Response(status=status.HTTP_200_OK)

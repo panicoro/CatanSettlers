@@ -1,5 +1,5 @@
 import pytest
-from catan.cargaJson import HexagonInfo
+from aux.json_load import HexagonInfo
 
 
 class TestInfo:

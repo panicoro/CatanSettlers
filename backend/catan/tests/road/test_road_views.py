@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import User
+from mixer.backend.django import mixer
 from django.test import TestCase, RequestFactory
 from catan.models import *
 from aux.generateBoard import *
@@ -9,44 +10,51 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
-from catan.cargaJson import *
 
 
 @pytest.mark.django_db
 class TestViews(TestCase):
 
     def setUp(self):
-        generateVertexPositions()
         self.username = 'test_user'
         self.email = 'test_user@example.com'
-        self.user = User.objects.create_user(self.username, self.email)
+        self.user = mixer.blend(User, username=self.username, email=self.email)
         self.token = AccessToken()
-        self.vert_position1 = VertexPosition.objects.get(level=2, index=0)
-        self.vert_position2 = VertexPosition.objects.get(level=2, index=1)
-        self.vp2 = VertexPosition.objects.get(level=2, index=2)
-        self.hexe_position = HexePosition.objects.create(level=0, index=0)
-        self.board = Board.objects.create(name='Colonos')
-        self.game = Game.objects.create(id=1, name='Juego1', board=self.board,
-                                        robber=self.hexe_position,
-                                        winner=self.user)
-        self.player = Player.objects.create(turn=1, username=self.user,
-                                            colour='YELLOW', game=self.game,
-                                            victory_points=0)
-        self.turn = Current_Turn.objects.create(game=self.game,
-                                                user=self.user,
-                                                dices1=3,
-                                                dices2=3,
-                                                game_stage='FULL_PLAY')
-        self.brick = Resource.objects.create(owner=self.player,
-                                             game=self.game,
-                                             resource_name="brick")
-        self.lumber = Resource.objects.create(owner=self.player,
-                                              game=self.game,
-                                              resource_name="lumber")
-        self.road = Road.objects.create(owner=self.player,
-                                        vertex_1=self.vert_position1,
-                                        vertex_2=self.vert_position2,
-                                        game=self.game)
+        self.board = mixer.blend('catan.Board', name='Colonos')
+        self.hexe = mixer.blend('catan.Hexe', terrain=0,
+                                token=2, board=self.board)
+        self.game = mixer.blend('catan.Game', id=1, name='Juego1',
+                                board=self.board,
+                                robber=self.hexe)
+        self.player = mixer.blend('catan.Player', turn=1,
+                                  username=self.user,
+                                  colour='YELLOW', game=self.game,
+                                  victory_points=0)
+        self.turn = mixer.blend('catan.Current_Turn', game=self.game,
+                                user=self.user, dices1=3, dices2=3,
+                                game_stage='FULL_PLAY')
+        self.brick = mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game, name="brick")
+        self.lumber = mixer.blend('catan.Resource', owner=self.player,
+                                  game=self.game, name="lumber")
+        self.road = mixer.blend('catan.Road', owner=self.player,
+                                level_1=2, index_1=0,
+                                level_2=2, index_2=1,
+                                game=self.game)
+
+    def get_game_info(self, pk):
+        path_game = reverse('GameInfo', kwargs={'pk': pk})
+        request_game = RequestFactory().get(path_game)
+        force_authenticate(request_game, user=self.user, token=self.token)
+        view_game = GameInfo.as_view()
+        return view_game(request_game, pk=pk)
+
+    def get_player_info(self, pk):
+        path_player = reverse('PlayerInfo', kwargs={'pk': pk})
+        request_player = RequestFactory().get(path_player)
+        force_authenticate(request_player, user=self.user, token=self.token)
+        view_player = PlayerInfo.as_view()
+        return view_player(request_player, pk=pk)
 
     def test_not_turn(self):
         user = User.objects.create_user(username='nvero', email='bariloche')
@@ -61,17 +69,8 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        response.render()
-        path_game = reverse('GameInfo', kwargs={'pk': 1})
-        request_game = RequestFactory().get(path_game)
-        force_authenticate(request_game, user=self.user, token=self.token)
-        view_game = GameInfo.as_view()
-        response_game = view_game(request_game, pk=1)
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
         assert len(response_player.data['resources']) == 2
         assert len(response_game.data['players'][0]['roads']) == 1
         assert response.data == {"detail": "Not in turn"}
@@ -79,8 +78,6 @@ class TestViews(TestCase):
 
     def test_not_neighbor(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
-        vert_position1 = VertexPosition.objects.get(level=2, index=18)
-        vert_position2 = VertexPosition.objects.get(level=2, index=20)
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 18},
                             {"level": 2, "index": 20}]}
@@ -89,7 +86,7 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert response.data == {'detail': 'not neighbor'}
+        assert response.data == {'detail': 'not neighbors'}
         assert response.status_code == 403
 
     def test_invalid_position(self):
@@ -100,50 +97,29 @@ class TestViews(TestCase):
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
         force_authenticate(request, user=self.user, token=self.token)
-
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-
-        path_game = reverse('GameInfo', kwargs={'pk': 1})
-        request_game = RequestFactory().get(path_game)
-        force_authenticate(request_game, user=self.user, token=self.token)
-        view_game = GameInfo.as_view()
-        response_game = view_game(request_game, pk=1)
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
         assert len(response_player.data['resources']) == 2
         assert len(response_game.data['players'][0]['roads']) == 1
-        assert response.data == {'detail': 'invalid position, reserved'}
+        assert response.data == {'detail': 'Busy position, reserved'}
         assert response.status_code == 403
 
     def test_build_road(self):
-        self.token = AccessToken()
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
                 "payload": [{"level": 2, "index": 1},
                             {"level": 2, "index": 2}]}
         request = RequestFactory().post(path, data,
                                         content_type='application/json')
-        request.user = User.objects.create(username='nvero',
-                                           password='bariloche')
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        response.render()
-        path_game = reverse('GameInfo', kwargs={'pk': 1})
-        request_game = RequestFactory().get(path_game)
-        force_authenticate(request_game, user=self.user, token=self.token)
-        view_game = GameInfo.as_view()
-        response_game = view_game(request_game, pk=1)
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
-        assert len(response_player.data['resources']) == 0
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
+        assert response.status_code == 200
+        assert response_player.data['resources'] == []
         assert response_game.data['players'][0]['resources_cards'] == 0
         assert response_game.data['players'][0]['roads'][0][0]['level'] == 2
         assert response_game.data['players'][0]['roads'][0][0]['index'] == 0
@@ -154,7 +130,6 @@ class TestViews(TestCase):
         assert response_game.data['players'][0]['roads'][1][1]['level'] == 2
         assert response_game.data['players'][0]['roads'][1][1]['index'] == 2
         assert len(response_game.data['players'][0]['roads']) == 2
-        assert response.status_code == 200
 
     def test_nothing_built(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
@@ -167,19 +142,11 @@ class TestViews(TestCase):
         self.road.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        path_game = reverse('GameInfo', kwargs={'pk': 1})
-        request_game = RequestFactory().get(path_game)
-        force_authenticate(request_game, user=self.user, token=self.token)
-        view_game = GameInfo.as_view()
-        response_game = view_game(request_game, pk=1)
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
         assert len(response_player.data['resources']) == 2
         assert response_game.data['players'][0]['roads'] == []
-        assert response.data == {'detail': 'must have something built'}
+        assert response.data == {'detail': 'You must have something built'}
         assert response.status_code == 403
         assert response_game.data['players'][0]['resources_cards'] == 2
 
@@ -195,16 +162,8 @@ class TestViews(TestCase):
         self.lumber.delete()
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        path_game = reverse('GameInfo', kwargs={'pk': 1})
-        request_game = RequestFactory().get(path_game)
-        force_authenticate(request_game, user=self.user, token=self.token)
-        view_game = GameInfo.as_view()
-        response_game = view_game(request_game, pk=1)
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
         assert len(response_player.data['resources']) == 0
         assert len(response_game.data['players'][0]['roads']) == 1
         assert response.data == {'detail': "Doesn't have enough resources"}
@@ -220,22 +179,14 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        path_game = reverse('GameInfo', kwargs={'pk': 1})
-        request_game = RequestFactory().get(path_game)
-        force_authenticate(request_game, user=self.user, token=self.token)
-        view_game = GameInfo.as_view()
-        response_game = view_game(request_game, pk=1)
-        path_player = reverse('PlayerInfo', kwargs={'pk': 1})
-        request_player = RequestFactory().get(path_player)
-        force_authenticate(request_player, user=self.user, token=self.token)
-        view_player = PlayerInfo.as_view()
-        response_player = view_player(request_player, pk=1)
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
         assert len(response_player.data['resources']) == 2
         assert len(response_game.data['players'][0]['roads']) == 1
-        assert response.data == {"detail": "Non-existent vetertexs positions"}
+        assert response.data == {"detail": "Non-existent vertexs positions"}
         assert response.status_code == 403
 
-    def test_get_noResource(self):
+    def test_get_no_resource(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
@@ -245,7 +196,7 @@ class TestViews(TestCase):
         assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200
 
-    def test_get_withResource1(self):
+    def test_get_with_resource_1(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
@@ -263,14 +214,12 @@ class TestViews(TestCase):
         assert expected_data in response.data
         assert response.status_code == 200
 
-    def test_get_withResource2(self):
-        """
-        This test delete the one road and then create a building in
-        the board
-        """
+    def test_get_with_resource_2(self):
+        # This test delete the one road and then create a building in
+        # the board
         self.road.delete()
-        Building.objects.create(owner=self.player, game=self.game,
-                                position=self.vert_position2)
+        mixer.blend('catan.Building', owner=self.player, game=self.game,
+                    level=2, index=1)
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
@@ -292,8 +241,8 @@ class TestViews(TestCase):
         """
         This test only create a building in the board
         """
-        Building.objects.create(owner=self.player, game=self.game,
-                                position=self.vert_position2)
+        mixer.blend('catan.Building', owner=self.player, game=self.game,
+                    level=2, index=1)
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)

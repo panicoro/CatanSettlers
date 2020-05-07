@@ -7,7 +7,7 @@ MYDIR = os.path.dirname(__file__)
 
 
 def HexagonInfo(level, index):
-    with open(os.path.join(MYDIR, 'HexaVerVecinos.json')) as file:
+    with open(os.path.join(MYDIR, 'hexe_neighbors.json')) as file:
         data = json.load(file)
 
         for aux in data['data']:
@@ -18,7 +18,7 @@ def HexagonInfo(level, index):
 
 # get the neighbors of a given vertex
 def VertexInfo(level, index):
-    with open(os.path.join(MYDIR, 'VertexVecinos.json')) as file:
+    with open(os.path.join(MYDIR, 'vertex_neighbors.json')) as file:
         data = json.load(file)
 
         for aux in data["data"]:
