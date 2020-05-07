@@ -230,11 +230,6 @@ class Game(models.Model):
                         vertex_available.remove(neighbor)
             return vertex_available
 
-    def not_moved_robber(self):
-        print("HERE")
-        self.current_turn.robber_moved = False
-        self.save()
-
     def move_robber(self, level, index):
         hexe_robber = Hexe.objects.filter(board=self.board,
                                           level=level,
@@ -252,37 +247,6 @@ class Game(models.Model):
 
     def get_sum_dices(self):
         return sum(self.current_turn.get_dices())
-
-    def posible_robber_positions(self):
-        """
-        A function that obtains the possible positions
-        where the thief can move and for each of them, the players to steal.
-        """
-        hexes_positions_robber = generateHexesPositions()
-        actual_robber = [self.robber.level, self.robber.index]
-        hexes_positions_robber.remove(actual_robber)
-        data = []
-        for hexe in hexes_positions_robber:
-            item = {'position': {
-                                    'level': hexe[0],
-                                    'index': hexe[1]
-                                }
-                    }
-            neighbors = HexagonInfo(hexe[0], hexe[1])
-            item['players'] = []
-            for neighbor in neighbors:
-                try:
-                    building = Building.objects.get(level=neighbor[0],
-                                                    index=neighbor[1],
-                                                    game=self)
-                    new_user = building.owner.username.username
-                    if new_user not in item['players'] and \
-                            new_user != self.current_turn.user.username:
-                        item['players'].append(new_user)
-                except Building.DoesNotExist:
-                    pass
-            data.append(item)
-        return data
 
     def set_players_resources_not_last_gained(self):
         """
@@ -360,6 +324,17 @@ class Game(models.Model):
             # Then distribute_resources...
             self.distribute_resources(hexes)
 
+    def can_change_turn(self):
+        game_stage = self.current_turn.game_stage
+        last_action = self.current_turn.last_action
+        if game_stage != 'FULL_PLAY':
+            if last_action != 'BUILD_ROAD':
+                return False
+        return True
+
+    def change_turn(self):
+        self.current_turn.set_new_turn()
+
 
 class Player(models.Model):
     """
@@ -411,11 +386,21 @@ class Player(models.Model):
         resource_name: the type of resources to obtain.
         amount: the amount of resources to obtain.
         """
-        print(self)
         for i in range(amount):
             Resource.objects.create(owner=self, game=self.game,
                                     name=resource_name,
                                     last_gained=True)
+
+    def gain_resources_free(self, position):
+        """
+        """
+        hexes = Hexe.objects.filter(board=self.game.board)
+        for hexe in hexes:
+            hexe_level = hexe.level
+            hexe_index = hexe.index
+            hexagon_neighbors = HexagonInfo(hexe_level, hexe_index)
+            if position in hexagon_neighbors:
+                self.gain_resources(hexe.terrain, 1)
 
     def has_necessary_resources(self, action, gaven=''):
         """
@@ -584,13 +569,45 @@ class Player(models.Model):
         potencial_roads = self.get_potencial_roads(available_vertex)
         return potencial_roads
 
+    def posibles_initial_roads(self):
+        building = Building.objects.filter(owner=self).last()
+        potencial_roads = []
+        vertex = [building.level, building.index]
+        neighbors = VertexInfo(vertex[0], vertex[1])
+        for neighbor in neighbors:
+            vertex_position = [neighbor[0], neighbor[1]]
+            new_road = [vertex, vertex_position]
+            potencial_roads.append(new_road)
+        return potencial_roads
+
+    def posibles_roads_card_road_building(self):
+        """
+        A function that obtains posistions that a player might have
+        available to build the two roads using the Card road_building
+        Args:
+        @player: a player of a started game.
+        """
+        potencial_roads = self.posible_roads()
+        new_positions = []
+        for road in potencial_roads:
+            new_positions.append(road[1])
+        new_potencial_roads = self.get_potencial_roads(new_positions)
+        total_roads = potencial_roads + new_potencial_roads
+        # Remove the repeat road
+        final_roads = total_roads
+        for road in total_roads:
+            invert_road = [road[1], road[0]]
+            if invert_road in final_roads:
+                final_roads.remove(invert_road)
+        return final_roads
+
     def is_winner(self):
         points = self.victory_points
         card_vic_points = Card.objects.filter(game=self.game, owner=self,
-                                              card_name='victory_point'
+                                              name='victory_point'
                                               ).count()
         total = points + card_vic_points
-        if total != 10:
+        if total < 10:
             return False
         user = User.objects.get(username=self.username)
         self.game.winner = user
@@ -603,11 +620,11 @@ class Player(models.Model):
 
     def select_card(self):
         card_name = CARD_TYPE[randint(0, 4)]
-        new_card = Card(owner=self, game=self.game, card_name=card_name[0])
+        new_card = Card(owner=self, game=self.game, name=card_name[0])
         new_card.save()
 
     def has_card(self, type_card):
-        return Card.objects.filter(owner=self, card_name=type_card).exists()
+        return Card.objects.filter(owner=self, name=type_card).exists()
 
     def get_players_to_steal(self, level, index):
         owners = set()
@@ -626,7 +643,7 @@ class Player(models.Model):
         return list(owners)
 
     def use_card(self, card_type):
-        Card.objects.filter(owner=self, card_name=card_type)[0].delete()
+        Card.objects.filter(owner=self, name=card_type)[0].delete()
 
     def steal_to(self, choosen_player):
         user_to_steal = User.objects.get(username=choosen_player)
@@ -663,7 +680,7 @@ class Card(models.Model):
     '''
     owner = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    card_name = models.CharField(max_length=50, choices=CARD_TYPE)
+    name = models.CharField(max_length=50, choices=CARD_TYPE + RESOURCE_TYPE)
 
     def clean(self):
         '''
@@ -673,14 +690,11 @@ class Card(models.Model):
             raise ValidationError('Cannot be player of other game')
 
 
-class Resource(models.Model):
+class Resource(Card):
     """
     Stores information about a resource of a player in a started game,
     related to :model `Player` and :model `Game`
     """
-    owner = models.ForeignKey(Player, on_delete=models.CASCADE)
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    name = models.CharField(max_length=6, choices=RESOURCE_TYPE)
     last_gained = models.BooleanField(default=False)
 
     def clean(self):
@@ -843,3 +857,59 @@ class Current_Turn(models.Model):
 
     def get_dices(self):
         return (self.dices1, self.dices2)
+
+    def set_new_turn(self):
+        """
+        A method to set a new player in turn on a given
+        current turn of a started game.
+        Args:
+        @current_turn: a Current_Turn object of a started game.
+        @ player: a player to set as new in the turn.
+        """
+        new_player = self.get_next_player()
+        self.user = new_player.username
+        self.last_action = 'NON_BLOCKING_ACTION'
+        self.robber_moved = False
+        self.save()
+
+    def get_next_player(self):
+        """
+        A method to get the next player in the turn of a
+        started game.
+        Args:
+        @current_turn: a Current_Turn object of a started game.
+        @players: a queryset of the players of a started game.
+        """
+        player_in_turn = Player.objects.get(username=self.user,
+                                            game=self.game)
+        # Get the number of the actual turn
+        actual_turn = player_in_turn.turn
+        # Calculate the next turn in the game...
+        # In the stage 'FIRST_CONSTRUCTION' and 'FULL_PLAY' the order
+        # is the natural, and in the stage 'SECOND_CONSTRUCTION' the order
+        # is the inverse
+        game_stage = self.game_stage
+        if game_stage == 'FIRST_CONSTRUCTION':
+            if actual_turn != 4:
+                next_turn = actual_turn + 1
+            else:
+                next_turn = actual_turn
+                self.game_stage = 'SECOND_CONSTRUCTION'
+                self.save()
+        elif game_stage == 'SECOND_CONSTRUCTION':
+            if actual_turn != 1:
+                next_turn = actual_turn - 1
+            else:
+                next_turn = actual_turn
+                self.game_stage = 'FULL_PLAY'
+                self.game.throw_dices()
+                self.save()
+        else:
+            if actual_turn == 4:
+                next_turn = 1
+            else:
+                next_turn = actual_turn + 1
+        # Get the player with the next turn
+        next_player = Player.objects.get(turn=next_turn,
+                                         game=self.game)
+        return next_player
