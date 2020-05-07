@@ -20,10 +20,10 @@ class TestView(TestCase):
         self.user3 = User.objects.create_user("user3")
         self.user4 = User.objects.create_user("user4")
         self.token = AccessToken()
-        self.hexe_position = HexePosition.objects.create(level=2, index=11)
+        self.hexe = mixer.blend('catan.Hexe', level=2, index=11, terrain='ore')
         self.board = Board.objects.create(name='Colonos')
         self.game = Game.objects.create(name='Juego1', board=self.board,
-                                        robber=self.hexe_position)
+                                        robber=self.hexe)
         self.player1 = Player.objects.create(turn=1, username=self.user1,
                                              colour='red', game=self.game)
         self.player2 = Player.objects.create(turn=2, username=self.user2,
@@ -38,7 +38,7 @@ class TestView(TestCase):
                                                 dices2=3,
                                                 game_stage='FULL_PLAY')
 
-    def test_endTurn(self):
+    def test_end_turn(self):
         """
         A test to see the change of users in turn according
         to the user requesting the end of their shift
@@ -135,4 +135,4 @@ class TestView(TestCase):
         response = view_actions(request, pk=1)
         response.render()
         assert response.status_code == 403
-        assert response.data == {"detail": "you have to move the thief"}
+        assert response.data == {"detail": "You have to move the thief"}

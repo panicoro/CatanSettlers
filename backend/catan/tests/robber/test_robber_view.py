@@ -460,7 +460,7 @@ class TestViews(TestCase):
                                 level=1, index=15)
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user1, token=self.token)

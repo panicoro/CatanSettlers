@@ -94,7 +94,7 @@ class TestViews(TestCase):
         self.player.victory_points = 9
         self.player.save()
         Card.objects.create(owner=self.player,
-                            game=self.game, card_name='victory_point')
+                            game=self.game, name='victory_point')
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "buy_card"}
         request = RequestFactory().post(path, data,

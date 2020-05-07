@@ -1,7 +1,6 @@
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
 from catan.models import *
-from catan.dices import *
 from mixer.backend.django import mixer
 from django.contrib.auth.models import User
 from aux.generateBoard import generateBoardTest, TYPE_RESOURCE

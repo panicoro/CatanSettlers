@@ -58,19 +58,21 @@ class TestView(TestCase):
                                     robber=robber)
         user1 = mixer.blend(User, username='Nico', password='minombrenico')
         user2 = mixer.blend(User, username='Pablo', password='minombrepablo')
-        player1 = mixer.blend(Player, username=user1,
+        player1 = mixer.blend('catan.Player', username=user1,
                               game=game1, colour='yellow',
                               development_cards=1, resources_cards=2)
-        player2 = mixer.blend(Player, username=user2,
+        player2 = mixer.blend('catan.Player', username=user2,
                               game=game1, colour='green',
                               development_cards=1, resources_cards=2)
-        current_turn = mixer.blend(Current_Turn, game=game1, user=user1)
-        resource1 = mixer.blend(Resource, owner=player1,
+        current_turn = mixer.blend('catan.Current_Turn', game=game1,
+                                   user=user1)
+        resource1 = mixer.blend('catan.Resource', owner=player1,
                                 game=game1, name='wool',
                                 last_gained=True)
-        building = mixer.blend(Building, owner=player2,
+        building = mixer.blend('catan.Building',
+                               name="settlement", owner=player2,
                                level=2, index=6, game=game1)
-        road = mixer.blend(Road, owner=player1,
+        road = mixer.blend('catan.Road', owner=player1,
                            game=game1, level_1=1, level_2=1,
                            index_1=2, index_2=1)
         path = reverse('GameInfo', kwargs={'pk': 1})
@@ -78,7 +80,6 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
         view = GameInfo.as_view()
         response = view(request, pk=1)
-        response.render()
         expected_data = {'robber': {'level': 1, 'index': 2},
                          'current_turn': {'user': 'Nico',
                                           'dice': [1, 1]},
@@ -91,15 +92,16 @@ class TestView(TestCase):
                                       'roads': [[{'level': 1, 'index': 2},
                                                  {'level': 1, 'index': 1}]],
                                       'last_gained': ['wool'],
-                                      'settlements': [], 'cities': []},
+                                      'settlements': [],
+                                      'cities': []},
                                      {'username': 'Pablo',
                                       'colour': 'green',
                                       'victory_points': 0,
                                       'resources_cards': 0,
                                       'development_cards': 0,
                                       'roads': [], 'last_gained': [],
-                                      'settlements': [
-                                            {'level': 2, 'index': 6}],
+                                      'settlements': [{'level': 2,
+                                                       'index': 6}],
                                       'cities': []}]}
         assert response.data == expected_data
         assert response.status_code == 200

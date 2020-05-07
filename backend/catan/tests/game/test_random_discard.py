@@ -4,7 +4,6 @@ from mixer.backend.django import mixer
 from django.contrib.auth.models import User
 from catan.models import *
 from catan.views.players_views import PlayerInfo
-from catan.dices import *
 from aux.generateBoard import *
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken

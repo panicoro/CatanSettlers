@@ -83,7 +83,7 @@ class TestViews(TestCase):
             'catan.Current_Turn', user=self.user2, game=self.game)
         card = Card.objects.create(owner=self.player1,
                                    game=self.game,
-                                   card_name='knight')
+                                   name='knight')
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {'type': 'play_knight_card',
                 'payload': {
@@ -109,7 +109,7 @@ class TestViews(TestCase):
             dices1=4, dices2=3)
         card = Card.objects.create(owner=self.player1,
                                    game=self.game,
-                                   card_name='knight')
+                                   name='knight')
         mixer.blend('catan.Hexe', terrain='ore', token=2,
                     board=self.board, level=2, index=10)
         path = reverse('PlayerActions', kwargs={'pk': 1})
@@ -137,7 +137,7 @@ class TestViews(TestCase):
             Current_Turn, user=self.user1, game=self.game)
         card = mixer.blend('catan.Card', owner=self.player1,
                            game=self.game,
-                           card_name='knight')
+                           name='knight')
         mixer.blend('catan.Hexe', terrain='ore', token=2,
                     board=self.board, level=2, index=10)
         path = reverse('PlayerActions', kwargs={'pk': 1})
@@ -173,10 +173,10 @@ class TestViews(TestCase):
             owner=self.player2, level=2, index=26)
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         mixer.blend('catan.Hexe', terrain='ore', token=2,
                     board=self.board, level=2, index=10)
         mixer.blend('catan.Hexe', terrain='ore', token=2,
@@ -253,7 +253,7 @@ class TestViews(TestCase):
             owner=self.player3, level=1, index=15)
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         mixer.blend('catan.Hexe', terrain='ore', token=2,
                     board=self.board, level=2, index=10)
         resources = Resource.objects.create(
@@ -300,7 +300,7 @@ class TestViews(TestCase):
             owner=self.player3, level=1, index=15)
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         mixer.blend('catan.Hexe', terrain='ore', token=2,
                     board=self.board, level=2, index=10)
         resources = Resource.objects.create(
@@ -347,7 +347,7 @@ class TestViews(TestCase):
             owner=self.player3, level=1, index=15)
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         mixer.blend('catan.Hexe', terrain='ore', token=2,
                     board=self.board, level=2, index=10)
         resources = Resource.objects.create(
@@ -432,7 +432,7 @@ class TestViews(TestCase):
                                 level=1, index=15)
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user1, token=self.token)
@@ -449,7 +449,7 @@ class TestViews(TestCase):
             dices1=6, dices2=3, game_stage='FULL_PLAY')
         Card.objects.create(owner=self.player1,
                             game=self.game,
-                            card_name='knight')
+                            name='knight')
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user1, token=self.token)
