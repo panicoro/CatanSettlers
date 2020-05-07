@@ -75,7 +75,7 @@ class RoomSerializer(serializers.ModelSerializer):
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
-        fields = ['card_name']
+        fields = ['name']
 
 
 class ResourceSerializer(serializers.ModelSerializer):
