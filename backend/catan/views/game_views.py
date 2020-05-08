@@ -116,7 +116,7 @@ class GameInfo(APIView):
                                                 Q(name='monopoly') |
                                                 Q(name='year_of_plenty') |
                                                 Q(name='road_building') |
-                                                Q(name='victry_points'))
+                                                Q(name='victory_point'))
                                                ).count()
         return development_card
 

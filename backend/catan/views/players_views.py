@@ -22,14 +22,14 @@ class PlayerInfo(APIView):
         card_list = []
         game = get_object_or_404(Game, pk=pk)
         user = self.request.user
-        player_id = Player.objects.filter(username=user, game=pk).get().id
-        queryset_card = Card.objects.filter(Q(owner=player_id) &
+        player = Player.objects.filter(username=user, game=pk).get().id
+        queryset_card = Card.objects.filter(Q(owner=player) &
                                             (Q(name='knight') |
                                             Q(name='monopoly') |
                                             Q(name='year_of_plenty') |
                                             Q(name='road_building') |
-                                            Q(name='victry_points')))
-        queryset_resource = Resource.objects.filter(Q(owner=player_id) &
+                                            Q(name='victOry_point')))
+        queryset_resource = Resource.objects.filter(Q(owner=player) &
                                                     (Q(name='ore') |
                                                      Q(name='brick') |
                                                      Q(name='lumber') |
