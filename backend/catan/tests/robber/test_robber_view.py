@@ -279,10 +279,10 @@ class TestViews(TestCase):
         assert response_game.data['robber'] == {'level': 2, 'index': 11}
         assert response.status_code == 204
 
-    def test_move_robber_my_own_building(self):
+    def test_move_robber_my_own_building_1(self):
         self.createGame()
         self.current_turn = mixer.blend(
-            Current_Turn, user=self.user1, game=self.game,
+            'catan.Current_Turn', user=self.user1, game=self.game,
             dices1=4, dices2=3)
         building1 = Building.objects.create(
             name="settlement", game=self.game,
