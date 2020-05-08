@@ -66,7 +66,7 @@ class TestViews(TestCase):
         response_player = view_player(request_player, pk=pk)
         return response_player
 
-    def test_noVertex(self):
+    def test_no_vertex(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_settlement",
                 "payload": {"level": 100, "index": 106}}
@@ -83,7 +83,7 @@ class TestViews(TestCase):
         assert response.data == {"detail": "Non-existent position"}
         assert response.status_code == 403
 
-    def test_noTurn(self):
+    def test_no_turn(self):
         new_user = mixer.blend(User, username='catan', email='matilde13')
         self.turn.user = new_user
         self.turn.save()
@@ -226,6 +226,39 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200
+
+    def test_build_gain_free_resources(self):
+        self.grain.delete()
+        self.wool.delete()
+        self.lumber.delete()
+        self.brick.delete()
+        self.road.delete()
+        self.turn.game_stage = 'SECOND_CONSTRUCTION'
+        self.turn.save()
+        mixer.blend('catan.Hexe', board=self.board, level=1, index=4,
+                    terrain='ore', token=5)
+        mixer.blend('catan.Hexe', board=self.board, level=2, index=8,
+                    terrain='brick', token=7)
+        mixer.blend('catan.Hexe', board=self.board, level=1, index=3,
+                    terrain='grain', token=2)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "build_settlement",
+                "payload": {"level": 1, "index": 12}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert response.status_code == 200
+        assert response_player.data['resources'] == ['ore', 'brick', 'grain']
+        assert response_game.data['players'][
+               0]['settlements'][0]['level'] == 1
+        assert response_game.data['players'][
+               0]['settlements'][0]['index'] == 12
+        assert response_game.data['players'][0]['victory_points'] == 1
+
 
     def test_get_with_resources(self):
         mixer.blend('catan.Road', owner=self.player, game=self.game,
