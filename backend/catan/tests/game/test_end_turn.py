@@ -64,7 +64,7 @@ class TestView(TestCase):
         response.render()
         assert response.data['current_turn']['user'] == "user2"
 
-    def test_endTurn4(self):
+    def test_end_turn_4(self):
         """
         A test to see the change of users in turn according
         to the user requesting the end of their shift
@@ -91,7 +91,7 @@ class TestView(TestCase):
         response.render()
         assert response.data['current_turn']['user'] == "user1"
 
-    def test_endTurn_NotInTurn(self):
+    def test_end_turn_Not_in_turn(self):
         """
         If the user requesting the end of his shift is not in
         his turn, then he must indicate prohibited
@@ -117,7 +117,7 @@ class TestView(TestCase):
         response.render()
         assert response.data['current_turn']['user'] == 'user1'
 
-    def test_endTurnNotMoveRobber(self):
+    def test_end_turn_not_move_robber(self):
         """
         A test to see the change of users in turn according
         to the user requesting the end of their shift
@@ -136,3 +136,20 @@ class TestView(TestCase):
         response.render()
         assert response.status_code == 403
         assert response.data == {"detail": "You have to move the thief"}
+
+    def test_end_turn_not_build(self):
+        self.turn.game_stage = 'FIRST_CONSTRUCCION'
+        self.turn.last_action = 'NON_BLOCKING_ACTION'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        response.render()
+        assert response.status_code == 403
+        assert response.data == {"detail":
+                                 "You must build your first constructions"}
