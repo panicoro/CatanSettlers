@@ -28,7 +28,7 @@ class PlayerInfo(APIView):
                                             Q(name='monopoly') |
                                             Q(name='year_of_plenty') |
                                             Q(name='road_building') |
-                                            Q(name='victOry_point')))
+                                            Q(name='victory_point')))
         queryset_resource = Resource.objects.filter(Q(owner=player) &
                                                     (Q(name='ore') |
                                                      Q(name='brick') |
