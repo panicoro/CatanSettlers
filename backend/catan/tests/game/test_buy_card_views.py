@@ -68,7 +68,9 @@ class TestViews(TestCase):
         response_game = self.get_game_info(1)
         response_player = self.get_player_info(1)
         assert response_player.data['resources'] == []
-        assert len(response_player.data['cards']) == 1
+        card = response_player.data['cards'][0]
+        assert card in ['knight', 'victory_point', 'year_of_plenty',
+                        'road_building', 'monopoly']
         assert response_game.data['players'][0]['development_cards'] == 1
         assert response.status_code == 200
 
