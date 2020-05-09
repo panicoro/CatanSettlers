@@ -33,14 +33,6 @@ def check_range_vertex_positions(level1, index1, level2, index2):
     return vertex_1 and vertex_2
 
 
-def deleteCard(game_id, player_id):
-    # Corregir para que solo borre una carta
-    # Esta borrando todas las cartas...
-    card = Card.objects.filter(owner=player_id, game=game_id,
-                               card_name='road_building')[0]
-    card.delete()
-
-
 def build_road(payload, game, player, road_building_card=False):
     level_1 = payload[0]['level']
     index_1 = payload[0]['index']
