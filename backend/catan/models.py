@@ -335,6 +335,15 @@ class Game(models.Model):
     def change_turn(self):
         self.current_turn.set_new_turn()
 
+    def check_player_in_turn(self, player):
+        """
+        A method to check if the player is in turn in the given game.
+        Args:
+        @game: a started game.
+        @player: a player in the game.
+        """
+        return self.current_turn.user == player.username
+
 
 class Player(models.Model):
     """
