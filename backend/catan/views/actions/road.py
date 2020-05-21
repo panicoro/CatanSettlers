@@ -39,6 +39,7 @@ def build_road(payload, game, player, road_building_card=False):
     level_2 = payload[1]['level']
     index_2 = payload[1]['index']
     game_stage = game.current_turn.game_stage
+    last_action = game.current_turn.last_action
     # Check that the position is valid
     if not check_range_vertex_positions(level_1, index_1, level_2, index_2):
         response = {"detail": "Non-existent vertexs positions"}
@@ -58,24 +59,28 @@ def build_road(payload, game, player, road_building_card=False):
                                                level_2, index_2):
             response = {"detail": "You must have something built"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
-    else:
-        last_building = Building.objects.filter(owner=player).last()
-        last_level_1 = last_building.level
-        last_index_1 = last_building.index
-        # I verify that I have my last building
-        if not player.check_roads_continuation(last_level_1, last_index_1,
-                                               level_2, index_2,
-                                               only_building=True):
-            response = {"detail": "must built since your last building"}
-            return Response(response, status=status.HTTP_403_FORBIDDEN)
+    elif game_stage in ['FIRST_CONSTRUCTION', 'SECOND_CONSTRUCTION']:
+        if last_action == 'BUILD_SETTLEMENT':
+            last_building = Building.objects.filter(owner=player,
+                                                    name='settlement').last()
+            last_level = last_building.level
+            last_index = last_building.index
+            # I verify that I give the correct levels and indexs
+            is_continuation = ((last_level == level_1) and
+                               (last_index == index_1)) or \
+                              ((last_level == level_2) and
+                               (last_index == index_2))
+            if not is_continuation:
+                response = {"detail":
+                            "You must build since your last building"}
+                return Response(response, status=status.HTTP_403_FORBIDDEN)
     if (road_building_card is False) and (game_stage == 'FULL_PLAY'):
         # I verify necessary resources
-        # cambiar por la funcon del player idem con delete
         if not player.has_necessary_resources('build_road'):
             response = {"detail": "Doesn't have enough resources"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         player.delete_resources('build_road')
-    # sacar funcion de create es al pedo
+    # Finally I build my road...
     Road.objects.create(game=game, owner=player,
                         level_1=level_1, index_1=index_1,
                         level_2=level_2, index_2=index_2)
