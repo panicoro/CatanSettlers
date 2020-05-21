@@ -165,6 +165,17 @@ class TestViewRoom(TestCase):
         assert json_1 == response.data
         assert response.status_code == 200
 
+    def test_create_room_incorrect_board(self):
+        path = reverse('list_rooms')
+        data = {'name': 'room_3', 'owner': self.user.username,
+                'players': [], 'board_id': 2}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = RoomList.as_view()
+        response = view(request)
+        assert response.status_code == 405
+
     def test_create_room_whitout_data(self):
         path = reverse('list_rooms')
         data = {}
