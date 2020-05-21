@@ -61,9 +61,9 @@ class TestView(TestCase):
         user2 = mixer.blend(User, username='Pablo', password='minombrepablo')
         player1 = mixer.blend('catan.Player', username=user1,
                               game=game1, colour='yellow',
-                              development_cards=1, resources_cards=2)
+                              development_cards=1, resources_cards=2, turn=1)
         player2 = mixer.blend('catan.Player', username=user2,
-                              game=game1, colour='green',
+                              game=game1, colour='green', turn=2,
                               development_cards=1, resources_cards=2)
         current_turn = mixer.blend('catan.Current_Turn', game=game1,
                                    user=user1)
@@ -115,10 +115,10 @@ class TestView(TestCase):
         user_2 = mixer.blend(User, username='Pablo', password='minombrepablo')
         player1 = mixer.blend('catan.Player', username=self.user,
                               game=game_1, colour='yellow',
-                              development_cards=1, resources_cards=2)
+                              development_cards=1, resources_cards=2, turn=1)
         player2 = mixer.blend('catan.Player', username=user_2,
                               game=game_1, colour='green',
-                              development_cards=1, resources_cards=2)
+                              development_cards=1, resources_cards=2, turn=2)
         current_turn = mixer.blend('catan.Current_Turn', game=game_1,
                                    user=user_2)
         path = reverse('PlayerActions', kwargs={'pk': 1})
