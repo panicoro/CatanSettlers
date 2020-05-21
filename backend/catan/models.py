@@ -335,6 +335,15 @@ class Game(models.Model):
     def change_turn(self):
         self.current_turn.set_new_turn()
 
+    def check_player_in_turn(self, player):
+        """
+        A method to check if the player is in turn in the given game.
+        Args:
+        @game: a started game.
+        @player: a player in the game.
+        """
+        return self.current_turn.user == player.username
+
 
 class Player(models.Model):
     """
@@ -363,19 +372,6 @@ class Player(models.Model):
             models.UniqueConstraint(fields=['colour', 'game'],
                                     name='User with unique colour per game'),
         ]
-
-    def set_not_last_gained(self):
-        """
-        A method to remove resources as obtained in the last turn.
-        """
-        # Get the last gained of the player
-        resources_last_gained = Resource.objects.filter(last_gained=True,
-                                                        owner=self)
-        # Set the resources to False in last_gained field
-        if len(resources_last_gained) != 0:
-            for resource in resources_last_gained:
-                resource.last_gained = False
-                resource.save()
 
     def gain_resources(self, resource_name, amount):
         """
@@ -462,21 +458,17 @@ class Player(models.Model):
                                    Q(owner=self, game=self.game,
                                    level_2=level, index_2=index)).exists()
 
-    def check_roads_continuation(self, level1, index1, level2, index2,
-                                 only_building=False):
-        if only_building:
-            road_1, road_2 = False, False
-        else:
-            road_1 = Road.objects.filter(Q(owner=self, game=self.game,
-                                         level_1=level1, index_1=index1) |
-                                         Q(owner=self, game=self.game,
-                                         level_2=level1, index_2=index1)
-                                         ).exists()
-            road_2 = Road.objects.filter(Q(owner=self, game=self.game,
-                                         level_1=level2, index_1=index2) |
-                                         Q(owner=self, game=self.game,
-                                         level_2=level2, index_2=index2)
-                                         ).exists()
+    def check_roads_continuation(self, level1, index1, level2, index2):
+        road_1 = Road.objects.filter(Q(owner=self, game=self.game,
+                                     level_1=level1, index_1=index1) |
+                                     Q(owner=self, game=self.game,
+                                     level_2=level1, index_2=index1)
+                                     ).exists()
+        road_2 = Road.objects.filter(Q(owner=self, game=self.game,
+                                     level_1=level2, index_1=index2) |
+                                     Q(owner=self, game=self.game,
+                                     level_2=level2, index_2=index2)
+                                     ).exists()
         building_1 = Building.objects.filter(owner=self, game=self.game,
                                              level=level1, index=index1
                                              ).exists()
@@ -697,23 +689,6 @@ class Resource(Card):
     """
     last_gained = models.BooleanField(default=False)
 
-    def clean(self):
-        if self.owner.game.id != self.game.id:
-            raise ValidationError('Cannot be player of other game')
-
-    def set_not_last_gained(self):
-        """
-        A method to remove resources as obtained in the last turn.
-        """
-        # Get the last gained of the owner
-        resources_last_gained = Resource.objects.filter(last_gained=True,
-                                                        owner=self.owner)
-        # Set the resources to False in last_gained field
-        if len(resources_last_gained) != 0:
-            for resource in resources_last_gained:
-                resource.last_gained = False
-                resource.save()
-
 
 class Building(models.Model):
     """
@@ -792,8 +767,6 @@ class Road(models.Model):
             if (level_index[0] == 2) and not (0 <= level_index[1] <= 29):
                 raise ValidationError(
                     'The index with level 2 must be between 0 and 29.')
-        if self.owner.game.id != self.game.id:
-            raise ValidationError('Cannot be player of other game')
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
 

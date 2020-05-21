@@ -55,15 +55,6 @@ class PlayerActions(APIView):
                          'index': position[1]})
         return data
 
-    def check_player_in_turn(self, game, player):
-        """
-        A method to check if the player is in turn in the given game.
-        Args:
-        @game: a started game.
-        @player: a player in the game.
-        """
-        return game.current_turn.user == player.username
-
     def get_roads(self, posibles_roads, item):
         """
         A function to get the payload in a given item with the positions
@@ -114,7 +105,7 @@ class PlayerActions(APIView):
         player = get_object_or_404(Player, username=user, game=game)
         turn = Current_Turn.objects.get(game=game)
         data = []
-        if not self.check_player_in_turn(game, player):
+        if not game.check_player_in_turn(player):
             return Response(data, status=status.HTTP_200_OK)
         game_stage = game.current_turn.game_stage
         last_action = game.current_turn.last_action
@@ -191,7 +182,7 @@ class PlayerActions(APIView):
         player = get_object_or_404(Player, username=user, game=game)
         game_stage = game.current_turn.game_stage
         # Check if the player is on his turn
-        if not self.check_player_in_turn(game, player):
+        if not game.check_player_in_turn(player):
             response = {"detail": "Not in turn"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         if data['type'] == 'end_turn':

@@ -259,7 +259,6 @@ class TestViews(TestCase):
                0]['settlements'][0]['index'] == 12
         assert response_game.data['players'][0]['victory_points'] == 1
 
-
     def test_get_with_resources(self):
         mixer.blend('catan.Road', owner=self.player, game=self.game,
                     level_1=1, index_1=17, level_2=2, index_2=29)
@@ -343,4 +342,97 @@ class TestViews(TestCase):
         assert response_game.data['winner'] == 'test_user'
         assert response_game.data['players'][0]['victory_points'] == 10
         assert response.data == {'detail': 'YOU WIN!!!'}
+        assert response.status_code == 200
+
+    def test_get_initial_settlements(self):
+        self.grain.delete()
+        self.lumber.delete()
+        self.brick.delete()
+        self.wool.delete()
+        self.road.delete()
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'NON_BLOCKING_ACTION'
+        self.turn.save()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = {
+            'payload': [{'index': 0, 'level': 0}, {'index': 1, 'level': 0},
+                        {'index': 2, 'level': 0}, {'index': 3, 'level': 0},
+                        {'index': 4, 'level': 0}, {'index': 5, 'level': 0},
+                        {'index': 0, 'level': 1}, {'index': 1, 'level': 1},
+                        {'index': 2, 'level': 1}, {'index': 3, 'level': 1},
+                        {'index': 4, 'level': 1}, {'index': 5, 'level': 1},
+                        {'index': 6, 'level': 1}, {'index': 7, 'level': 1},
+                        {'index': 8, 'level': 1}, {'index': 9, 'level': 1},
+                        {'index': 10, 'level': 1}, {'index': 11, 'level': 1},
+                        {'index': 12, 'level': 1}, {'index': 13, 'level': 1},
+                        {'index': 14, 'level': 1}, {'index': 15, 'level': 1},
+                        {'index': 16, 'level': 1}, {'index': 17, 'level': 1},
+                        {'index': 0, 'level': 2},  {'index': 1, 'level': 2},
+                        {'index': 2, 'level': 2},  {'index': 3, 'level': 2},
+                        {'index': 4, 'level': 2},  {'index': 5, 'level': 2},
+                        {'index': 6, 'level': 2},  {'index': 7, 'level': 2},
+                        {'index': 8, 'level': 2},  {'index': 9, 'level': 2},
+                        {'index': 10, 'level': 2}, {'index': 11, 'level': 2},
+                        {'index': 12, 'level': 2}, {'index': 13, 'level': 2},
+                        {'index': 14, 'level': 2}, {'index': 15, 'level': 2},
+                        {'index': 16, 'level': 2}, {'index': 17, 'level': 2},
+                        {'index': 18, 'level': 2}, {'index': 19, 'level': 2},
+                        {'index': 20, 'level': 2}, {'index': 21, 'level': 2},
+                        {'index': 22, 'level': 2}, {'index': 23, 'level': 2},
+                        {'index': 24, 'level': 2}, {'index': 25, 'level': 2},
+                        {'index': 26, 'level': 2}, {'index': 27, 'level': 2},
+                        {'index': 28, 'level': 2}, {'index': 29, 'level': 2}],
+            'type': 'build_settlement'
+        }
+        assert expected_data == response.data[0]
+        assert response.status_code == 200
+
+    def test_get_initial_settlements_2(self):
+        self.grain.delete()
+        self.lumber.delete()
+        self.brick.delete()
+        self.wool.delete()
+        mixer.blend('catan.Building', name='settlement', level=1, index=16,
+                    owner=self.player, game=self.game)
+        self.turn.game_stage = 'SECOND_CONSTRUCTION'
+        self.turn.last_action = 'NON_BLOCKING_ACTION'
+        self.turn.save()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = {
+            'payload': [{'index': 0, 'level': 0}, {'index': 1, 'level': 0},
+                        {'index': 2, 'level': 0}, {'index': 3, 'level': 0},
+                        {'index': 4, 'level': 0}, {'index': 5, 'level': 0},
+                        {'index': 0, 'level': 1}, {'index': 1, 'level': 1},
+                        {'index': 2, 'level': 1}, {'index': 3, 'level': 1},
+                        {'index': 4, 'level': 1}, {'index': 5, 'level': 1},
+                        {'index': 6, 'level': 1}, {'index': 7, 'level': 1},
+                        {'index': 8, 'level': 1}, {'index': 9, 'level': 1},
+                        {'index': 10, 'level': 1}, {'index': 11, 'level': 1},
+                        {'index': 12, 'level': 1}, {'index': 13, 'level': 1},
+                        {'index': 14, 'level': 1}, {'index': 0, 'level': 2},
+                        {'index': 1, 'level': 2}, {'index': 2, 'level': 2},
+                        {'index': 3, 'level': 2}, {'index': 4, 'level': 2},
+                        {'index': 5, 'level': 2}, {'index': 6, 'level': 2},
+                        {'index': 7, 'level': 2}, {'index': 8, 'level': 2},
+                        {'index': 9, 'level': 2}, {'index': 10, 'level': 2},
+                        {'index': 11, 'level': 2}, {'index': 12, 'level': 2},
+                        {'index': 13, 'level': 2}, {'index': 14, 'level': 2},
+                        {'index': 15, 'level': 2}, {'index': 16, 'level': 2},
+                        {'index': 17, 'level': 2}, {'index': 18, 'level': 2},
+                        {'index': 19, 'level': 2}, {'index': 20, 'level': 2},
+                        {'index': 21, 'level': 2}, {'index': 22, 'level': 2},
+                        {'index': 23, 'level': 2}, {'index': 24, 'level': 2},
+                        {'index': 25, 'level': 2}, {'index': 27, 'level': 2},
+                        {'index': 28, 'level': 2}, {'index': 29, 'level': 2}],
+            'type': 'build_settlement'
+        }
+        assert expected_data == response.data[0]
         assert response.status_code == 200
