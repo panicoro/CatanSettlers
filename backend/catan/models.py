@@ -373,19 +373,6 @@ class Player(models.Model):
                                     name='User with unique colour per game'),
         ]
 
-    def set_not_last_gained(self):
-        """
-        A method to remove resources as obtained in the last turn.
-        """
-        # Get the last gained of the player
-        resources_last_gained = Resource.objects.filter(last_gained=True,
-                                                        owner=self)
-        # Set the resources to False in last_gained field
-        if len(resources_last_gained) != 0:
-            for resource in resources_last_gained:
-                resource.last_gained = False
-                resource.save()
-
     def gain_resources(self, resource_name, amount):
         """
         A method for players to gain resources.
@@ -471,21 +458,17 @@ class Player(models.Model):
                                    Q(owner=self, game=self.game,
                                    level_2=level, index_2=index)).exists()
 
-    def check_roads_continuation(self, level1, index1, level2, index2,
-                                 only_building=False):
-        if only_building:
-            road_1, road_2 = False, False
-        else:
-            road_1 = Road.objects.filter(Q(owner=self, game=self.game,
-                                         level_1=level1, index_1=index1) |
-                                         Q(owner=self, game=self.game,
-                                         level_2=level1, index_2=index1)
-                                         ).exists()
-            road_2 = Road.objects.filter(Q(owner=self, game=self.game,
-                                         level_1=level2, index_1=index2) |
-                                         Q(owner=self, game=self.game,
-                                         level_2=level2, index_2=index2)
-                                         ).exists()
+    def check_roads_continuation(self, level1, index1, level2, index2):
+        road_1 = Road.objects.filter(Q(owner=self, game=self.game,
+                                     level_1=level1, index_1=index1) |
+                                     Q(owner=self, game=self.game,
+                                     level_2=level1, index_2=index1)
+                                     ).exists()
+        road_2 = Road.objects.filter(Q(owner=self, game=self.game,
+                                     level_1=level2, index_1=index2) |
+                                     Q(owner=self, game=self.game,
+                                     level_2=level2, index_2=index2)
+                                     ).exists()
         building_1 = Building.objects.filter(owner=self, game=self.game,
                                              level=level1, index=index1
                                              ).exists()
