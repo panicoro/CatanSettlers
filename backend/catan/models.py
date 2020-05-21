@@ -689,23 +689,6 @@ class Resource(Card):
     """
     last_gained = models.BooleanField(default=False)
 
-    def clean(self):
-        if self.owner.game.id != self.game.id:
-            raise ValidationError('Cannot be player of other game')
-
-    def set_not_last_gained(self):
-        """
-        A method to remove resources as obtained in the last turn.
-        """
-        # Get the last gained of the owner
-        resources_last_gained = Resource.objects.filter(last_gained=True,
-                                                        owner=self.owner)
-        # Set the resources to False in last_gained field
-        if len(resources_last_gained) != 0:
-            for resource in resources_last_gained:
-                resource.last_gained = False
-                resource.save()
-
 
 class Building(models.Model):
     """
