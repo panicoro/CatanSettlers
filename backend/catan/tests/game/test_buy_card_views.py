@@ -106,3 +106,12 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.status_code == 200
         assert response.data == {'detail': 'YOU WIN!!!'}
+
+    def test_get_bank_trade(self):
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert {"type": 'buy_card'} in response.data
+        assert response.status_code == 200
