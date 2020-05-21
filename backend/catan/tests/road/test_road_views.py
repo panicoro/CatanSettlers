@@ -131,6 +131,60 @@ class TestViews(TestCase):
         assert response_game.data['players'][0]['roads'][1][1]['index'] == 2
         assert len(response_game.data['players'][0]['roads']) == 2
 
+    def test_build_road_first_stage(self):
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_SETTLEMENT'
+        self.turn.save()
+        self.road.delete()
+        mixer.blend('catan.Building', owner=self.player,
+                    game=self.game, name='settlement',
+                    level=2, index=1)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "build_road",
+                "payload": [{"level": 2, "index": 1},
+                            {"level": 2, "index": 2}]}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
+        assert response.status_code == 200
+        assert response_player.data['resources'] == ['brick', 'lumber']
+        assert response_game.data['players'][0]['resources_cards'] == 2
+        assert response_game.data['players'][0]['roads'][0][0]['level'] == 2
+        assert response_game.data['players'][0]['roads'][0][0]['index'] == 1
+        assert response_game.data['players'][0]['roads'][0][1]['level'] == 2
+        assert response_game.data['players'][0]['roads'][0][1]['index'] == 2
+        assert len(response_game.data['players'][0]['roads']) == 1
+
+    def test_build_road_first_stage_not_from_last(self):
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_SETTLEMENT'
+        self.turn.save()
+        self.road.delete()
+        mixer.blend('catan.Building', owner=self.player,
+                    game=self.game, name='settlement',
+                    level=2, index=1)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "build_road",
+                "payload": [{"level": 1, "index": 0},
+                            {"level": 1, "index": 1}]}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_game_info(1)
+        response_player = self.get_player_info(1)
+        assert response.status_code == 403
+        assert response.data == {"detail":
+                                 "You must build since your last building"}
+        assert response_player.data['resources'] == ['brick', 'lumber']
+        assert response_game.data['players'][0]['resources_cards'] == 2
+        assert len(response_game.data['players'][0]['roads']) == 0
+
     def test_nothing_built(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_road",
