@@ -33,14 +33,14 @@ class TestViews(TestCase):
                                 board=self.board, level=1, index=0)
         self.game = mixer.blend('catan.Game', name='Game1', board=self.board,
                                 robber=self.hexe)
-        self.player1 = mixer.blend(Player, username=self.user1,
-                                   game=self.game, colour='yellow')
-        self.player2 = mixer.blend(Player, username=self.user2,
-                                   game=self.game, colour='green')
-        self.player3 = mixer.blend(Player, username=self.user3,
-                                   game=self.game, colour='blue')
-        self.player4 = mixer.blend(Player, username=self.user4,
-                                   game=self.game, colour='red')
+        self.player1 = mixer.blend('catan.Player', username=self.user1,
+                                   game=self.game, colour='yellow', turn=1)
+        self.player2 = mixer.blend('catan.Player', username=self.user2,
+                                   game=self.game, colour='green', turn=2)
+        self.player3 = mixer.blend('catan.Player', username=self.user3,
+                                   game=self.game, colour='blue', turn=3)
+        self.player4 = mixer.blend('catan.Player', username=self.user4,
+                                   game=self.game, colour='red', turn=4)
 
     def get_game_info(self, pk):
         path_game = reverse('GameInfo', kwargs={'pk': pk})
