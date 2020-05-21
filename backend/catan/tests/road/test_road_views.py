@@ -326,3 +326,55 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.data == [{'type': 'end_turn'}]
         assert response.status_code == 200
+
+    def test_get_initial_road(self):
+        self.lumber.delete()
+        self.brick.delete()
+        self.road.delete()
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_SETTLEMENT'
+        self.turn.save()
+        mixer.blend('catan.Building', name='settlement', level=1, index=16,
+                    owner=self.player, game=self.game)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = {
+            'payload': [
+                        [{'index': 16, 'level': 1}, {'index': 26, 'level': 2}],
+                        [{'index': 16, 'level': 1}, {'index': 17, 'level': 1}],
+                        [{'index': 16, 'level': 1}, {'index': 15, 'level': 1}]
+                       ],
+            'type': 'build_road'
+        }
+        assert expected_data == response.data[0]
+        assert response.status_code == 200
+
+    def test_get_initial_road_2(self):
+        self.lumber.delete()
+        self.brick.delete()
+        self.road.delete()
+        self.turn.game_stage = 'SECOND_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_SETTLEMENT'
+        self.turn.save()
+        mixer.blend('catan.Building', name='settlement', level=1, index=16,
+                    owner=self.player, game=self.game)
+        mixer.blend('catan.Building', name='settlement', level=1, index=5,
+                    owner=self.player, game=self.game)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        expected_data = {
+            'payload': [
+                        [{'index': 5, 'level': 1}, {'index': 4, 'level': 1}],
+                        [{'index': 5, 'level': 1}, {'index': 6, 'level': 1}],
+                        [{'index': 5, 'level': 1}, {'index': 9, 'level': 2}]
+                       ],
+            'type': 'build_road'
+        }
+        assert expected_data == response.data[0]
+        assert response.status_code == 200
