@@ -39,10 +39,6 @@ class TestView(TestCase):
                                                 game_stage='FULL_PLAY')
 
     def test_end_turn(self):
-        """
-        A test to see the change of users in turn according
-        to the user requesting the end of their shift
-        """
         self.turn.dices1 = 2
         self.turn.dices2 = 2
         self.turn.save()
@@ -54,15 +50,104 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view_actions = PlayerActions.as_view()
         response = view_actions(request, pk=1)
-        response.render()
         assert response.status_code == 204
         url = reverse('GameInfo', kwargs={'pk': 1})
         request = RequestFactory().get(url)
         force_authenticate(request, user=self.user1, token=self.token)
         view_game = GameInfo.as_view()
         response = view_game(request, pk=1)
-        response.render()
         assert response.data['current_turn']['user'] == "user2"
+
+    def test_end_turn_first_stage(self):
+        self.turn.dices1 = 2
+        self.turn.dices2 = 2
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_ROAD'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        assert response.status_code == 204
+        url = reverse('GameInfo', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_game = GameInfo.as_view()
+        response = view_game(request, pk=1)
+        assert response.data['current_turn']['user'] == "user2"
+
+    def test_end_turn_first_stage_4(self):
+        self.turn.dices1 = 2
+        self.turn.dices2 = 2
+        self.turn.user = self.user4
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_ROAD'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user4, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        assert response.status_code == 204
+        url = reverse('GameInfo', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_game = GameInfo.as_view()
+        response = view_game(request, pk=1)
+        assert response.data['current_turn']['user'] == "user4"
+
+    def test_end_turn_second_stage(self):
+        self.turn.dices1 = 2
+        self.turn.dices2 = 2
+        self.turn.user = self.user4
+        self.turn.game_stage = 'SECOND_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_ROAD'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user4, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        assert response.status_code == 204
+        url = reverse('GameInfo', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_game = GameInfo.as_view()
+        response = view_game(request, pk=1)
+        assert response.data['current_turn']['user'] == "user3"
+
+    def test_end_turn_second_stage_1(self):
+        self.turn.dices1 = 2
+        self.turn.dices2 = 2
+        self.turn.user = self.user1
+        self.turn.game_stage = 'SECOND_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_ROAD'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "end_turn",
+                "payload": None}
+        request = RequestFactory().post(url, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        assert response.status_code == 204
+        url = reverse('GameInfo', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_game = GameInfo.as_view()
+        response = view_game(request, pk=1)
+        assert response.data['current_turn']['user'] == "user1"
 
     def test_end_turn_4(self):
         """
@@ -81,14 +166,12 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user4, token=self.token)
         view_actions = PlayerActions.as_view()
         response = view_actions(request, pk=1)
-        response.render()
         assert response.status_code == 204
         url = reverse('GameInfo', kwargs={'pk': 1})
         request = RequestFactory().get(url)
         force_authenticate(request, user=self.user4, token=self.token)
         view_game = GameInfo.as_view()
         response = view_game(request, pk=1)
-        response.render()
         assert response.data['current_turn']['user'] == "user1"
 
     def test_end_turn_Not_in_turn(self):
@@ -106,7 +189,6 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user2, token=self.token)
         view_actions = PlayerActions.as_view()
         response = view_actions(request, pk=1)
-        response.render()
         assert response.status_code == 403
         assert response.data['detail'] == 'Not in turn'
         url = reverse('GameInfo', kwargs={'pk': 1})
@@ -114,7 +196,6 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user2, token=self.token)
         view_game = GameInfo.as_view()
         response = view_game(request, pk=1)
-        response.render()
         assert response.data['current_turn']['user'] == 'user1'
 
     def test_end_turn_not_move_robber(self):
@@ -133,7 +214,6 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view_actions = PlayerActions.as_view()
         response = view_actions(request, pk=1)
-        response.render()
         assert response.status_code == 403
         assert response.data == {"detail": "You have to move the thief"}
 
@@ -149,7 +229,42 @@ class TestView(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view_actions = PlayerActions.as_view()
         response = view_actions(request, pk=1)
-        response.render()
         assert response.status_code == 403
         assert response.data == {"detail":
                                  "You must build your first constructions"}
+
+    def test_get_end_turn_first_stage(self):
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_ROAD'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        assert response.status_code == 200
+        assert response.data == [{"type": 'end_turn'}]
+
+    def test_get_end_turn_first_stage_2(self):
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_ROAD'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        assert response.status_code == 200
+        assert response.data == [{"type": 'end_turn'}]
+
+    def test_get_end_turn_second_stage(self):
+        self.turn.game_stage = 'SECOND_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_ROAD'
+        self.turn.save()
+        url = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(url)
+        force_authenticate(request, user=self.user1, token=self.token)
+        view_actions = PlayerActions.as_view()
+        response = view_actions(request, pk=1)
+        assert response.status_code == 200
+        assert response.data == [{"type": 'end_turn'}]
