@@ -769,8 +769,6 @@ class Road(models.Model):
                     'The index with level 2 must be between 0 and 29.')
         if self.owner.game.id != self.game.id:
             raise ValidationError('Cannot be player of other game')
-        if self.owner.game.id != self.game.id:
-            raise ValidationError('Cannot be player of other game')
 
 
 class Current_Turn(models.Model):
