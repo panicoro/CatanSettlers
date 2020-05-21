@@ -4,6 +4,7 @@ from mixer.backend.django import mixer
 from django.contrib.auth.models import User
 from catan.models import *
 from catan.views.game_views import GameList, GameInfo
+from catan.views.players_views import PlayerActions
 from rest_framework.test import force_authenticate
 from rest_framework_simplejwt.tokens import AccessToken
 import pytest
@@ -104,4 +105,26 @@ class TestView(TestCase):
                                                        'index': 6}],
                                       'cities': []}]}
         assert response.data == expected_data
+        assert response.status_code == 200
+
+    def test_game_not_in_turn(self):
+        robber = mixer.blend('catan.Hexe', level=1, index=2)
+        board = Board.objects.create(name='Colonos')
+        game_1 = Game.objects.create(name='Juego', board=board,
+                                     robber=robber)
+        user_2 = mixer.blend(User, username='Pablo', password='minombrepablo')
+        player1 = mixer.blend('catan.Player', username=self.user,
+                              game=game_1, colour='yellow',
+                              development_cards=1, resources_cards=2)
+        player2 = mixer.blend('catan.Player', username=user_2,
+                              game=game_1, colour='green',
+                              development_cards=1, resources_cards=2)
+        current_turn = mixer.blend('catan.Current_Turn', game=game_1,
+                                   user=user_2)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == []
         assert response.status_code == 200
