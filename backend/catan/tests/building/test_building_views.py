@@ -83,6 +83,23 @@ class TestViews(TestCase):
         assert response.data == {"detail": "Non-existent position"}
         assert response.status_code == 403
 
+    def test_no_vertex_city(self):
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "upgrade_city",
+                "payload": {"level": 100, "index": 106}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "Non-existent position"}
+        assert response.status_code == 403
+
     def test_no_turn(self):
         new_user = mixer.blend(User, username='catan', email='matilde13')
         self.turn.user = new_user
@@ -103,6 +120,30 @@ class TestViews(TestCase):
         assert response.data == {"detail": "Not in turn"}
         assert response.status_code == 403
 
+    def test_no_turn_city(self):
+        new_user = mixer.blend(User, username='catan', email='matilde13')
+        build = mixer.blend('catan.Building', game=self.game, name='settlement',
+                            owner=self.player, level=1, index=16)
+        self.turn.user = new_user
+        self.turn.save()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "upgrade_city",
+                "payload": {"level": 1, "index": 16}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == [
+            {'level': 1, 'index': 16}
+        ]
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "Not in turn"}
+        assert response.status_code == 403
+    
     def test_build_vertex_1(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_settlement",
@@ -121,6 +162,39 @@ class TestViews(TestCase):
         assert response_game.data['players'][
                0]['settlements'][0]['index'] == 16
         assert response_game.data['players'][0]['victory_points'] == 1
+
+    def test_build_city(self):
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="grain")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        build = mixer.blend('catan.Building', game=self.game, name='settlement',
+                            owner=self.player, level=1, index=16)
+        self.player.gain_points(1)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "upgrade_city",
+                "payload": {"level": 1, "index": 16}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert response.status_code == 200
+        assert response_player.data['resources'] == ['brick', 'lumber', 'wool']
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['cities'] == [
+            {'level': 1, 'index': 16}]
+        assert response_game.data['players'][0]['victory_points'] == 3
 
     def test_build_vertex_2(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
@@ -198,7 +272,24 @@ class TestViews(TestCase):
         assert response.data == {"detail": "Busy position"}
         assert response.status_code == 403
 
-    def test_no_resource(self):
+    def test_upgrade_non_existent_build(self):
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "upgrade_city",
+                "payload": {"level": 2, "index": 26}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "Must upgrade an existent settlement"}
+        assert response.status_code == 403
+
+    def test_no_resource_settlement(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_settlement",
                 "payload": {"level": 2, "index": 26}}
@@ -217,6 +308,77 @@ class TestViews(TestCase):
                                  "the necessary resources"}
         assert response.status_code == 403
 
+    def test_no_resource_city(self):
+        build = mixer.blend('catan.Building', game=self.game, name='settlement',
+                            owner=self.player, level=1, index=16)
+        self.player.gain_points(1)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "upgrade_city",
+                "payload": {"level": 1, "index": 16}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert len(response_player.data['resources']) == 4
+        assert response_game.data['players'][0]['settlements'] == [
+            {'level':1, 'index': 16}
+        ]
+        assert response_game.data['players'][0]['cities'] == []
+        assert response_game.data['players'][0]['victory_points'] == 1
+        assert response.data == {"detail": "It does not have" +
+                                 "the necessary resources"}
+        assert response.status_code == 403
+
+    def test_no_time_for_build(self):
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_SETTLEMENT'
+        self.turn.save()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "build_settlement",
+                "payload": {"level": 2, "index": 26}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        self.grain.delete()
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert len(response_player.data['resources']) < 4
+        assert response_game.data['players'][0]['settlements'] == []
+        assert response_game.data['players'][0]['victory_points'] == 0
+        assert response.data == {"detail": "You cannot construct at this momment"}
+        assert response.status_code == 403
+
+    def test_no_time_for_build_city(self):
+        self.turn.game_stage = 'FIRST_CONSTRUCTION'
+        self.turn.last_action = 'BUILD_SETTLEMENT'
+        self.turn.save()
+        self.player.gain_points(1)
+        build = mixer.blend('catan.Building', game=self.game, name='settlement',
+                            owner=self.player, level=1, index=16)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "upgrade_city",
+                "payload": {"level": 1, "index": 16}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        self.grain.delete()
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert len(response_player.data['resources']) < 4
+        assert response_game.data['players'][0]['settlements'] == [
+            {'level':1, 'index': 16}
+        ]
+        assert response_game.data['players'][0]['victory_points'] == 1
+        assert response.data == {"detail": "You cannot construct at this momment"}
+        assert response.status_code == 403
+    
     def test_get_no_resource(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
@@ -278,14 +440,15 @@ class TestViews(TestCase):
             "payload": [{"level": 1, "index": 17},
                         {"level": 2, "index": 29}]}
         expected_data_roads = {
-            "type": "build_road",
-            "payload": [
-                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}],
-                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
-                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
-                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
-                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
-                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}]]}
+        'type': 'build_road',
+        'payload': 
+            [[{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
+            [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
+            [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
+            [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}],
+            [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}], 
+            [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}]]
+        }        
         assert response.data[1] == expected_data_roads
         assert expected_data_roads in response.data
         assert response.status_code == 200
@@ -300,28 +463,28 @@ class TestViews(TestCase):
         mixer.blend('catan.Road', owner=self.player, game=self.game,
                     level_1=2, index_1=26, level_2=1, index_2=16)
         mixer.blend('catan.Building', owner=self.player, game=self.game,
-                    level=2, index=26)
+                    level=2, index=26, name='settlement')
         mixer.blend('catan.Building', owner=self.player, game=self.game,
-                    level=1, index=17)
+                    level=1, index=17, name='settlement')
         path = reverse('PlayerActions', kwargs={'pk': 1})
         request = RequestFactory().get(path)
         force_authenticate(request, user=self.user, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
         expected_data = {
-            "type": "build_road",
-            "payload": [
-                 [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}],
-                 [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
-                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}],
-                 [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}],
-                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
-                 [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}]]
-        }
+        'type': 'build_road',
+        'payload': 
+            [[{'level': 2, 'index': 29}, {'level': 2, 'index': 28}],
+            [{'level': 2, 'index': 29}, {'level': 2, 'index': 0}],
+            [{'level': 1, 'index': 16}, {'level': 1, 'index': 15}],
+            [{'level': 1, 'index': 17}, {'level': 1, 'index': 0}],
+            [{'level': 2, 'index': 26}, {'level': 2, 'index': 27}], 
+            [{'level': 2, 'index': 26}, {'level': 2, 'index': 25}]]
+        }        
         assert expected_data == response.data[1]
         assert response.status_code == 200
 
-    def test_BuildWinner(self):
+    def test_winner_settlement(self):
         self.player.gain_points(9)
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_settlement",
@@ -333,7 +496,6 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         response_game = self.get_info_game(1)
         response_player = self.get_info_player(1)
-        assert response.status_code == 200
         assert response_player.data['resources'] == []
         assert response_game.data['players'][
                0]['settlements'][0]['level'] == 2
@@ -344,6 +506,43 @@ class TestViews(TestCase):
         assert response.data == {'detail': 'YOU WIN!!!'}
         assert response.status_code == 200
 
+    def test_winner_city(self):
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="grain")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        build = mixer.blend('catan.Building', game=self.game, name='settlement',
+                            owner=self.player, level=2, index=26)
+        self.player.gain_points(8)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        data = {"type": "upgrade_city",
+                "payload": {"level": 2, "index": 26}}
+        request = RequestFactory().post(path, data,
+                                        content_type='application/json')
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        response_game = self.get_info_game(1)
+        response_player = self.get_info_player(1)
+        assert response_player.data['resources'] == ['brick', 'lumber', 'wool']
+        assert response_game.data['players'][0]['settlements'] == []        
+        assert response_game.data['players'][0]['cities'] == [
+            {"level": 2, "index": 26}
+        ]        
+        assert response_game.data['winner'] == 'test_user'
+        assert response_game.data['players'][0]['victory_points'] == 10
+        assert response.data == {'detail': 'YOU WIN!!!'}
+        assert response.status_code == 200
+
+    
     def test_get_initial_settlements(self):
         self.grain.delete()
         self.lumber.delete()
