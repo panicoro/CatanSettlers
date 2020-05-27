@@ -175,14 +175,19 @@ class Game(models.Model):
         unique_together = ['id', 'name']
         ordering = ['id']
 
-    def exists_building(self, level, index):
+    def exists_building(self, level, index, city=False):
         """
         Return true is there's a bulding in the
         vertex position with gaven level and index
         """
-        return Building.objects.filter(game=self, level=level,
-                                       index=index).exists()
-
+        if city:
+            return Building.objects.filter(game=self, level=level,
+                                           index=index,
+                                            name='settlement').exists()
+        else:
+            return Building.objects.filter(game=self, level=level,
+                                           index=index).exists()
+         
     def exists_road(self, level1, index1, level2, index2):
         road_1 = Road.objects.filter(game=self,
                                      level_1=level1, level_2=level2,
@@ -409,6 +414,7 @@ class Player(models.Model):
         """
         NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
                                                     'wool', 'grain'],
+                               'upgrade_city': 3*['ore'] + 2*['grain'],
                                'build_road': ['brick', 'lumber'],
                                'buy_card': ['ore', 'grain', 'wool']
                                }
@@ -440,6 +446,7 @@ class Player(models.Model):
         """
         NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
                                                     'wool', 'grain'],
+                               'upgrade_city': 3*['ore'] + 2*['grain'],
                                'build_road': ['brick', 'lumber'],
                                'trade_bank': [gaven for resource in range(4)],
                                'buy_card': ['ore', 'grain', 'wool']
