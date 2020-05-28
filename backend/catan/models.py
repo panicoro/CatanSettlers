@@ -175,18 +175,13 @@ class Game(models.Model):
         unique_together = ['id', 'name']
         ordering = ['id']
 
-    def exists_building(self, level, index, city=False):
+    def exists_building(self, level, index):
         """
         Return true is there's a bulding in the
         vertex position with gaven level and index
         """
-        if city:
-            return Building.objects.filter(game=self, level=level,
-                                           index=index,
-                                            name='settlement').exists()
-        else:
-            return Building.objects.filter(game=self, level=level,
-                                           index=index).exists()
+        return Building.objects.filter(game=self, level=level,
+                                       index=index).exists()
          
     def exists_road(self, level1, index1, level2, index2):
         road_1 = Road.objects.filter(game=self,
@@ -556,6 +551,24 @@ class Player(models.Model):
                     new_road = [vertex, neighbor]
                     potencial_roads.append(new_road)
         return potencial_roads
+
+    def has_settlements(self, level=None, index=None):
+        if level and index:
+            return Building.objects.filter(owner=self, name='settlement', 
+                                       game=self.game,
+                                       level=level, index=index).exists()
+        else:
+            return Building.objects.filter(owner=self, name='settlement', 
+                                       game=self.game).exists()
+
+    def posibles_upgrades(self):
+        potencial_cities = []
+        setllements = Building.objects.filter(owner=self, name='settlement', 
+                                               game=self.game)
+        for settle in setllements:
+            vertex = [settle.level, settle.index]
+            potencial_cities.append(vertex)
+        return potencial_cities
 
     def posible_roads(self):
         """
