@@ -68,7 +68,7 @@ def upgrade_city(payload, game, player):
     if not exists_vertex(level, index):
         response = {"detail": "Non-existent position"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-    if not game.exists_building(level, index, city=True):
+    if not player.has_settlements(level, index):
         response = {"detail": "Must upgrade an existent settlement"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
     game_stage = game.current_turn.game_stage
