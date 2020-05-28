@@ -11,7 +11,7 @@ from random import shuffle
 from catan.views.actions.road import build_road, play_road_building_card
 from catan.views.actions.buy_card import buy_card
 from catan.views.actions.bank import bank_trade
-from catan.views.actions.build import build_settlement
+from catan.views.actions.build import build_settlement, upgrade_city
 from catan.views.actions.move_robber import move_robber
 from catan.views.actions.change_turn import change_turn
 
@@ -161,6 +161,14 @@ class PlayerActions(APIView):
                                         posibles_settlements)
                     if len(item['payload']) != 0:
                         data.append(item)
+                if player.has_necessary_resources('upgrade_city'):
+                    if player.has_settlements():
+                        item = {"type": 'upgrade_city'}
+                        posibles_cities = player.posibles_upgrades()
+                        item['payload'] = self.to_json_positions(
+                                           posibles_cities)
+                        if len(item['payload']) != 0:
+                            data.append(item)
                 if player.has_card('knight'):
                     item = {"type": 'play_knight_card'}
                     posibles_robber = self.posible_robber_positions(game)
@@ -196,6 +204,9 @@ class PlayerActions(APIView):
             return response
         if data['type'] == 'build_settlement':
             response = build_settlement(data['payload'], game, player)
+            return response
+        if data['type'] == 'upgrade_city':
+            response = upgrade_city(data['payload'], game, player)
             return response
         if data['type'] == 'build_road':
             response = build_road(data['payload'], game, player)
