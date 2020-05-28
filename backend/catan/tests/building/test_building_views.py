@@ -66,6 +66,26 @@ class TestViews(TestCase):
         response_player = view_player(request_player, pk=pk)
         return response_player
 
+    def resources_for_city(self):
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="grain")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+        mixer.blend('catan.Resource', owner=self.player,
+                                 game=self.game,
+                                 name="ore")
+                                
+    def delete_resources_settl(self):
+        self.grain.delete()
+        self.lumber.delete()
+        self.brick.delete()
+        self.wool.delete()
+
     def test_no_vertex(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "build_settlement",
@@ -121,6 +141,7 @@ class TestViews(TestCase):
         assert response.status_code == 403
 
     def test_no_turn_city(self):
+        self.resources_for_city()
         new_user = mixer.blend(User, username='catan', email='matilde13')
         build = mixer.blend('catan.Building', game=self.game, name='settlement',
                             owner=self.player, level=1, index=16)
@@ -136,7 +157,7 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         response_game = self.get_info_game(1)
         response_player = self.get_info_player(1)
-        assert len(response_player.data['resources']) == 4
+        assert len(response_player.data['resources']) == 8
         assert response_game.data['players'][0]['settlements'] == [
             {'level': 1, 'index': 16}
         ]
@@ -164,18 +185,7 @@ class TestViews(TestCase):
         assert response_game.data['players'][0]['victory_points'] == 1
 
     def test_build_city(self):
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="grain")
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="ore")
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="ore")
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="ore")
+        self.resources_for_city()
         build = mixer.blend('catan.Building', game=self.game, name='settlement',
                             owner=self.player, level=1, index=16)
         self.player.gain_points(1)
@@ -390,11 +400,7 @@ class TestViews(TestCase):
         assert response.status_code == 200
 
     def test_build_gain_free_resources(self):
-        self.grain.delete()
-        self.wool.delete()
-        self.lumber.delete()
-        self.brick.delete()
-        self.road.delete()
+        self.delete_resources_settl()
         self.turn.game_stage = 'SECOND_CONSTRUCTION'
         self.turn.save()
         mixer.blend('catan.Hexe', board=self.board, level=1, index=4,
@@ -507,18 +513,7 @@ class TestViews(TestCase):
         assert response.status_code == 200
 
     def test_winner_city(self):
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="grain")
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="ore")
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="ore")
-        mixer.blend('catan.Resource', owner=self.player,
-                                 game=self.game,
-                                 name="ore")
+        self.resources_for_city()
         build = mixer.blend('catan.Building', game=self.game, name='settlement',
                             owner=self.player, level=2, index=26)
         self.player.gain_points(8)
@@ -544,10 +539,7 @@ class TestViews(TestCase):
 
     
     def test_get_initial_settlements(self):
-        self.grain.delete()
-        self.lumber.delete()
-        self.brick.delete()
-        self.wool.delete()
+        self.delete_resources_settl()
         self.road.delete()
         self.turn.game_stage = 'FIRST_CONSTRUCTION'
         self.turn.last_action = 'NON_BLOCKING_ACTION'
@@ -591,10 +583,7 @@ class TestViews(TestCase):
         assert response.status_code == 200
 
     def test_get_initial_settlements_2(self):
-        self.grain.delete()
-        self.lumber.delete()
-        self.brick.delete()
-        self.wool.delete()
+        self.delete_resources_settl()
         mixer.blend('catan.Building', name='settlement', level=1, index=16,
                     owner=self.player, game=self.game)
         self.turn.game_stage = 'SECOND_CONSTRUCTION'
@@ -634,4 +623,48 @@ class TestViews(TestCase):
             'type': 'build_settlement'
         }
         assert expected_data == response.data[0]
+        assert response.status_code == 200
+
+    def test_get_cities_no_settl(self):
+        self.resources_for_city()
+        self.delete_resources_settl()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == [{'type': 'end_turn'}]
+        assert response.status_code == 200
+
+    def test_get_cities_no_resources(self):
+        mixer.blend('catan.Building', name='settlement', level=1, index=16,
+                    owner=self.player, game=self.game)
+        self.road.delete()
+        self.brick.delete()
+        self.lumber.delete()
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert response.data == [{'type': 'end_turn'}]
+        assert response.status_code == 200
+
+    def test_get_cities(self):
+        self.resources_for_city()
+        mixer.blend('catan.Building', name='settlement', level=1, index=16,
+                    owner=self.player, game=self.game)
+        mixer.blend('catan.Building', name='settlement', level=0, index=3,
+                    owner=self.player, game=self.game)
+        mixer.blend('catan.Building', name='city', level=1, index=8,
+                    owner=self.player, game=self.game)
+        path = reverse('PlayerActions', kwargs={'pk': 1})
+        request = RequestFactory().get(path)
+        force_authenticate(request, user=self.user, token=self.token)
+        view = PlayerActions.as_view()
+        response = view(request, pk=1)
+        assert  { 'payload': [{'index': 16, 'level': 1},
+                              {'index': 3, 'level': 0}],
+                  'type': 'upgrade_city'
+        } in response.data
         assert response.status_code == 200
