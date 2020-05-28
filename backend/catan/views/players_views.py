@@ -161,6 +161,14 @@ class PlayerActions(APIView):
                                         posibles_settlements)
                     if len(item['payload']) != 0:
                         data.append(item)
+                if player.has_necessary_resources('upgrade_city'):
+                    if player.has_settlements():
+                        item = {"type": 'upgrade_city'}
+                        posibles_cities = player.posibles_upgrades()
+                        item['payload'] = self.to_json_positions(
+                                           posibles_cities)
+                        if len(item['payload']) != 0:
+                            data.append(item)
                 if player.has_card('knight'):
                     item = {"type": 'play_knight_card'}
                     posibles_robber = self.posible_robber_positions(game)
