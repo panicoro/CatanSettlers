@@ -1,6 +1,9 @@
 # The settlers of Catan
 
-The following project implements a web application using Django REST framework (backend) and React (frontend) of a classic board game for a subset of rules.
+The following project implements a web application using [Django REST framework] (backend) and [React] (frontend) of a classic board game for a subset of rules.
+
+[Django REST framework]: https://www.django-rest-framework.org/
+[React]: https://es.reactjs.org/
 
 For an introduction to the game it is recommended to read its [basic] rules in principle and then its [detailed] rules.
 
@@ -105,4 +108,6 @@ $ ./node_modules/.bin/eslint yourfile.js
 
 [airbnb javascript]: https://github.com/airbnb/javascript
 
-The python code follows the PEP-8 convetions. You can test it with ```pycodestyle``` command.
+The python code follows the [PEP-8] convetions. You can test it with ```pycodestyle``` command.
+
+[PEP-8]: https://www.python.org/dev/peps/pep-0008/
