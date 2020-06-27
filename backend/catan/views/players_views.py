@@ -11,6 +11,7 @@ from random import shuffle
 from catan.views.actions.road import build_road, play_road_building_card
 from catan.views.actions.buy_card import buy_card
 from catan.views.actions.bank import bank_trade
+from catan.views.actions.monopoly import play_monopoly_card
 from catan.views.actions.build import build_settlement, upgrade_city
 from catan.views.actions.move_robber import move_robber
 from catan.views.actions.change_turn import change_turn
@@ -174,6 +175,9 @@ class PlayerActions(APIView):
                     posibles_robber = self.posible_robber_positions(game)
                     item["payload"] = posibles_robber
                     data.append(item)
+                if player.has_card('monopoly'):
+                    item = {"type": 'play_monopoly_card'}
+                    data.append(item)
                 if player.has_card('road_building'):
                     item = {"type": 'play_road_building_card'}
                     posibles_roads = player.posibles_roads_card_road_building()
@@ -227,6 +231,9 @@ class PlayerActions(APIView):
             return response
         if data['type'] == 'play_road_building_card':
             response = play_road_building_card(data['payload'], game, player)
+            return response
+        if data['type'] == 'play_monopoly_card':
+            response = play_monopoly_card(data['payload'], game, player)
             return response
         response = {"detail": 'Please select a valid action'}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
