@@ -182,7 +182,7 @@ class Game(models.Model):
         """
         return Building.objects.filter(game=self, level=level,
                                        index=index).exists()
-         
+
     def exists_road(self, level1, index1, level2, index2):
         road_1 = Road.objects.filter(game=self,
                                      level_1=level1, level_2=level2,
@@ -449,9 +449,9 @@ class Player(models.Model):
                                                         'wool', 'grain'],
                                    'upgrade_city': 3*['ore'] + 2*['grain'],
                                    'build_road': ['brick', 'lumber'],
-                                   'trade_bank': [gaven for resource in range(4)],
-                                   'buy_card': ['ore', 'grain', 'wool']
-                                  }
+                                   'trade_bank': [gaven
+                                                  for resource in range(4)],
+                                   'buy_card': ['ore', 'grain', 'wool']}
             used_resources = NECESSARY_RESOURCES[action]
             for resource in used_resources:
                 Resource.objects.filter(owner=self, name=resource)[0].delete()
@@ -560,17 +560,17 @@ class Player(models.Model):
 
     def has_settlements(self, level=None, index=None):
         if level and index:
-            return Building.objects.filter(owner=self, name='settlement', 
-                                       game=self.game,
-                                       level=level, index=index).exists()
+            return Building.objects.filter(owner=self, name='settlement',
+                                           game=self.game,
+                                           level=level, index=index).exists()
         else:
-            return Building.objects.filter(owner=self, name='settlement', 
-                                       game=self.game).exists()
+            return Building.objects.filter(owner=self, name='settlement',
+                                           game=self.game).exists()
 
     def posibles_upgrades(self):
         potencial_cities = []
-        setllements = Building.objects.filter(owner=self, name='settlement', 
-                                               game=self.game)
+        setllements = Building.objects.filter(owner=self, name='settlement',
+                                              game=self.game)
         for settle in setllements:
             vertex = [settle.level, settle.index]
             potencial_cities.append(vertex)
