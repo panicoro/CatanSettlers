@@ -44,7 +44,7 @@ git clone https://github.com/panicoro/CattanSettlers.git
 First install the dependencies for the backend, so go to the create and run the [virtualenv](https://virtualenv.pypa.io/en/stable/):
 
 ```bash
-$ cd CattanSettlers/backend
+$ cd CattanSettlers/
 $ virtualenv venv
 $ source venv/bin/activate
 $ pip install -r requirements.txt
