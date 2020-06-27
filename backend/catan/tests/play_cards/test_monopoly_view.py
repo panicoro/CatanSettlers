@@ -44,7 +44,7 @@ class TestViews(TestCase):
         force_authenticate(request_player, user=user, token=self.token)
         view_player = PlayerInfo.as_view()
         return view_player(request_player, pk=pk)
-    
+
     def test_play_monopoly(self):
         self.createGame()
         self.current_turn = mixer.blend(
@@ -61,7 +61,7 @@ class TestViews(TestCase):
         Resource.objects.create(
             owner=self.player4, game=self.game, name='lumber')
         Resource.objects.create(
-            owner=self.player4, game=self.game, name='wool')  
+            owner=self.player4, game=self.game, name='wool')
         card = Card.objects.create(owner=self.player1,
                                    game=self.game,
                                    name='monopoly')
@@ -82,7 +82,7 @@ class TestViews(TestCase):
         response_player = self.get_player_info(1, self.user4)
         assert response_player.data['resources'] == ['lumber', 'wool']
         assert response.status_code == 200
-    
+
     def test_no_card(self):
         self.createGame()
         self.current_turn = mixer.blend(
@@ -98,7 +98,7 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.data == {"detail": 'You have not monopoly card'}
         assert response.status_code == 403
-    
+
     def test_non_existent_resource(self):
         self.createGame()
         self.current_turn = mixer.blend(
@@ -117,7 +117,7 @@ class TestViews(TestCase):
         response = view(request, pk=1)
         assert response.data == {"detail": "Non-existent resource"}
         assert response.status_code == 403
-    
+
     def test_get_monopoly(self):
         self.createGame()
         self.current_turn = mixer.blend(
@@ -144,5 +144,5 @@ class TestViews(TestCase):
         force_authenticate(request, user=self.user1, token=self.token)
         view = PlayerActions.as_view()
         response = view(request, pk=1)
-        assert [{"type": 'end_turn'}] ==  response.data
+        assert [{"type": 'end_turn'}] == response.data
         assert response.status_code == 200

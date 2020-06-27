@@ -24,7 +24,7 @@ def build_settlement(payload, game, player):
     last_action = game.current_turn.last_action
     if game_stage == 'FULL_PLAY':
         # Check that the pleyer has the necessary resources if he wants
-        # to build a settlement        
+        # to build a settlement
         if not player.has_necessary_resources('build_settlement'):
             response = {"detail": "It does not have" +
                         "the necessary resources"}
@@ -37,13 +37,13 @@ def build_settlement(payload, game, player):
             response = {"detail": "Invalid position"}
             return Response(response, status=status.HTTP_403_FORBIDDEN)
         new_build = Building(game=game, name='settlement', owner=player,
-                         level=level, index=index)
+                             level=level, index=index)
         new_build.save()
         player.delete_resources('build_settlement')
     else:
         if last_action == 'NON_BLOCKING_ACTION':
             new_build = Building(game=game, name='settlement', owner=player,
-                         level=level, index=index)
+                                 level=level, index=index)
             new_build.save()
             game.current_turn.last_action = 'BUILD_SETTLEMENT'
             game.current_turn.save()
@@ -89,7 +89,7 @@ def upgrade_city(payload, game, player):
         if player.is_winner():
             response = {"detail": "YOU WIN!!!"}
             return Response(response, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_200_OK)    
+        return Response(status=status.HTTP_200_OK)
     else:
         response = {"detail": "You cannot construct at this momment"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
