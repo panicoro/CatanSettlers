@@ -439,16 +439,22 @@ class Player(models.Model):
         @gave: optional, only used if the action is 'trade_bank'.
                It's the type of resource that the player want to get.
         """
-        NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
-                                                    'wool', 'grain'],
-                               'upgrade_city': 3*['ore'] + 2*['grain'],
-                               'build_road': ['brick', 'lumber'],
-                               'trade_bank': [gaven for resource in range(4)],
-                               'buy_card': ['ore', 'grain', 'wool']
-                               }
-        used_resources = NECESSARY_RESOURCES[action]
-        for resource in used_resources:
-            Resource.objects.filter(owner=self, name=resource)[0].delete()
+        if action == 'monopoly':
+            count = Resource.objects.filter(owner=self, name=gaven).count()
+            if count != 0:
+                Resource.objects.filter(owner=self, name=gaven).delete()
+            return count
+        else:
+            NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
+                                                        'wool', 'grain'],
+                                   'upgrade_city': 3*['ore'] + 2*['grain'],
+                                   'build_road': ['brick', 'lumber'],
+                                   'trade_bank': [gaven for resource in range(4)],
+                                   'buy_card': ['ore', 'grain', 'wool']
+                                  }
+            used_resources = NECESSARY_RESOURCES[action]
+            for resource in used_resources:
+                Resource.objects.filter(owner=self, name=resource)[0].delete()
 
     def check_my_road(self, level, index):
         """
