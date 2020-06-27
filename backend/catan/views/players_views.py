@@ -14,6 +14,7 @@ from catan.views.actions.bank import bank_trade
 from catan.views.actions.monopoly import play_monopoly_card
 from catan.views.actions.build import build_settlement, upgrade_city
 from catan.views.actions.move_robber import move_robber
+from catan.views.actions.plenty_year import play_year_of_plenty
 from catan.views.actions.change_turn import change_turn
 
 
@@ -178,6 +179,9 @@ class PlayerActions(APIView):
                 if player.has_card('monopoly'):
                     item = {"type": 'play_monopoly_card'}
                     data.append(item)
+                if player.has_card('year_of_plenty'):
+                    item = {"type": 'play_year_of_plenty_card'}
+                    data.append(item)
                 if player.has_card('road_building'):
                     item = {"type": 'play_road_building_card'}
                     posibles_roads = player.posibles_roads_card_road_building()
@@ -234,6 +238,9 @@ class PlayerActions(APIView):
             return response
         if data['type'] == 'play_monopoly_card':
             response = play_monopoly_card(data['payload'], game, player)
+            return response
+        if data['type'] == 'play_year_of_plenty_card':
+            response = play_year_of_plenty(data['payload'], game, player)
             return response
         response = {"detail": 'Please select a valid action'}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
