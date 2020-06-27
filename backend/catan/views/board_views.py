@@ -19,7 +19,7 @@ class BoardInfo(APIView):
         hexes_serializer = HexeSerializer(board_hexes, many=True)
         hexes = hexes_serializer.data
         for hexe in hexes:
-            hexe['position'] = {'level': hexe['level'], 
+            hexe['position'] = {'level': hexe['level'],
                                 'index': hexe['index']}
             hexe.pop('level')
             hexe.pop('index')

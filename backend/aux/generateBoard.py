@@ -21,7 +21,7 @@ def generateBoard(name):
     hexe_position_desert = hexes_positions[position_for_desert]
     hexes_positions.remove(hexe_position_desert)
     hexe_desert = Hexe(board=new_board, terrain='desert',
-                       level=hexe_position_desert[0], 
+                       level=hexe_position_desert[0],
                        index=hexe_position_desert[1])
     hexe_desert.save()
     for i in range(0, len(hexes_positions)):
