@@ -1,7 +1,7 @@
 import { colours } from './Constants';
 
 
-export const path = process.env.REACT_APP_PATH || 'http://localhost:8000';
+export const path = process.env.REACT_APP_PATH;
 
 export const getToken = () => JSON.parse(localStorage.getItem('token'));
 
