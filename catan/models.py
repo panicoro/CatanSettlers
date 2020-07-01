@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
-from random import random, shuffle, randint
+from random import random, shuffle, randint, choice
 from django.db.models import Q
 import math
 from aux.json_load import VertexInfo, HexagonInfo
@@ -68,9 +68,9 @@ class Room(models.Model):
         turns_colors = {1: 'Blue', 2: 'Red', 3: 'Yellow', 4: 'Green'}
         keys = list(turns_colors.keys())
         shuffle(keys)
-        for key in keys:
+        for key, idx in zip(keys, range(4)):
             new_player = Player.objects.create(turn=key,
-                                               username=players[key-1],
+                                               username=players[idx],
                                                game=game,
                                                colour=turns_colors[key])
             if key == 1:
@@ -637,8 +637,9 @@ class Player(models.Model):
         self.save()
 
     def select_card(self):
-        shuffle(CARD_TYPE)
-        card_name = CARD_TYPE[randint(0, 4)]
+        deck = CARD_TYPE * 5
+        shuffle(deck)
+        card_name = choice(deck)
         new_card = Card(owner=self, game=self.game, name=card_name[0])
         new_card.save()
 
