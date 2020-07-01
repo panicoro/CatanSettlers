@@ -637,6 +637,7 @@ class Player(models.Model):
         self.save()
 
     def select_card(self):
+        shuffle(CARD_TYPE)
         card_name = CARD_TYPE[randint(0, 4)]
         new_card = Card(owner=self, game=self.game, name=card_name[0])
         new_card.save()
