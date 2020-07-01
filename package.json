@@ -81,6 +81,5 @@
     "moduleNameMapper": {
       "\\.(css|less)$": "identity-obj-proxy"
     }
-  },
-  "proxy": "https://settlerscatan.herokuapp.com/"
+  }
 }
