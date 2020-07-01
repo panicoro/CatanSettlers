@@ -81,5 +81,6 @@
     "moduleNameMapper": {
       "\\.(css|less)$": "identity-obj-proxy"
     }
-  }
+  },
+  "proxy": "http://localhost:8000"
 }
