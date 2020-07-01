@@ -82,5 +82,5 @@
       "\\.(css|less)$": "identity-obj-proxy"
     }
   },
-  "proxy": "http://localhost:8000"
+  "proxy": "https://settlerscatan.herokuapp.com/"
 }
