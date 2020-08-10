@@ -19,6 +19,7 @@ const Body = (props) => {
       onClick={onClick}
       data-testid="room-body-button"
       disabled={disabled}
+      variant="dark"
     >
       {label}
     </Button>

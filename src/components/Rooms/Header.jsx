@@ -10,7 +10,9 @@ const Header = ({ id, name }) => (
     <Accordion.Toggle
       as={Button}
       eventKey={id}
-      variant="link"
+      variant="outline-dark"
+      size='sm'
+      block
     >
       {name}
     </Accordion.Toggle>
