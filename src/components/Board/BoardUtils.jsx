@@ -1,4 +1,4 @@
-export const L = 90;
+export const L = 80;
 const r = Math.sqrt(L ** 2 - (L / 2) ** 2); // Adjacent side.
 const k = L + L / 2;
 const l = (Math.sqrt(3) / 2) * L;
