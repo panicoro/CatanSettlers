@@ -4,11 +4,12 @@ import FormControl from 'react-bootstrap/FormControl';
 import FormGroup from 'react-bootstrap/FormGroup';
 import FormLabel from 'react-bootstrap/FormLabel';
 import PropTypes from 'prop-types';
-
 import Error from './Error';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 
 
 const Signup = (props) => {
+  
   const {
     values, error, validate, loading,
     handleSubmit, changeUsername, changePassword,
@@ -63,14 +64,16 @@ const Signup = (props) => {
       disabled={!validate()}
       data-testid="button"
       type="submit"
+      variant="dark"
     >
-      {loading ? 'Loading...' : 'Signup'}
+      {loading ? 'Loading...' : 'Register'}
     </Button>
   );
 
   return (
-    <div className="Forms">
-      <h1>Signup</h1>
+    <div className="container">
+      <Jumbotron id='reg_log'>
+      <h1>Register now!</h1>
       {error && <Error message={error} />}
       <form
         onSubmit={handleSubmit}
@@ -80,6 +83,7 @@ const Signup = (props) => {
         {passForm}
         {button}
       </form>
+      </Jumbotron>
     </div>
   );
 };

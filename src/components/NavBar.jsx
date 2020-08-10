@@ -4,36 +4,47 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
-
+import icon from '../images/catan_icon.png';
 
 const NavBar = ({ auth, logout }) => {
   const items = (
     <>
       <LinkContainer to="/signup">
-        <Button>Signup</Button>
+        <Button variant="outline-light"
+          className="mr-sm-2">
+            Register
+        </Button>
       </LinkContainer>
       <LinkContainer to="/login">
-        <Button>Login</Button>
+        <Button variant="outline-light">Log in</Button>
       </LinkContainer>
     </>
   );
 
   const logoutButton = (
     <LinkContainer to="/">
-      <Button onClick={logout}>
-        Logout
+      <Button onClick={logout}
+              variant="outline-light"
+              class="btn btn-dark">
+        Log out
       </Button>
     </LinkContainer>
   );
 
   return (
-    <Navbar>
-      <Navbar.Brand>
-        <h1>Settlers of Catan</h1>
-      </Navbar.Brand>
+    <Navbar  expand="lg" variant="dark" bg="dark" 
+             className="justify-content-between">
+      <Navbar.Brand  href="/"> 
+      <img
+        alt=""
+        src={icon}
+        width="30"
+        height="30"
+        className="d-inline-block align-top"
+      />{' '}Settlers of Catan</Navbar.Brand>
 
-      <Navbar.Collapse>
-        <Nav>
+      <Navbar.Collapse className="justify-content-end">
+        <Nav >
           {auth ? logoutButton : items}
         </Nav>
       </Navbar.Collapse>

@@ -1,14 +1,16 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import FormControl from 'react-bootstrap/FormControl';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import FormGroup from 'react-bootstrap/FormGroup';
 import FormLabel from 'react-bootstrap/FormLabel';
 import PropTypes from 'prop-types';
-
 import Error from './Error';
+import './General.css'
 
 
 const Login = (props) => {
+  
   const {
     values, error, validate, loading,
     handleSubmit, changeUsername, changePassword,
@@ -63,23 +65,26 @@ const Login = (props) => {
       disabled={!validate()}
       data-testid="button"
       type="submit"
+      variant="dark"
     >
       {loading ? 'Loading...' : 'Login'}
     </Button>
   );
 
   return (
-    <div className="Forms">
-      <h1>Login</h1>
-      {error && <Error message={error} />}
-      <form
-        onSubmit={handleSubmit}
-        data-testid="login-form"
-      >
-        {userForm}
-        {passForm}
-        {button}
-      </form>
+    <div className='container'>
+      <Jumbotron id='reg_log'>
+          <h1>Login</h1>
+        { error && <Error message={error} />}
+          <form
+            onSubmit={handleSubmit}
+            data-testid="login-form"
+          >
+            {userForm}
+            {passForm}
+            {button}
+          </form>
+      </Jumbotron>
     </div>
   );
 };
