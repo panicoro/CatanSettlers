@@ -409,13 +409,18 @@ class Player(models.Model):
         """
         NECESSARY_RESOURCES = {'build_settlement': ['brick', 'lumber',
                                                     'wool', 'grain'],
-                               'upgrade_city': 3*['ore'] + 2*['grain'],
                                'build_road': ['brick', 'lumber'],
                                'buy_card': ['ore', 'grain', 'wool']
                                }
         if gaven:
             return Resource.objects.filter(owner=self,
                                            name=gaven).count() >= 4
+        if action == 'upgrade_city':
+            amount_ore = Resource.objects.filter(owner=self,
+                                                 name='ore').count() >= 3
+            amount_grain = Resource.objects.filter(owner=self,
+                                                   name='grain').count() >= 2
+            return amount_ore and amount_grain
         needed_resources = NECESSARY_RESOURCES[action]
         for resource in needed_resources:
             resource_exists = Resource.objects.filter(owner=self,
