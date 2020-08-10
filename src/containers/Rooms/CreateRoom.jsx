@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
 import PropTypes from 'prop-types';
-
 import { dispatchRunning } from './Rooms.ducks';
 import Error from '../../components/Error';
 import CreateScreen from '../../components/Rooms/CreateRoom';
@@ -102,6 +101,10 @@ export const CreateRoom = ({ setRunning }) => {
     createRoom(roomName, boardId, onCreateSuccess, onFailure);
   };
 
+  const componentDidMount = () => {
+    document.body.style.backgroundColor = "white"
+  };
+
   const validate = () => {
     const { roomNameValid, boardIdValid } = formData;
     return (roomNameValid && boardIdValid);
@@ -125,6 +128,7 @@ export const CreateRoom = ({ setRunning }) => {
       handleSubmit={handleSubmit}
       changeRoomName={changeRoomName}
       changeBoardId={changeBoardId}
+      componentDidMount={componentDidMount}
       validate={validate}
     />
   );
