@@ -28,7 +28,7 @@ export const CardDropdown = ({ actions }) => {
 
   return (
     <Dropdown>
-      <Dropdown.Toggle disabled={!cardActions.length}>
+      <Dropdown.Toggle disabled={!cardActions.length} variant="info">
       Development Cards
       </Dropdown.Toggle>
 

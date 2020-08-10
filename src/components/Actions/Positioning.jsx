@@ -4,15 +4,18 @@ import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import PropTypes from 'prop-types';
+import Jumbotron from 'react-bootstrap/Jumbotron';
+
+import '../General.css'
 
 
 const Positioning = ({ message, onCancel, onConfirm }) => {
   const head = (
     <Row>
       <Col>
-        <h1 data-testid="actions-positioning-head">
+        <h3 data-testid="actions-positioning-head">
           {message}
-        </h1>
+        </h3>
       </Col>
     </Row>
   );
@@ -24,6 +27,7 @@ const Positioning = ({ message, onCancel, onConfirm }) => {
           disabled={!onConfirm}
           onClick={onConfirm}
           data-testid="actions-positioning-confirm"
+          variant="danger"
         >
           Confirm
         </Button>
@@ -32,6 +36,7 @@ const Positioning = ({ message, onCancel, onConfirm }) => {
         <Button
           onClick={onCancel}
           data-testid="actions-positioning-cancel"
+          variant="danger"
         >
           Cancel
         </Button>
@@ -41,10 +46,12 @@ const Positioning = ({ message, onCancel, onConfirm }) => {
   );
 
   return (
+    <Jumbotron id='jumbo_actions'>
     <Container data-testid="actions-positioning">
       {head}
       {body}
     </Container>
+    </Jumbotron>
   );
 };
 

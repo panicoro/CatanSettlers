@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
-
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import {
   dispatchWaiting,
   dispatchError,
