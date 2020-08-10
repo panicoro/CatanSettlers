@@ -2,11 +2,13 @@ import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import Table from 'react-bootstrap/Table';
 import PropTypes from 'prop-types';
 
 import { cardNames, resourceNames } from '../utils/Constants';
 
+import './General.css'
 
 const counter = (list, string) => {
   let count = 0;
@@ -89,18 +91,21 @@ const Hand = ({ cards, resources }) => (
   <Container>
     <Row>
       <Col>
-        <h1>Resources</h1>
+        <Jumbotron id='jumbo_info'>
+        <h3>Resources</h3>
         <Table borderless size="sm">
           {resToTable(resources)}
         </Table>
+        </Jumbotron>
       </Col>
       <Col>
-        <h1>Cards</h1>
+      <Jumbotron id='jumbo_info'>
+        <h3>Cards</h3>
         <Table borderless size="sm">
           {cardsToTable(cards)}
         </Table>
+      </Jumbotron>
       </Col>
-
     </Row>
   </Container>
 );
