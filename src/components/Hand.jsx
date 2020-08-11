@@ -2,10 +2,18 @@ import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import Table from 'react-bootstrap/Table';
 import PropTypes from 'prop-types';
 
 import { cardNames, resourceNames } from '../utils/Constants';
+
+import './General.css'
+import lumber_icon from '../images/lumber_icon.png';
+import wool_icon from '../images/wool_icon.png';
+import grain_icon from '../images/grain_icon.png';
+import ore_icon from '../images/ore_icon.png';
+import brick_icon from '../images/brick_icon.png';
 
 
 const counter = (list, string) => {
@@ -28,22 +36,57 @@ export const resToTable = (resources) => {
   return (
     <tbody>
       <tr>
+        <img
+          alt=""
+          src={lumber_icon}
+          width="35"
+          height="35"
+          className="d-inline-block align-top"
+        />
         <td>Lumber: </td>
         <td>{lumber}</td>
       </tr>
       <tr>
+        <img
+          alt=""
+          src={wool_icon}
+          width="35"
+          height="35"
+          className="d-inline-block align-top"
+        />
         <td>Wool: </td>
         <td>{wool}</td>
       </tr>
       <tr>
+      <img
+          alt=""
+          src={ore_icon}
+          width="35"
+          height="35"
+          className="d-inline-block align-top"
+        />
         <td>Ore: </td>
         <td>{ore}</td>
       </tr>
       <tr>
+        <img
+          alt=""
+          src={grain_icon}
+          width="35"
+          height="35"
+          className="d-inline-block align-top"
+        />
         <td>Grain: </td>
         <td>{grain}</td>
       </tr>
       <tr>
+      <img
+          alt=""
+          src={brick_icon}
+          width="35"
+          height="35"
+          className="d-inline-block align-top"
+        />
         <td>Brick: </td>
         <td>{brick}</td>
       </tr>
@@ -89,18 +132,21 @@ const Hand = ({ cards, resources }) => (
   <Container>
     <Row>
       <Col>
-        <h1>Resources</h1>
+        <Jumbotron id='jumbo_info'>
+        <h3>Resources</h3>
         <Table borderless size="sm">
           {resToTable(resources)}
         </Table>
+        </Jumbotron>
       </Col>
       <Col>
-        <h1>Cards</h1>
+      <Jumbotron id='jumbo_info'>
+        <h3>Cards</h3>
         <Table borderless size="sm">
           {cardsToTable(cards)}
         </Table>
+      </Jumbotron>
       </Col>
-
     </Row>
   </Container>
 );

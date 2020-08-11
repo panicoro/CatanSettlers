@@ -2,9 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import Button from 'react-bootstrap/Button';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import Table from 'react-bootstrap/Table';
 import { RoomType } from '../../utils/ApiTypes';
 
+import '../General.css'
 
 export const Waiting = ({
   room, onStart, onCancel, loading,
@@ -40,33 +42,38 @@ export const Waiting = ({
   const roomIsFull = room.players.length === room.max_players;
 
   const buttons = (
-    <div data-testid="waiting-buttons">
-      <Button
-        data-testid="start-button"
-        disabled={!onStart || !roomIsFull || loading}
-        onClick={onStart}
-        className="start"
-      >
-        {loading ? 'Loading...' : 'Start game'}
-      </Button>
-      <Button
-        data-testid="cancel-button"
-        disabled={!onCancel || loading}
-        onClick={onCancel}
-        className="cancel"
-      >
-        Cancel Room
-      </Button>
-    </div>
+      <div data-testid="waiting-buttons">
+        <Button
+          data-testid="start-button"
+          disabled={!onStart || !roomIsFull || loading}
+          onClick={onStart}
+          className="start"
+        >
+          {loading ? 'Loading...' : 'Start game'}
+        </Button>
+        <Button
+          data-testid="cancel-button"
+          disabled={!onCancel || loading}
+          onClick={onCancel}
+          className="cancel"
+        >
+          Cancel Room
+        </Button>
+      </div>
   );
 
+
   return (
-    <div data-testid="waiting-running">
-      <Table borderless size="sm">
-        {head}
-        {body}
-      </Table>
-      {onStart ? buttons : null}
+    <div className='container'>
+      <Jumbotron id='reg_log'>
+        <div data-testid="waiting-running">
+          <Table borderless size="sm">
+            {head}
+            {body}
+          </Table>
+          {onStart ? buttons : null}
+          </div>
+      </Jumbotron>
     </div>
   );
 };

@@ -1,10 +1,12 @@
 import React from 'react';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import GameStatus from '../../components/Info/GameStatus';
 import PlayerInfo from '../../components/Info/PlayerInfo';
 import { PlayerType } from '../../utils/ApiTypes';
+import '../../components/General.css'
 
 
 export const mapStateToProps = (state) => ({
@@ -21,6 +23,9 @@ export const Info = (props) => {
 
   return (
     <>
+      <Jumbotron id='jumbo_dice'>
+      <GameStatus currentTurn={currentTurn} winner={winner} />
+      </Jumbotron>
       {players.map((player) => (
         <PlayerInfo
           player={player}
@@ -29,7 +34,6 @@ export const Info = (props) => {
           playerOnClick={playerOnClick(player.username)}
         />
       ))}
-      <GameStatus currentTurn={currentTurn} winner={winner} />
     </>
   );
 };

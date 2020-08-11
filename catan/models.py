@@ -312,6 +312,7 @@ class Game(models.Model):
         sum_dices = sum(two_dices)
         # Get the players of the games
         if sum_dices == 7:
+            self.set_players_resources_not_last_gained()
             self.random_discard()
         else:
             self.set_players_resources_not_last_gained()
@@ -396,7 +397,8 @@ class Player(models.Model):
             hexe_index = hexe.index
             hexagon_neighbors = HexagonInfo(hexe_level, hexe_index)
             if position in hexagon_neighbors:
-                self.gain_resources(hexe.terrain, 1)
+                if hexe.terrain != 'desert':
+                    self.gain_resources(hexe.terrain, 1)
 
     def has_necessary_resources(self, action, gaven=''):
         """
@@ -642,7 +644,10 @@ class Player(models.Model):
         self.save()
 
     def select_card(self):
-        deck = CARD_TYPE * 5
+        available_cards = [ ('road_building', 'ROAD_BUILDING'),
+                            ('victory_point', 'VICTORY_POINT'),
+                            ('knight', 'KNIGHT')]
+        deck = available_cards * 5
         shuffle(deck)
         card_name = choice(deck)
         new_card = Card(owner=self, game=self.game, name=card_name[0])

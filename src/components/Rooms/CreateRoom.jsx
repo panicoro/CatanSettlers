@@ -1,12 +1,14 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import FormControl from 'react-bootstrap/FormControl';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import FormGroup from 'react-bootstrap/FormGroup';
 import FormLabel from 'react-bootstrap/FormLabel';
 import PropTypes from 'prop-types';
 
 import { BoardListType } from '../../utils/ApiTypes';
 
+import '../General.css';
 
 const CreateRoom = (props) => {
   const {
@@ -16,6 +18,7 @@ const CreateRoom = (props) => {
   const {
     handleSubmit, changeRoomName, changeBoardId, validate,
   } = props;
+
 
   const nameForm = (
     <FormGroup bssize="large">
@@ -73,19 +76,23 @@ const CreateRoom = (props) => {
       disabled={!validate()}
       type="submit"
       data-testid="button"
+      variant="dark"
     >
       {loading ? 'Loading...' : 'Create Room'}
     </Button>
   );
 
   return (
-    <div data-testid="rooms-create">
+    <div data-testid="rooms-create" 
+         className="container">
+      <Jumbotron id='reg_log'>
       <h1>Create Room</h1>
       <form onSubmit={handleSubmit}>
         {nameForm}
         {selectForm}
         {button}
       </form>
+      </Jumbotron>
     </div>
   );
 };

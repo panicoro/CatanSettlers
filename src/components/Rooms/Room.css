@@ -1,0 +1,17 @@
+#create-room {
+    margin-top: 150px;
+    margin-left: 100px;
+    margin-right: 100px;
+    background-color: rgba(240, 220, 46, 0.95)
+
+}
+
+#list-rooms {
+    margin-top: 40px;
+    margin-right: 100px;
+    background-color: rgba(96, 150, 11, 0.95)
+}
+
+#accordion {
+    background-color: rgba(211, 252, 209, 0.9)
+}

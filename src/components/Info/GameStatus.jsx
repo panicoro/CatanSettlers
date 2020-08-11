@@ -1,6 +1,7 @@
 import React from 'react';
 import Table from 'react-bootstrap/Table';
 import PropTypes from 'prop-types';
+import icon from '../../images/two_dices.png';
 
 
 const GameStatus = ({ currentTurn, winner }) => {
@@ -20,15 +21,18 @@ const GameStatus = ({ currentTurn, winner }) => {
   }
 
   return (
-    <Table borderless size="sm">
-      <tbody>
-        <tr>
-          <td>Dice:</td>
+    <Table borderless size="lg">
           <td data-testid="dice">
-            {`${currentTurn.dice[0]}, ${currentTurn.dice[1]}`}
+          <img
+            alt=""
+            src={icon}
+            width="60"
+            height="60"
+            className="d-inline-block"
+            />{' '}
+            {`${currentTurn.dice[0]} + ${currentTurn.dice[1]} = `}
+            { currentTurn.dice[0] + currentTurn.dice[1]}
           </td>
-        </tr>
-      </tbody>
     </Table>
   );
 };

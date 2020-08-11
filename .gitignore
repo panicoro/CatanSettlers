@@ -137,3 +137,6 @@ yarn-debug.log*
 yarn-error.log*
 
 .env
+
+# no gimp images
+src/images/*.xcf

@@ -1,0 +1,59 @@
+#jumbotron {
+    margin-top: 120px;
+    margin-bottom: 100px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    margin-left: 70px;
+    margin-right: 70px;
+}
+
+#reg_log {
+    margin-top: 100px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    margin-left: 300px;
+    margin-right: 300px;
+    background-color: #FFF;
+    background-color: rgba(255, 255, 255, 0.9)
+}
+
+#jumbo_info {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 20px;
+    padding-bottom: 5px;
+    margin-left: -100px;
+    background-color: rgba(236, 128, 128, 0.9);
+}
+
+#jumbo_actions {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-left: -100px;
+    margin-right: -50px;
+    background-color: rgb(189, 189, 189);
+}
+
+#jumbo_dice {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-left: -0px;
+    padding-left: 0px;
+    margin-right: -90px;
+    background-color: rgb(189, 189, 189);
+}
+
+#jumbo_robber {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-left: -80px;
+    padding-left: -50px;
+    margin-right: 15px;
+    background-color: rgb(236, 40, 89);
+}

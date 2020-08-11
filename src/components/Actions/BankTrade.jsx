@@ -3,10 +3,12 @@ import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Table from 'react-bootstrap/Table';
+import Jumbotron from 'react-bootstrap/Jumbotron';
 import PropTypes from 'prop-types';
 
 import { resourceNames } from '../../utils/Constants';
 
+import '../General.css'
 
 const format = (string, n) => {
   const initial = string.charAt(0).toUpperCase();
@@ -60,7 +62,7 @@ const BankTrade = (props) => {
   const confirmTrade = (
     <td>
       <Button
-        variant="success"
+        variant="danger"
         onClick={trade}
         disabled={disabled}
       >
@@ -72,6 +74,7 @@ const BankTrade = (props) => {
   const cancelTrade = (
     <td>
       <Button
+        variant="danger"
         onClick={cancel}
       >
         Cancel
@@ -80,7 +83,7 @@ const BankTrade = (props) => {
   );
 
   return (
-    <div>
+      <Jumbotron id='jumbo_actions'>
       <h1>Please choose.</h1>
       <Table borderless size="sm">
         <tbody>
@@ -94,7 +97,7 @@ const BankTrade = (props) => {
           </tr>
         </tbody>
       </Table>
-    </div>
+      </Jumbotron>
   );
 };
 

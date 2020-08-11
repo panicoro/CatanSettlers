@@ -83,7 +83,7 @@ def upgrade_city(payload, game, player):
                                     level=level, index=index)
         city.name = 'city'
         city.save()
-        player.gain_points(2)
+        player.gain_points(1)
         player.delete_resources('upgrade_city')
         # Check if the player won
         if player.is_winner():
