@@ -27,7 +27,7 @@ export const roadStroke = (colour) => ({
 export const colour = {
   brick: '#cb7341',
   lumber: '#5a3300',
-  wool: '#e8e8e8',
+  wool: '#e1e5ad',
   grain: '#ecc16f',
   ore: '#7b7167',
   desert: '#c19a40',
