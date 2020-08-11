@@ -14,8 +14,8 @@ const Rooms = ({ rooms, createRoom }) => {
   
   return (
   
-  <div data-testid="rooms" class="row">
-    <div class="col-md-6">
+  <div data-testid="rooms" className="row">
+    <div className="col-md-6">
       <Jumbotron id='create-room'>
       <h3>Create a new room</h3>
         <div >
@@ -30,7 +30,7 @@ const Rooms = ({ rooms, createRoom }) => {
       </Jumbotron>
     </div>    
 
-    <div class="col-md-6">
+    <div className="col-md-6">
     <Jumbotron id='list-rooms'>
       <h3>Join or Enter to a room</h3>
       <Accordion data-testid="rooms-accordion">

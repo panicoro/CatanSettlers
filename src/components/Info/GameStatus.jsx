@@ -22,8 +22,6 @@ const GameStatus = ({ currentTurn, winner }) => {
 
   return (
     <Table borderless size="lg">
-      <tbody>
-          <div className='container'>
           <td data-testid="dice">
           <img
             alt=""
@@ -35,8 +33,6 @@ const GameStatus = ({ currentTurn, winner }) => {
             {`${currentTurn.dice[0]} + ${currentTurn.dice[1]} = `}
             { currentTurn.dice[0] + currentTurn.dice[1]}
           </td>
-          </div>
-      </tbody>
     </Table>
   );
 };

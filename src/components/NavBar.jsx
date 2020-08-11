@@ -24,8 +24,7 @@ const NavBar = ({ auth, logout }) => {
   const logoutButton = (
     <LinkContainer to="/">
       <Button onClick={logout}
-              variant="outline-light"
-              class="btn btn-dark">
+              variant="outline-light">
         Log out
       </Button>
     </LinkContainer>
