@@ -87,7 +87,7 @@ export const ActionButton = (props) => {
       disabled={disabled}
       onClick={onClick}
       size="sm"
-      variant="info"
+      variant="warning"
     >
       {actionLabels[type]}
     </C>
