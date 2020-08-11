@@ -206,7 +206,7 @@ class TestViews(TestCase):
         assert response_game.data['players'][0]['settlements'] == []
         assert response_game.data['players'][0]['cities'] == [
             {'level': 1, 'index': 16}]
-        assert response_game.data['players'][0]['victory_points'] == 3
+        assert response_game.data['players'][0]['victory_points'] == 2
 
     def test_build_vertex_2(self):
         path = reverse('PlayerActions', kwargs={'pk': 1})
@@ -528,7 +528,7 @@ class TestViews(TestCase):
         build = mixer.blend('catan.Building', game=self.game,
                             name='settlement',
                             owner=self.player, level=2, index=26)
-        self.player.gain_points(8)
+        self.player.gain_points(9)
         path = reverse('PlayerActions', kwargs={'pk': 1})
         data = {"type": "upgrade_city",
                 "payload": {"level": 2, "index": 26}}
