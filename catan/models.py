@@ -396,7 +396,8 @@ class Player(models.Model):
             hexe_index = hexe.index
             hexagon_neighbors = HexagonInfo(hexe_level, hexe_index)
             if position in hexagon_neighbors:
-                self.gain_resources(hexe.terrain, 1)
+                if hexe.terrain != 'desert':
+                    self.gain_resources(hexe.terrain, 1)
 
     def has_necessary_resources(self, action, gaven=''):
         """
