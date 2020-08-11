@@ -1,4 +1,8 @@
-# The settlers of Catan
+<p align="center">
+  <img src="./src/images/catan_icon.png" hight= "150" width= "150" />
+</p>
+
+#  The settlers of Catan 
 
 The following project implements a web application using [Django REST framework] (backend) and [React] (frontend) of a classic board game for a subset of rules.
 
@@ -53,18 +57,16 @@ $ pip install -r requirements.txt
 Then install all the dependecies for the frontend:
 
 ```bash
-$ cd auxtmp
 $ npm install
 ```
 
-It is important ** not ** to run `npm update`, at least for the moment, since `react-scripts` does not support new versions of webpack.
+It is important **not** to run `npm update`, at least for the moment, since `react-scripts` does not support new versions of webpack.
 
 ## Usage
 
 To run the server:
 
 ```bash
-$ cd backend/
 $ python manage.py makemigrations catan
 $ python manage.py migrate
 $ python manage.py runserver
@@ -72,7 +74,7 @@ $ python manage.py runserver
 
 The virtual environment must be activate.
 
-For the frontend, in the frontend directory run:
+For the frontend, run:
 
 ```bash
 npm start
