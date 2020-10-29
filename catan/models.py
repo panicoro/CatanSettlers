@@ -667,9 +667,7 @@ class Player(models.Model):
                                              index=neighbor[1],
                                              game=self.game).owner
                 if owner.username != self.username:
-                    owners.add(Building.objects.get(level=neighbor[0],
-                                                    index=neighbor[1]
-                                                    ).owner.username.username)
+                    owners.add(owner.username.username)
         return list(owners)
 
     def use_card(self, card_type):
