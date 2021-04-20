@@ -22,7 +22,7 @@ packaging==19.2
 pluggy==0.13.0
 psycopg2==2.7.5
 psycopg2-binary==2.8.5
-py==1.8.0
+py==1.10.0
 pycodestyle==2.5.0
 Pygments==2.4.2
 PyJWT==1.7.1
